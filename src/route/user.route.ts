@@ -6,4 +6,6 @@ const router = express.Router();
 // Register User Route
 router.post("/register", registerUser);
 
+console.log("object");
+
 export default router;
