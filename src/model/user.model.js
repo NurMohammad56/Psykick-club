@@ -39,6 +39,9 @@ const userSchema = new Schema(
     tierRanK: {
       type: Number,
     },
+    point:{
+      type: Number,
+    },
     tmcScore: {
       type: Number,
       default: 0
