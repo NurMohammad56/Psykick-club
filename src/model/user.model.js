@@ -1,41 +1,9 @@
-import { Schema, model, Document, Model } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 import bcrypt from "bcrypt";
 
-export enum UserTitle {
-  MR = 'Mr',
-  MRS = 'Mrs',
-  MISS = 'Miss',
-  OTHER = 'Other'
-}
-
-export enum Gender {
-  MALE = 'Male',
-  FEMALE = 'Female',
-  OTHER = 'Other'
-}
-
-export interface IUser extends Document {
-  email: string;
-  userName: string;
-  title: UserTitle;
-  fullName: string;
-  country: string;
-  dob: Date;
-  password?: string;
-  tmcScore: number;
-  arvScore: number;
-  combinedScore: number;
-  leaderboardPosition: number;
-  completedTargets: number;
-  successRate: number;
-  tierRanK: number;
-  phoneNumber?: string;
-  gender: Gender;
-  comparePassword(candidatePassword: string): Promise<boolean>;
-}
 
 // Mongoose Schema
-const userSchema = new Schema<IUser>(
+const userSchema = new Schema(
   {
     email: {
       type: String,
@@ -51,7 +19,6 @@ const userSchema = new Schema<IUser>(
     },
     title: {
       type: String,
-      enum: Object.values(UserTitle),
       required: true
     },
     fullName: {
@@ -82,9 +49,6 @@ const userSchema = new Schema<IUser>(
     },
     combinedScore: {
       type: Number,
-      default: function(this: IUser) {
-        return this.tmcScore + this.arvScore;
-      }
     },
     leaderboardPosition: {
       type: Number,
@@ -102,13 +66,24 @@ const userSchema = new Schema<IUser>(
     },
     phoneNumber: {
       type: String,
-      match: [/^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/, 'Invalid phone number']
     },
     gender: {
       type: String,
-      enum: Object.values(Gender),
+      enum: ["male", "female"],
       required: true
     },
+    emailVerified: {
+        type: Boolean,
+        default: false,
+      },
+      otp: {
+        type: String,
+        required: false,
+      },
+      otpExpiration: {
+        type: Date,
+        required: false,
+      },
   },
   {
     timestamps: true
@@ -116,13 +91,13 @@ const userSchema = new Schema<IUser>(
 );
 
 // Password comparison method (bcrypt)
-userSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
+userSchema.methods.comparePassword = async function(password){
   if (!this.password) {
     throw new Error("Password not set for this user");
   }
-  const isMatch = await bcrypt.compare(candidatePassword, this.password);
+  const isMatch = await bcrypt.compare(password, this.password);
   return isMatch;
 };
 
 
-export const User: Model<IUser> = model<IUser>('User', userSchema);
+export const User = mongoose.model('User', userSchema);
