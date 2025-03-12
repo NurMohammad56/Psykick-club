@@ -1,9 +1,8 @@
-import { Request, Response } from "express";
-import { User } from "../model/user.model";
+import { User } from "../model/user.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
-export const registerUser = async (req: Request, res: Response): Promise<void> => {
+export const registerUser = async (req, res)=> {
     try {
         const { email, userName, fullName, country, dob, password} = req.body;
 
@@ -30,13 +29,7 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
             dob,
             password: hashedPassword,
         });
-
-        // Generate JWT token
-        if (!process.env.JWT_SECRET_KEY) {
-            console.error("JWT_SECRET_KEY is not set in environment variables.");
-            return res.status(500).json({ status: false, message: "Internal server error." });
-        }
-
+        
         // Generate JWT token
         const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: "2h" });
 
