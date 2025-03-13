@@ -3,7 +3,7 @@ import { getUserProfile, updateUserPassword, updateUserProfile } from "../contro
 
 const router = express.Router();
 
-router.get("/:id", getUserProfile)
+router.get("/", getUserProfile)
 router.put("/", updateUserProfile)
 router.put("/password", updateUserPassword)
 

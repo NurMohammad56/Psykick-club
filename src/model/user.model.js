@@ -1,5 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken"
 
 const userSchema = new Schema(
   {
@@ -15,12 +16,15 @@ const userSchema = new Schema(
       unique: true,
       trim: true,
     },
-    title: {
-      type: String,
-    },
     fullName: {
       type: String,
       required: true,
+    },
+    phone: {
+      type: String,
+    },
+    title: {
+      type: String,
     },
     country: {
       type: String,
@@ -118,7 +122,7 @@ userSchema.methods.isPasswordValid = function (password) {
     throw new Error("Password or hashed password is missing");
   }
 
-  return bcrypt.compare(this.password, password);
+  return bcrypt.compare(password, this.password);
 };
 
 // Generate ACCESS_TOKEN
