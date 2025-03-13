@@ -1,5 +1,5 @@
 import express from "express";
-import { registerUser, loginUser, logoutUser, refreshAccessToken } from "../controller/user.controller.js";
+import { registerUser, loginUser, logoutUser, refreshAccessToken, forgotPassword, verifyOtp, resendOTP, resetPassword } from "../controller/user.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js"
 
 const router = express.Router();
@@ -9,6 +9,10 @@ router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.post("/logout", verifyJWT, logoutUser);
 router.post("/refresh-access-token", verifyJWT, refreshAccessToken);
+router.post("/forget-password", verifyJWT, forgotPassword);
+router.post("/verifyOTP", verifyJWT, verifyOtp);
+router.post("/resendOTP", verifyJWT, resendOTP);
+router.post("/reset-password", verifyJWT, resetPassword);
 
 
 
