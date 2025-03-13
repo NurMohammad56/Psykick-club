@@ -282,7 +282,7 @@ const resendOTP = async (req, res) => {
 
     // Update OTP in the database
     user.otp = newOtp;
-    user.otpExpires = otpExpires;
+    user.otpExpiration = otpExpires;
     await user.save();
 
     await sendMail(user.email, newOtp);
