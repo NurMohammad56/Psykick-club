@@ -20,6 +20,7 @@ app.get('/', (req, res) => {
 // Routes
 app.use('/api/v1/user', userRoute);
 
+
 // Start server
 app.listen(PORT, async () => {
   try {
