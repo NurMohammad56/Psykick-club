@@ -2,7 +2,6 @@ import express from 'express';
 import { dbconfig } from './src/db/index.js';
 import dotenv from 'dotenv';
 
-
 dotenv.config();
 
 const app = express();
@@ -11,18 +10,17 @@ const PORT = process.env.PORT || 5001;
 // Middleware
 app.use(express.json());
 
-
-
 app.get('/', (req, res) => {
   res.send('Welcome to the server');
 });
 
 // Import routes
 import userRoute from './src/route/user.route.js';
+import profileRoute from './src/route/profile.route.js';
 
 // set 
 app.use('/api/v1/user', userRoute);
-
+app.use('/api/v1/profile', profileRoute);
 
 // Start server
 app.listen(PORT, async () => {
