@@ -1,20 +1,25 @@
-import nodemailer from 'nodemailer';
+import nodemailer from "nodemailer";
 
-export const sendOTPEmail = async (email, otp) => {
-    const transporter = nodemailer.createTransport({
-        service: 'gmail', 
-        auth: {
-            user: process.env.EMAIL_USER, 
-            pass: process.env.EMAIL_PASS, 
-        },
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.NODEMAILER_EMAIL,
+    pass: process.env.NODEMAILER_EMAIL_PASS,
+  },
+});
+
+const sendMail = async (email, otp) => {
+  try {
+    await transporter.sendMail({
+      from: process.env.NODEMAILER_EMAIL,
+      to: email,
+      subject: "Password Reset OTP",
+      text: `Your OTP is: ${otp}`,
     });
-
-    const mailOptions = {
-        from: process.env.EMAIL_USER, 
-        to: email, 
-        subject: 'Your Email Verification OTP', 
-        text: `Your OTP is expire in 10 minutes.`, 
-    };
-
-    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error("Error sending email:", error);
+    throw new Error("Failed to send OTP email");
+  }
 };
+
+export { sendMail };
