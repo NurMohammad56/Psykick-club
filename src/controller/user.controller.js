@@ -1,4 +1,5 @@
 import { User } from "../model/user.model.js";
+import jwt from "jsonwebtoken";
 
 // Generate access and refresh tokens
 const generateAccessAndRefreshTokens = async (userId) => {
@@ -140,4 +141,51 @@ const logoutUser = async (req, res) => {
     });
   }
 };
-export { registerUser, generateAccessAndRefreshTokens, loginUser, logoutUser };
+
+// Refresh accessToken
+const refreshAccessToken = async (req, res) => {
+  const { refreshToken } = req.body;
+
+  if (!refreshToken) {
+    return res
+      .status(400)
+      .json({ status: false, message: "Refresh token not provided." });
+  }
+
+  try {
+    // Find user by refreshToken
+    const user = await User.findOne({ refreshToken });
+
+    if (!user) {
+      return res
+        .status(403)
+        .json({ status: false, message: "Invalid refresh token." });
+    }
+
+    // Verify refresh token
+    const decodedToken = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+
+    if (!decodedToken || decodedToken._id !== user._id.toString()) {
+      return res
+        .status(403)
+        .json({ status: false, message: "Invalid refresh token." });
+    }
+
+    // Generate new access and refresh tokens
+    const { accessToken, newRefreshToken } = await generateAccessAndRefreshTokens(user._id);
+
+    // Set access token in response header
+    res.setHeader("Authorization", `Bearer ${accessToken}`);
+
+    return res.status(200).json({
+      status: true,
+      message: "Access token refreshed successfully",
+      data: accessToken ,
+    });
+  } catch (error) {
+    console.error("Error in refresh access token:", error);
+    return res.status(500).json({ status: false, message: error.message });
+  }
+};
+
+export { registerUser, generateAccessAndRefreshTokens, loginUser, logoutUser, refreshAccessToken };
