@@ -16,12 +16,15 @@ const userSchema = new Schema(
       unique: true,
       trim: true,
     },
-    title: {
-      type: String,
-    },
     fullName: {
       type: String,
       required: true,
+    },
+    phone: {
+      type: String,
+    },
+    title: {
+      type: String,
     },
     country: {
       type: String,
@@ -35,8 +38,8 @@ const userSchema = new Schema(
       type: String,
     },
     tierRank: {
-      type: Number,
-      default: 0,
+      type: String,
+      enum: ["novice seeker", "silver", "gold", "platinum"],
     },
     point: {
       type: Number,
@@ -114,7 +117,7 @@ userSchema.pre("save", async function (next) {
 });
 
 // Password comparison method (bcrypt)
-userSchema.methods.isPasswordValid = function (password) {  
+userSchema.methods.isPasswordValid = function (password) {
   if (!password || !this.password) {
     throw new Error("Password or hashed password is missing");
   }
