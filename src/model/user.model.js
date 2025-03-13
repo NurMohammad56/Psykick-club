@@ -17,7 +17,6 @@ const userSchema = new Schema(
     },
     title: {
       type: String,
-      required: true,
     },
     fullName: {
       type: String,
@@ -78,7 +77,6 @@ const userSchema = new Schema(
     gender: {
       type: String,
       enum: ["male", "female"],
-      required: true,
     },
     emailVerified: {
       type: Boolean,
@@ -120,7 +118,7 @@ userSchema.methods.isPasswordValid = function (password) {
     throw new Error("Password or hashed password is missing");
   }
 
-  return bcrypt.compare(password, this.password);
+  return bcrypt.compare(this.password, password);
 };
 
 // Generate ACCESS_TOKEN

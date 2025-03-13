@@ -1,7 +1,7 @@
 import express from 'express';
 import { dbconfig } from './src/db/index.js';
 import dotenv from 'dotenv';
-import userRoute from './src/route/user.route.js';
+
 
 dotenv.config();
 
@@ -17,7 +17,10 @@ app.get('/', (req, res) => {
   res.send('Welcome to the server');
 });
 
-// Routes
+// Import routes
+import userRoute from './src/route/user.route.js';
+
+// set 
 app.use('/api/v1/user', userRoute);
 
 
