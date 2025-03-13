@@ -2,14 +2,17 @@ import { User } from "../model/user.model.js";
 
 // Generate access and refresh tokens
 const generateAccessAndRefreshTokens = async (userId) => {
-  const user = await User.findById(userId);
-  const accessToken = await user.generateAccessToken();
-  const refreshToken = await user.generateRefreshToken();
+  try {
+    const user = await User.findById(userId);
+    const accessToken = await user.generateAccessToken();
+    const refreshToken = await user.generateRefreshToken();
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
 
-  user.refreshToken = refreshToken;
-  await user.save({ validateBeforeSave: false });
-
-  return { accessToken, refreshToken };
+    return { accessToken, refreshToken };
+  } catch (error) {
+    console.log("Error generating access and refresh tokens", error.message);
+  }
 };
 // User register
 const registerUser = async (req, res) => {
@@ -59,4 +62,55 @@ const registerUser = async (req, res) => {
   }
 };
 
-export { registerUser, generateAccessAndRefreshTokens };
+// Login user
+const loginUser = async (req, res) => {
+  // get user details
+  const { email, password } = req.body;
+
+  // check email is provided or not
+  if (!email) {
+    return res
+      .status(400)
+      .json({ status: false, message: "Please provide email" });
+  }
+
+  // check if user exist or not with email
+  const user = await User.findOne({
+    $or: [{ email }],
+  });
+
+  // if user not found then throw error
+  if (!user) {
+    return res.status(404).json({
+      status: false,
+      message: "User not found with provided email",
+    });
+  }
+
+  // compare the password
+  const isPasswordCorrect = await user.isPasswordValid(password);
+  if (!isPasswordCorrect) {
+    return res.status(400).json({
+      status: false,
+      message: "Incorrect password",
+    });
+  }
+
+  // implement access and refresh token
+  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
+    user._id
+  );
+
+  // remove password and refreshToken filed from response
+  const loggedUser = await User.findById(user._id).select("-password -refreshToken");
+
+  res.setHeader("Authorization", `Bearer ${accessToken}`);
+
+  return res.status(200).json({
+    status: true,
+    message: "User logged in successfully",
+    data: loggedUser,
+  });
+};
+
+export { registerUser, generateAccessAndRefreshTokens, loginUser };
