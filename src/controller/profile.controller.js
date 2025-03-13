@@ -1,13 +1,18 @@
 import { User } from "../model/user.model.js"
 
-
 export const getUserProfile = async (req, res) => {
 
     const { id } = req.params
 
     try {
 
-        const user = await User.findById(id).select("-username -phone -title -country -dob -password -point -tmcScore -arvScore -combinedScore -leaderboardPosition -emailVerified")
+        const user = (
+            await User.findById(id)
+                .select("-userName -phone -title -country -dob -password -point -tmcScore -arvScore -combinedScore -leaderboardPosition -emailVerified -role -gender -refreshToken -otpExpiration -createdAt -updatedAt -__v"))
+
+        if (!user) {
+            return res.status(404).json({ status: false, message: "User not found" });
+        }
 
         return res.status(200).json({
             status: true,
@@ -29,11 +34,13 @@ export const getUserProfile = async (req, res) => {
 export const updateUserProfile = async (req, res) => {
 
     const { id } = req.params
-    const { email, fullName, userName, phone, country, dob, gender } = req.body
+    const { fullName, phone, country, dob, gender } = req.body
 
     try {
 
-        const updatedUser = await User.findByIdAndUpdate(id, { email, fullName, userName, phone, country, dob, gender }, { new: true })
+        const updatedUser = (
+            await User.findByIdAndUpdate(id, { fullName, phone, country, dob, gender }, { new: true })
+                .select("-title -password -tierRank -point -tmcScore -arvScore -combinedScore -leaderboardPosition -completedTargets -successRate -emailVerified -role -refreshToken -otpExpiration -createdAt -updatedAt -__v"))
 
         return res.status(200).json({
             status: true,
@@ -61,9 +68,18 @@ export const updateUserPassword = async (req, res) => {
 
         const user = await User.findById(id)
 
+        if (!user) {
+            return res.status(404).json({ status: false, message: "User not found" })
+        }
+
         user.password = newPassword
 
         await user.save({ validateBeforeSave: false })
+
+        return res.status(200).json({
+            status: true,
+            message: "Password updated successfully"
+        })
     }
 
     catch (error) {
