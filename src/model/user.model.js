@@ -34,8 +34,8 @@ const userSchema = new Schema(
       type: String,
     },
     tierRank: {
-      type: Number,
-      default: 0,
+      type: String,
+      enum: ["novice seeker", "silver", "gold", "platinum"],
     },
     point: {
       type: Number,
