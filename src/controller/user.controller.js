@@ -102,7 +102,9 @@ const loginUser = async (req, res) => {
   );
 
   // remove password and refreshToken filed from response
-  const loggedUser = await User.findById(user._id).select("-password -refreshToken");
+  const loggedUser = await User.findById(user._id).select(
+    "-password -refreshToken"
+  );
 
   res.setHeader("Authorization", `Bearer ${accessToken}`);
 
@@ -113,4 +115,29 @@ const loginUser = async (req, res) => {
   });
 };
 
-export { registerUser, generateAccessAndRefreshTokens, loginUser };
+// logout user
+const logoutUser = async (req, res) => {
+  try {
+    const user = req.user;
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ status: false, message: "User not found." });
+    }
+
+    // Remove refreshToken from the database
+    await User.findByIdAndUpdate(user._id, { refreshToken: null });
+
+    return res
+      .status(200)
+      .json({ status: true, message: "Logged out successfully" });
+  } catch (error) {
+    console.error("Error while logout: ", error);
+    return res.status(500).json({
+      status: false,
+      message: error.message,
+    });
+  }
+};
+export { registerUser, generateAccessAndRefreshTokens, loginUser, logoutUser };
