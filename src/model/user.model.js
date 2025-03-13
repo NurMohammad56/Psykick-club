@@ -95,9 +95,19 @@ const userSchema = new Schema(
       type: Date,
       required: false,
     },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true
+    },
+    facebookId: {
+      type: String,
+      unique: true,
+      sparse: true
+    },
     role: {
       type: String,
-      enum: ["user", "admin"],
+      enum: ["admin"],
       default: "user",
     },
     refreshToken: {
