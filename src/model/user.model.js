@@ -1,71 +1,76 @@
-import mongoose, { Schema } from 'mongoose';
+import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcrypt";
 
-
-// Mongoose Schema
 const userSchema = new Schema(
   {
     email: {
       type: String,
       required: true,
       unique: true,
-      match: [/\S+@\S+\.\S+/, 'Invalid email format']
+      match: [/\S+@\S+\.\S+/, "Invalid email format"],
     },
     userName: {
       type: String,
       required: true,
       unique: true,
-      trim: true
+      trim: true,
     },
     title: {
       type: String,
-      required: true
+      required: true,
     },
     fullName: {
       type: String,
-      required: true
+      required: true,
     },
     country: {
       type: String,
-      required: true
+      required: true,
     },
     dob: {
       type: Date,
-      required: true
+      required: true,
     },
     password: {
       type: String,
     },
-    tierRanK: {
+    tierRank: {
       type: Number,
+      default: 0,
     },
-    point:{
+    point: {
       type: Number,
+      default: 0,
     },
     tmcScore: {
       type: Number,
-      default: 0
+      default: 0,
+      index: true,
     },
     arvScore: {
       type: Number,
-      default: 0
+      default: 0,
+      index: true,
     },
     combinedScore: {
       type: Number,
+      default: 0,
+      index: true,
     },
     leaderboardPosition: {
       type: Number,
-      default: 0
+      default: 0,
+      index: true,
     },
     completedTargets: {
       type: Number,
-      default: 0
+      default: 0,
     },
     successRate: {
       type: Number,
       default: 0,
       min: 0,
-      max: 100
+      max: 100,
     },
     phoneNumber: {
       type: String,
@@ -73,34 +78,75 @@ const userSchema = new Schema(
     gender: {
       type: String,
       enum: ["male", "female"],
-      required: true
+      required: true,
     },
     emailVerified: {
-        type: Boolean,
-        default: false,
-      },
-      otp: {
-        type: String,
-        required: false,
-      },
-      otpExpiration: {
-        type: Date,
-        required: false,
-      },
+      type: Boolean,
+      default: false,
+    },
+    otp: {
+      type: String,
+      required: false,
+    },
+    otpExpiration: {
+      type: Date,
+      required: false,
+    },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+    },
+    refreshToken: {
+      type: String,
+    },
   },
   {
-    timestamps: true
+    timestamps: true,
   }
 );
 
+// Hashing password
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  // const salt = await this.getSalt(10);
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
+
 // Password comparison method (bcrypt)
-userSchema.methods.comparePassword = async function(password){
-  if (!this.password) {
-    throw new Error("Password not set for this user");
+userSchema.methods.isPasswordValid = function (password) {
+  if (!password || !this.password) {
+    throw new Error("Password or hashed password is missing");
   }
-  const isMatch = await bcrypt.compare(password, this.password);
-  return isMatch;
+
+  return bcrypt.compare(password, this.password);
 };
 
+// Generate ACCESS_TOKEN
+userSchema.methods.generateAccessToken = function () {
+  return jwt.sign(
+    {
+      _id: this._id,
+    },
+    process.env.ACCESS_TOKEN_SECRET,
+    {
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
+    }
+  );
+};
 
-export const User = mongoose.model('User', userSchema);
+// Generate REFRESH_TOKEN
+userSchema.methods.generateRefreshToken = function () {
+  return jwt.sign(
+    {
+      _id: this._id,
+    },
+    process.env.REFRESH_TOKEN_SECRET,
+    {
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
+    }
+  );
+};
+
+export const User = mongoose.model("User", userSchema);
