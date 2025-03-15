@@ -230,7 +230,7 @@ const forgotPassword = async (req, res) => {
   }
 };
 
-// Vrify OTP
+// Verify OTP
 const verifyOtp = async (req, res) => {
   try {
     const { otp } = req.body;
