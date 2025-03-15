@@ -35,6 +35,6 @@ const arvTargetSchema = new Schema(
     },
   },
   { timestamps: true }
-);
+)
 
-export const TmcTarget = mongoose.model("TmcTarget", TmcTargetSchema);
+export const arvTarget = mongoose.model("arvTarget", arvTargetSchema);
