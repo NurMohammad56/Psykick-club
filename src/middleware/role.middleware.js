@@ -6,3 +6,4 @@ const isAdmin = (req, res, next) => {
     return res.status(403).json({ status: false, message: 'Access denied. Admins only' });
   };
   
+export { isAdmin };

@@ -77,7 +77,7 @@ const loginUser = async (req, res) => {
 
   // check if user exist or not with email
   const user = await User.findOne({
-    $or: [{ email }],
+    email, role: "user"
   });
 
   // if user not found then throw error

@@ -39,7 +39,7 @@ const userSchema = new Schema(
     },
     tierRank: {
       type: String,
-      enum: ["novice seeker", "silver", "gold", "platinum"],
+      enum: ["novice seeker", "initiate", "apprentice", "explorer", "visionary", "adept", "seer", "oracle", "master remote viewer", "ascending master"],
       default: "novice seeker",
     },
     point: {
@@ -107,7 +107,7 @@ const userSchema = new Schema(
     },
     role: {
       type: String,
-      enum: ["admin"],
+      enum: ["admin", "user"],
       default: "user",
     },
     refreshToken: {
