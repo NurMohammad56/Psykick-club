@@ -10,7 +10,7 @@ const userSchema = new Schema(
       unique: true,
       match: [/\S+@\S+\.\S+/, "Invalid email format"],
     },
-    userName: {
+    screenName: {
       type: String,
       required: true,
       unique: true,

@@ -8,7 +8,7 @@ export const getUserProfile = async (req, res) => {
 
         const user = (
             await User.findById(id)
-                .select("-userName -phone -title -country -dob -password -point -tmcScore -arvScore -combinedScore -leaderboardPosition -emailVerified -role -gender -refreshToken -otpExpiration -createdAt -updatedAt -__v"))
+                .select("-fullName -phone -title -country -dob -password -point -tmcScore -arvScore -combinedScore -leaderboardPosition -emailVerified -role -gender -refreshToken -otpExpiration -createdAt -updatedAt -__v"))
 
         if (!user) {
             return res.status(404).json({ status: false, message: "User not found" });
@@ -34,12 +34,18 @@ export const getUserProfile = async (req, res) => {
 export const updateUserProfile = async (req, res) => {
 
     const { id } = req.params
-    const { fullName, phone, country, dob, gender } = req.body
+    const { screenName, fullName, phone, country, dob, gender } = req.body
 
     try {
 
+        const user = await User.findOne({ screenName })
+
+        if (user && user._id.toString() !== id) {
+            return res.status(400).json({ status: false, message: "Screen name already exists" })
+        }
+
         const updatedUser = (
-            await User.findByIdAndUpdate(id, { fullName, phone, country, dob, gender }, { new: true })
+            await User.findByIdAndUpdate(id, { screenName, fullName, phone, country, dob, gender }, { new: true })
                 .select("-title -password -tierRank -point -tmcScore -arvScore -combinedScore -leaderboardPosition -completedTargets -successRate -emailVerified -role -refreshToken -otpExpiration -createdAt -updatedAt -__v"))
 
         return res.status(200).json({
