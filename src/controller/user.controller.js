@@ -20,10 +20,10 @@ const generateAccessAndRefreshTokens = async (userId) => {
 // User register
 const registerUser = async (req, res) => {
   try {
-    const { email, userName, fullName, country, dob, password } = req.body;
+    const { email, screenName, fullName, country, dob, password } = req.body;
 
     // Validate required fields
-    if (!email || !userName || !fullName || !country || !dob || !password) {
+    if (!email || !screenName || !fullName || !country || !dob || !password) {
       return res
         .status(500)
         .json({ status: false, message: "All fields are required." });
@@ -40,7 +40,7 @@ const registerUser = async (req, res) => {
     // Create user
     const user = await User.create({
       email,
-      userName,
+      screenName,
       fullName,
       country,
       dob,

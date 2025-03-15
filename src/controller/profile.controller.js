@@ -8,7 +8,7 @@ export const getUserProfile = async (req, res) => {
 
         const user = (
             await User.findById(id)
-                .select("-userName -phone -title -country -dob -password -point -tmcScore -arvScore -combinedScore -leaderboardPosition -emailVerified -role -gender -refreshToken -otpExpiration -createdAt -updatedAt -__v"))
+                .select("-fullName -phone -title -country -dob -password -point -tmcScore -arvScore -combinedScore -leaderboardPosition -emailVerified -role -gender -refreshToken -otpExpiration -createdAt -updatedAt -__v"))
 
         if (!user) {
             return res.status(404).json({ status: false, message: "User not found" });
