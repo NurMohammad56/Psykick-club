@@ -30,6 +30,9 @@ const arvTargetSchema = new Schema(
       type: String,
       required: true
     },
+    userSubmittedImage: {
+      type: String
+    },
     resultImage: {
       type: String
     },
