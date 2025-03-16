@@ -2,7 +2,8 @@ import express from "express";
 import {
   createCategory,
   categoryWiseImageUpload,
-  getCategoryImages
+  getCategoryImages,
+  getSubCategoryImages,
 } from "../controller/category.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { isAdmin } from "../middleware/role.middleware.js";
@@ -24,5 +25,12 @@ router.post(
 
 // Get Category Images Route
 router.get("/get-category-images/:categoryName", verifyJWT, getCategoryImages);
+
+// Get Sub-Category Images Route
+router.get(
+  "/get-subcategory-images/:categoryName/:subCategoryName",
+  verifyJWT,
+  getSubCategoryImages
+);
 
 export default router;
