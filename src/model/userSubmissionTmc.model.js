@@ -11,10 +11,6 @@ const UserSubmissionTmcSchema = new mongoose.Schema(
       ref: "TmcTarget",
       required: true,
     },
-    submittedDrawing: {
-      type: String,
-      required: true,
-    },
     selectedImages: [
       {
         type: Schema.Types.ObjectId,
