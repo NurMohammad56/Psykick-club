@@ -1,9 +1,9 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
-import { promises as fsPromises } from "fs"; 
+import { promises as fsPromises } from "fs";
 
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  cloud_name: process.env.CLOUDINARY_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
@@ -40,7 +40,10 @@ const uploadOnCloudinary = async (localFilePath) => {
         // Delete local file if Cloudinary upload fails
         await fsPromises.unlink(localFilePath);
       } catch (deleteError) {
-        console.error("Error deleting local file after failure:", deleteError.message);
+        console.error(
+          "Error deleting local file after failure:",
+          deleteError.message
+        );
       }
       return null;
     }
@@ -50,7 +53,10 @@ const uploadOnCloudinary = async (localFilePath) => {
       // Delete local file if upload fails
       await fsPromises.unlink(localFilePath);
     } catch (deleteError) {
-      console.error("Error deleting local file after upload failure:", deleteError.message);
+      console.error(
+        "Error deleting local file after upload failure:",
+        deleteError.message
+      );
     }
     return null;
   }
