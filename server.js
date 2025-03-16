@@ -19,12 +19,14 @@ import userRoute from './src/route/user.route.js';
 import profileRoute from './src/route/profile.route.js';
 import adminRoute from './src/route/admin.route.js'
 import categoryImageRoute from "./src/route/categoryImage.route.js"
+import ARVTargetRoute from "./src/route/ARVTarget.route.js"
 
 // set 
 app.use('/api/v1/user', userRoute);
 app.use('/api/v1/profile', profileRoute);
 app.use('/api/v1/admin', adminRoute);
 app.use('/api/v1/category', categoryImageRoute);
+app.use('/api/v1/ARVTarget', ARVTargetRoute);
 
 // Start server
 app.listen(PORT, async () => {
