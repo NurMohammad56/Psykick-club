@@ -21,6 +21,10 @@ const TmcTargetSchema = new Schema(
     ],
     outcomeTime: { type: Date, required: true },
     revealTime: { type: Date, required: true },
+    isCompleted: {
+      type: Boolean,
+      default: false
+    },
   },
   { timestamps: true }
 );
