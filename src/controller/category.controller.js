@@ -25,7 +25,7 @@ const createCategoryAndSubCategory = async (categoryName, subCategoryName) => {
   return category;
 };
 
-// create
+// create category from admin
 const createCategory = async (req, res) => {
   const { categoryName, subCategoryName } = req.body;
 
@@ -52,7 +52,7 @@ const createCategory = async (req, res) => {
   }
 };
 
-// category wise image upload
+// category wise image upload from admin
 const categoryWiseImageUpload = async (req, res) => { 
     try {
       const { categoryName, subCategoryName } = req.body;
@@ -92,6 +92,23 @@ const categoryWiseImageUpload = async (req, res) => {
       return res.status(500).json({status:false, message: error.message });
     }
   };
-  
 
-export { createCategory, categoryWiseImageUpload };
+// get category image for frontend
+const getCategoryImages = async (req, res) => {
+    try {
+        const { categoryName } = req.params;
+        const category = await CategoryImage.findOne({ categoryName });
+        if (!category) {
+            return res.status(404).json({status: false, message: 'Did not find category' });
+        }
+        return res.status(200).json({
+            status: true,
+            message: 'Category images fetched successfully',
+            data: category.subCategories,
+        });
+    } catch (error) {
+        return res.status(500).json({status: false, message: error.message });
+    }
+};
+
+export { createCategory, categoryWiseImageUpload, getCategoryImages };
