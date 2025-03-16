@@ -4,7 +4,6 @@ const categoryImageSchema = new Schema({
   categoryName: {
     type: String,
     required: true,
-    unique: true,
   },
   subCategories: [
     {
