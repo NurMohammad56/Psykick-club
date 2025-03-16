@@ -9,13 +9,17 @@ const TmcTargetSchema = new Schema(
     },
     targetImage: {
       type: Schema.Types.ObjectId,
-      ref: "TargetImage",
+      ref: "CategoryImage",
       required: true,
     },
     controlImages: [
-      { type: Schema.Types.ObjectId, ref: "ControlImage", required: true },
+      {
+        type: Schema.Types.ObjectId,
+        ref: "CategoryImage",
+        required: true,
+      },
     ],
-    expiration: { type: Date, required: true },
+    outcomeTime: { type: Date, required: true },
     revealTime: { type: Date, required: true },
   },
   { timestamps: true }
