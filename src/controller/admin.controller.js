@@ -1,7 +1,10 @@
+import mongoose from "mongoose";
 import { generateAccessAndRefreshTokens } from "../controller/user.controller.js";
 import { User } from "../model/user.model.js";
 import { sendMail } from "../utils/email.util.js";
 import { generateOTP } from "../utils/otp.util.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.util.js";
+import { deleteFromCloudinary } from "../utils/cloudinaryDestroy.util.js";
 
 // Admin login controller
 const adminLogin = async (req, res) => {
@@ -182,4 +185,86 @@ const resetPassword = async (req, res) => {
     return res.status(500).json({ status: false, message: error.message });
   }
 };
-export { adminLogin, forgotPassword, verifyOtp, resendOTP, resetPassword };
+
+const updateAdminProfile = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const adminId = req.user._id;
+    const { fullName, phoneNumber, country, city, streetAddress, about } =
+      req.body;
+
+    // Find admin and ensure they are authorized
+    const admin = await User.findOne({ _id: adminId, role: "admin" }).session(
+      session
+    );
+    if (!admin) {
+      await session.abortTransaction();
+      session.endSession();
+      return res
+        .status(403)
+        .json({ status: false, message: "Unauthorized access" });
+    }
+
+    // Update fields dynamically
+    const fieldsToUpdate = {
+      fullName,
+      phoneNumber,
+      country,
+      city,
+      streetAddress,
+      about,
+    };
+    for (const [key, value] of Object.entries(fieldsToUpdate)) {
+      if (value) admin[key] = value;
+    }
+
+    // Update avatar if a new image is uploaded
+    if (req.file) {
+      const cloudinaryUpload = await uploadOnCloudinary(req.file.buffer, {
+        resource_type: "auto",
+      });
+
+      // Delete old Cloudinary image if exists
+      if (admin.avatar) {
+        const publicId = admin.avatar.split("/").pop().split(".")[0];
+        await deleteFromCloudinary(publicId);
+      }
+
+      admin.avatar = cloudinaryUpload.secure_url;
+    }
+
+    // Save updated admin profile
+    const updatedProfile = await admin.save({ session });
+
+    // Commit transaction when all changes made
+    await session.commitTransaction();
+    session.endSession();
+
+    // Remove extra fields before returning
+    const profile = await User.findById(updatedProfile._id).select(
+      "-dob -password -tierRank -point -tmcScore -arvScore -combinedScore -leaderboardPosition -completedTargets -successRate -emailVerified -role -refreshToken"
+    );
+
+    return res.status(200).json({
+      status: true,
+      message: "Profile updated successfully",
+      updatedProfile: profile,
+    });
+  } catch (error) {
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
+    session.endSession();
+    next(error);
+  }
+};
+export {
+  adminLogin,
+  forgotPassword,
+  verifyOtp,
+  resendOTP,
+  resetPassword,
+  updateAdminProfile,
+};

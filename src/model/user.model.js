@@ -18,21 +18,33 @@ const userSchema = new Schema(
     },
     fullName: {
       type: String,
-      required: true,
-    },
-    phone: {
-      type: String,
     },
     title: {
       type: String,
+      default: "",
     },
     country: {
       type: String,
-      required: true,
+      default: "",
+    },
+    avatar: {
+      type: String,
+      default: "",
+    },
+    city: {
+      type: String,
+      default: "",
+    },
+    streetAddress: {
+      type: String,
+      default: "",
+    },
+    about: {
+      type: String,
+      default: "",
     },
     dob: {
       type: Date,
-      required: true,
     },
     password: {
       type: String,
@@ -89,11 +101,9 @@ const userSchema = new Schema(
     },
     otp: {
       type: String,
-      required: false,
     },
     otpExpiration: {
       type: Date,
-      required: false,
     },
     googleId: {
       type: String,
@@ -101,7 +111,7 @@ const userSchema = new Schema(
       sparse: true
     },
     facebookId: {
-      type: String,
+      type: String,   
       unique: true,
       sparse: true
     },
