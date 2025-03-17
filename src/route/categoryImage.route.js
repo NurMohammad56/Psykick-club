@@ -20,7 +20,7 @@ router.post(
   upload.single("image"),
   verifyJWT,
   isAdmin,
-  categoryWiseImageUpload
+  categoryWiseImageUpload,
 );
 
 // Get Category Images Route
