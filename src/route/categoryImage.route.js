@@ -4,6 +4,8 @@ import {
   categoryWiseImageUpload,
   getCategoryImages,
   getSubCategoryImages,
+  getAllCategories,
+  updateCategoryById
 } from "../controller/category.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { isAdmin } from "../middleware/role.middleware.js";
@@ -11,10 +13,10 @@ import upload from "../middleware/multer.middleware.js";
 
 const router = express.Router();
 
-// Create Category Route
+// Create Category Route from admin
 router.post("/create", verifyJWT, isAdmin, createCategory);
 
-// Upload Category Image Route
+// Upload Category Image from admin
 router.post(
   "/upload-category-image",
   upload.single("image"),
@@ -22,11 +24,16 @@ router.post(
   isAdmin,
   categoryWiseImageUpload,
 );
+// Get all category from admin
+ router.get("/get-all-category-images", verifyJWT, isAdmin, getAllCategories);
+ 
+// Update Category By Id from admin
+router.patch("/update-category/:id", verifyJWT, isAdmin, upload.single("image"), updateCategoryById)
 
-// Get Category Images Route
+// Get Category Images Route for frontend
 router.get("/get-category-images/:categoryName", verifyJWT, getCategoryImages);
 
-// Get Sub-Category Images Route
+// Get Sub-Category Images Route fro frontend   
 router.get(
   "/get-subcategory-images/:categoryName/:subCategoryName",
   verifyJWT,
