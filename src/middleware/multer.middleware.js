@@ -1,14 +1,12 @@
 import multer from "multer";
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "./public/temp");
-  },
-  filename: function (req, file, cb) {
-    cb(null, file.originalname);
-  },
-});
+import fs from "fs";
+const tempDir = "public/temp";
+if (!fs.existsSync(tempDir)) {
+  fs.mkdirSync(tempDir, { recursive: true }); 
+}
 
-const upload = multer({ storage: storage });
+const storage = multer.memoryStorage(); 
+const upload = multer({ storage });
 
 export default upload;

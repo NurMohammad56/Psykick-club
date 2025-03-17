@@ -64,7 +64,7 @@ const categoryWiseImageUpload = async (req, res) => {
     }
 
     // Cloudinary upload
-    const clodinaryUpload = await uploadOnCloudinary(req.file.path, {
+    const clodinaryUpload = await uploadOnCloudinary(req.file.buffer, {
       resource_type: "auto",
     });
 
