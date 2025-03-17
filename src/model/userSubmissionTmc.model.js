@@ -1,32 +1,28 @@
 import mongoose, { Schema } from "mongoose";
-const UserSubmissionTmcSchema = new mongoose.Schema(
+
+const UserSubmissionTMCSchema = new mongoose.Schema(
   {
     user: {
       type: Schema.Types.ObjectId,
-      ref: "UserProfile",
-      required: true,
+      ref: "User"
     },
-    target: {
+    firstChoice: {
       type: Schema.Types.ObjectId,
-      ref: "TmcTarget",
-      required: true,
+      ref: "CategoryImage"
     },
-    selectedImages: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Image",
-        required: true,
-      },
-    ],
-    points: {
-      type: Number,
-      default: 0,
+    secondChoice: {
+      type: Schema.Types.ObjectId,
+      ref: "CategoryImage"
     },
+    TMCTarget: {
+      type: Schema.Types.ObjectId,
+      ref: "TMCTarget"
+    }
   },
   { timestamps: true }
 );
 
-export const UserSubmissionTmc = mongoose.model(
-  "UserSubmissionTmc",
-  UserSubmissionTmcSchema
+export const UserSubmissionTMC = mongoose.model(
+  "UserSubmissionTMC",
+  UserSubmissionTMCSchema
 );

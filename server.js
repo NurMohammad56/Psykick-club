@@ -1,6 +1,8 @@
 import express from 'express';
 import { dbconfig } from './src/db/index.js';
 import dotenv from 'dotenv';
+import errorHandler from './src/middleware/errorHandler.middleware.js'
+import { notFoundHandler } from './src/middleware/notFoundHandler.middleware.js';
 
 dotenv.config();
 
@@ -27,6 +29,12 @@ app.use('/api/v1/profile', profileRoute);
 app.use('/api/v1/admin', adminRoute);
 app.use('/api/v1/category', categoryImageRoute);
 app.use('/api/v1/ARVTarget', ARVTargetRoute);
+
+// not found route handler middleware
+app.use(notFoundHandler)
+
+//error handler middleware
+app.use(errorHandler);
 
 // Start server
 app.listen(PORT, async () => {
