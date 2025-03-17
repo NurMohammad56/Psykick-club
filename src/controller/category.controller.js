@@ -183,6 +183,19 @@ const updateCategoryById = async (req, res, next) => {
   }
 };
 
+// delete a category from admin
+const deleteCategoryById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const category = await CategoryImage.findByIdAndDelete(id);
+    if (!category) {
+      return res.status(404).json({ status: false, message: "Category not found" });
+    }
+    return res.status(200).json({ status: true, message: "Category deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
 
 // get category image for frontend
 const getCategoryImages = async (req, res) => {
@@ -239,4 +252,5 @@ export {
   getSubCategoryImages,
   getAllCategories,
   updateCategoryById,
+  deleteCategoryById
 };

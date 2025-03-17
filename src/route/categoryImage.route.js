@@ -5,7 +5,8 @@ import {
   getCategoryImages,
   getSubCategoryImages,
   getAllCategories,
-  updateCategoryById
+  updateCategoryById,
+  deleteCategoryById,
 } from "../controller/category.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { isAdmin } from "../middleware/role.middleware.js";
@@ -22,18 +23,27 @@ router.post(
   upload.single("image"),
   verifyJWT,
   isAdmin,
-  categoryWiseImageUpload,
+  categoryWiseImageUpload
 );
 // Get all category from admin
- router.get("/get-all-category-images", verifyJWT, isAdmin, getAllCategories);
- 
+router.get("/get-all-category-images", verifyJWT, isAdmin, getAllCategories);
+
 // Update Category By Id from admin
-router.patch("/update-category/:id", verifyJWT, isAdmin, upload.single("image"), updateCategoryById)
+router.patch(
+  "/update-category/:id",
+  verifyJWT,
+  isAdmin,
+  upload.single("image"),
+  updateCategoryById
+);
+
+// Delete Category By Id from admin
+router.delete("/delete-category/:id", verifyJWT, isAdmin, deleteCategoryById);
 
 // Get Category Images Route for frontend
 router.get("/get-category-images/:categoryName", verifyJWT, getCategoryImages);
 
-// Get Sub-Category Images Route fro frontend   
+// Get Sub-Category Images Route fro frontend
 router.get(
   "/get-subcategory-images/:categoryName/:subCategoryName",
   verifyJWT,
