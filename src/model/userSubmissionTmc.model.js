@@ -2,19 +2,17 @@ import mongoose, { Schema } from "mongoose";
 
 const UserSubmissionTMCSchema = new mongoose.Schema(
   {
-    user: {
+    userId: {
       type: Schema.Types.ObjectId,
       ref: "User"
     },
-    firstChoice: {
-      type: Schema.Types.ObjectId,
-      ref: "CategoryImage"
+    firstChoiceImage: {
+      type: String
     },
-    secondChoice: {
-      type: Schema.Types.ObjectId,
-      ref: "CategoryImage"
+    secondChoiceImage: {
+      type: String
     },
-    TMCTarget: {
+    TMCTargetId: {
       type: Schema.Types.ObjectId,
       ref: "TMCTarget"
     }
