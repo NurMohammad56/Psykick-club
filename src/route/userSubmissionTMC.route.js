@@ -1,7 +1,6 @@
 import express from "express";
 import { verifyJWT } from "../middleware/auth.middleware.js";
-import { isAdmin } from '../middleware/role.middleware.js';
-import { get } from "mongoose";
+import { createUserSubmissionTMC, getUserSubmissionTMCAndCalculatePoints } from "../controller/userSubmissionTMC.controller.js";
 
 const router = express.Router();
 

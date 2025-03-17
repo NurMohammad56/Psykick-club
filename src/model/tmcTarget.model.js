@@ -7,13 +7,11 @@ const TMCTargetSchema = new Schema(
       unique: true
     },
     targetImage: {
-      type: Schema.Types.ObjectId,
-      ref: "CategoryImage"
+      type: String
     },
     controlImages: [
       {
-        type: Schema.Types.ObjectId,
-        ref: "CategoryImage"
+        type: String
       },
     ],
     revealTime: { type: Date },
