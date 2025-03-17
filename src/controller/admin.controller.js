@@ -260,6 +260,55 @@ const updateAdminProfile = async (req, res, next) => {
     next(error);
   }
 };
+
+const changePasswordAdmin = async (req, res) => {
+  try {
+    const { currentPassword, newPassword, confirmNewPassword } = req.body;
+
+    const adminId = req.user._id;
+    const admin = await User.findById(adminId);
+
+    if (!admin) {
+      return res.status(404).json({
+        status: false,
+        message: "Admin not found",
+      });
+    }
+
+    // check the pass
+    const isMatch = await admin.isPasswordValid(currentPassword);
+
+    if (!isMatch) {
+      return res.status(400).json({
+        status: false,
+        message: "Incorrect current password",
+      });
+    }
+
+    // check if new password and confirm new password match
+    if (newPassword !== confirmNewPassword) {
+      return res.status(400).json({
+        status: false,
+        message: "New password and confirm new password does not match",
+      });
+    }
+
+    // update the password
+    admin.password = newPassword;
+    await admin.save();
+
+    return res.status(200).json({
+      status: true,
+      message: "Password changed successfully",
+    });
+  } catch (error) {
+    console.log("Error while changing password: ", error);
+    return res.status(500).json({
+      status: false,
+      message: error.message,
+    });
+  }
+};
 export {
   adminLogin,
   forgotPassword,
@@ -267,4 +316,5 @@ export {
   resendOTP,
   resetPassword,
   updateAdminProfile,
+  changePasswordAdmin
 };
