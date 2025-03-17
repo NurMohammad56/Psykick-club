@@ -1,4 +1,4 @@
-export const addToQueue = async (model, res) => {
+export const addToQueue = async (id, model, res) => {
 
     try {
         const entity = await model.findByIdAndUpdate(id, { isQueued: true }, { new: true })

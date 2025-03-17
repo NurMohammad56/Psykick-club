@@ -1,6 +1,6 @@
 import { ARVTarget } from "../model/ARVTarget.model.js";
 
-export const createARVTarget = async (req, res) => {
+export const createARVTarget = async (req, res, next) => {
 
     const { code, eventName, eventDescription, revealTime, outcomeTime, image1, image2, image3, controlImage } = req.body;
 
@@ -17,12 +17,11 @@ export const createARVTarget = async (req, res) => {
     }
 
     catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: error.message });
+        next(error);
     }
 }
 
-export const getARVTarget = async (req, res) => {
+export const getARVTarget = async (req, res, next) => {
 
     const { id } = req.params;
 
@@ -38,12 +37,11 @@ export const getARVTarget = async (req, res) => {
     }
 
     catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: error.message });
+        next(error);
     }
 }
 
-export const getAllARVTargets = async (req, res) => {
+export const getAllARVTargets = async (_, res, next) => {
 
     try {
         const ARVTargets = await ARVTarget.find().select("-__v");
@@ -51,12 +49,11 @@ export const getAllARVTargets = async (req, res) => {
     }
 
     catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: error.message });
+        next(error);
     }
 }
 
-export const getAllQueuedARVTargets = async (req, res) => {
+export const getAllQueuedARVTargets = async (_, res) => {
 
     try {
         const ARVTargets = await ARVTarget.find({ isQueued: true }).select("-__v");
@@ -64,12 +61,11 @@ export const getAllQueuedARVTargets = async (req, res) => {
     }
 
     catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: error.message });
+        next(error);
     }
 }
 
-export const updateUserSubmission = async (req, res) => {
+export const updateUserSubmission = async (req, res, next) => {
 
     const { id } = req.params;
     const { userSubmittedImage } = req.body;
@@ -88,12 +84,11 @@ export const updateUserSubmission = async (req, res) => {
     }
 
     catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: error.message });
+        next(error);
     }
 }
 
-export const updateResultImage = async (req, res) => {
+export const updateResultImage = async (req, res, next) => {
 
     const { id } = req.params;
     const { resultImage } = req.body;
@@ -104,12 +99,11 @@ export const updateResultImage = async (req, res) => {
     }
 
     catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: error.message });
+        next(error);
     }
 }
 
-export const addToQueue = async (req, res) => {
+export const addToQueue = async (req, res, next) => {
 
     const { id } = req.params;
 
@@ -119,7 +113,6 @@ export const addToQueue = async (req, res) => {
     }
 
     catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: error.message });
+        next(error);
     }
 }
