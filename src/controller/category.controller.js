@@ -1,5 +1,6 @@
 import { CategoryImage } from "../model/categoryImage.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.util.js";
+import { deleteFromCloudinary } from "../utils/cloudinaryDestroy.util.js";
 
 // helper
 const createCategoryAndSubCategory = async (categoryName, subCategoryName) => {
@@ -105,6 +106,84 @@ const categoryWiseImageUpload = async (req, res) => {
   }
 };
 
+// get all categories from admin
+const getAllCategories = async (_, res) => {
+  try {
+    const categories = await CategoryImage.find({});
+    if (!categories.length) {
+      return res
+        .status(404)
+        .json({ status: false, message: "No categories found" });
+    }
+    return res.status(200).json({
+      status: true,
+      message: "All categories fetched successfully",
+      data: categories,
+    });
+  } catch (error) {
+    console.log("Error getting categories image:", error);
+    return res.status(500).json({ status: false, message: error.message });
+  }
+};
+
+// update a category form admin
+const updateCategoryById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { categoryName, subCategoryName } = req.body;
+
+    // Find the category by ID
+    let category = await CategoryImage.findById(id);
+    if (!category) {
+      return res.status(404).json({ status: false, message: "Category not found" });
+    }
+
+    // Update category name if provided
+    if (categoryName) {
+      category.categoryName = categoryName;
+    }
+
+    // Find the first subcategory
+    let subCategory = category.subCategories[0];
+    if (!subCategory) {
+      return res.status(404).json({ status: false, message: "Subcategory not found" });
+    }
+
+    // Update subcategory name if provided
+    if (subCategoryName) {
+      subCategory.name = subCategoryName;
+    }
+
+    // Upload new image if provided
+    if (req.file) {
+      // Upload to Cloudinary
+      const cloudinaryUpload = await uploadOnCloudinary(req.file.buffer, { resource_type: "auto" });
+
+      // Delete old Cloudinary image if exists
+      if (subCategory.images.length > 0) {
+        const oldImageUrl = subCategory.images[0].imageUrl;
+        const publicId = oldImageUrl.split("/").pop().split(".")[0];
+        await deleteFromCloudinary(publicId);
+      }
+
+      // Update subcategory image
+      subCategory.images = [{ imageUrl: cloudinaryUpload.secure_url }];
+    }
+
+    // Save updated category
+    await category.save();
+
+    return res.status(200).json({
+      status: true,
+      message: "Update successful",
+      data: category,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
 // get category image for frontend
 const getCategoryImages = async (req, res) => {
   try {
@@ -143,16 +222,21 @@ const getSubCategoryImages = async (req, res) => {
         .status(404)
         .json({ status: false, message: "Did not find sub category" });
     }
-    return res
-      .status(200)
-      .json({
-        status: false,
-        message: "Sub category image fetch successfully",
-        data: subCategory.images,
-      });
+    return res.status(200).json({
+      status: false,
+      message: "Sub category image fetch successfully",
+      data: subCategory.images,
+    });
   } catch (error) {
     return res.status(500).json({ status: false, message: error.message });
   }
 };
 
-export { createCategory, categoryWiseImageUpload, getCategoryImages, getSubCategoryImages };
+export {
+  createCategory,
+  categoryWiseImageUpload,
+  getCategoryImages,
+  getSubCategoryImages,
+  getAllCategories,
+  updateCategoryById,
+};
