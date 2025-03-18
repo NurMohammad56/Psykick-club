@@ -26,4 +26,7 @@ router.delete(
   deletePrivacyPolicy
 );
 
+// Get Privacy Policy Route from user
+router.get("/get-privacy-policies", verifyJWT, getPrivacyPolicies);
+
 export default router;
