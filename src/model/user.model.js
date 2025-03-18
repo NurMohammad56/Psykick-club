@@ -106,7 +106,7 @@ const userSchema = new Schema(
       max: 1,
     },
     timeLeft: {
-      type: String,
+      type: Date,
     },
     phoneNumber: {
       type: String,
@@ -149,10 +149,10 @@ const userSchema = new Schema(
           type: Date,
           default: Date.now,
         },
-        sessionEndTime: Date,
+        sessionEndTime: { type: Date },
       },
     ],
-    lastActive: Date,
+    lastActive: { type: Date },
   },
   {
     timestamps: true,

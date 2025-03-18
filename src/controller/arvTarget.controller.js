@@ -23,8 +23,18 @@ export const createARVTarget = async (req, res, next) => {
 
         // } while (arvCodes || tmcCodes); // Retry if any result is found
 
-        if (new Date(revealTime) > new Date(outcomeTime)) {
-            return res.status(400).json({ message: "Reveal time cannot be greater than Outcome time." })
+        if (new Date(revealTime) < new Date(gameTime)) {
+            return res.status(400).json({
+                message: "Reveal time should be in the future or equal to game time"
+            });
+        }
+
+        else if (new Date(revealTime) > new Date(outcomeTime)) {
+            return res.status(400).json({ message: "Outcome time should be in the future or equal to reveal time" })
+        }
+
+        else if (new Date(outcomeTime) > new Date(bufferTime)) {
+            return res.status(400).json({ message: "Buffer time should be in the future or equal to outcome time" })
         }
 
         const code = generateCode();
@@ -126,7 +136,7 @@ export const updateResultImage = async (req, res, next) => {
     }
 }
 
-export const updateARVTargetAddToQueue = async (req, res, next) => {
+export const updateAddToQueue = async (req, res, next) => {
 
     const { id } = req.params;
 
@@ -139,7 +149,7 @@ export const updateARVTargetAddToQueue = async (req, res, next) => {
     }
 }
 
-export const updateARVTargetRemoveFromQueue = async (req, res, next) => {
+export const updateRemoveFromQueue = async (req, res, next) => {
 
     const { id } = req.params;
 
@@ -158,6 +168,13 @@ export const updateGameTime = async (req, res, next) => {
     const { gameTime } = req.body;
 
     try {
+
+        if (new Date(revealTime) < new Date(gameTime)) {
+            return res.status(400).json({
+                message: "Reveal time should be in the future or equal to game time"
+            });
+        }
+        
         await ARVTarget.findByIdAndUpdate(id, { gameTime });
         return res.status(200).json({ message: "Game time updated successfully" });
     }
