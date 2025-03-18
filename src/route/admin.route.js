@@ -1,5 +1,5 @@
 import express from 'express';
-import {adminLogin, forgotPassword, verifyOtp, resendOTP, resetPassword, updateAdminProfile} from "../controller/admin.controller.js"
+import {adminLogin, forgotPassword, verifyOtp, resendOTP, resetPassword, updateAdminProfile, changePasswordAdmin} from "../controller/admin.controller.js"
 import {isAdmin} from "../middleware/role.middleware.js"
 import {verifyJWT} from "../middleware/auth.middleware.js";
 import upload from "../middleware/multer.middleware.js"
@@ -14,6 +14,9 @@ router.post("/reset-password", verifyJWT, resetPassword);
 
 // Admin Profile Route
 router.patch("/profile", verifyJWT, isAdmin, upload.single("avatar"), updateAdminProfile);
+
+// Change Password Route
+router.patch("/change-password", verifyJWT, isAdmin, changePasswordAdmin);
 
 
 
