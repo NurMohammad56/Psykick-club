@@ -32,6 +32,6 @@ router.delete(
 );
 
 // Get Terms Route from user
-router.get("/get-terms-and-condition", verifyJWT, getTermsCondition);
+router.get("/terms-condition-user", verifyJWT, getTermsCondition);
 
 export default router;
