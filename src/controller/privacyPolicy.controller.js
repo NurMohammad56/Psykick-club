@@ -19,4 +19,14 @@ const createPrivacyPolicy = async (req, res, next) => {
   }
 };
 
-export { createPrivacyPolicy}
+// Get privacy policies from admin
+const getPrivacyPolicies = async (_, res, next) => {
+  try {
+    const privacyPolicies = await PrivacyPolicy.find({});
+    return res.status(200).json({ status: true, message: "Privacy policy fetched successfully", data: privacyPolicies });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export { createPrivacyPolicy, getPrivacyPolicies}
