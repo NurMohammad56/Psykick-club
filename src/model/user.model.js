@@ -54,25 +54,21 @@ const userSchema = new Schema(
       enum: ["novice seeker", "initiate", "apprentice", "explorer", "visionary", "adept", "seer", "oracle", "master remote viewer", "ascending master"],
       default: "novice seeker",
     },
-    point: {
-      type: Number,
-      default: 0,
-    },
-    tmcScore: {
+    totalPoints: {
       type: Number,
       default: 0,
       index: true,
     },
-    arvScore: {
-      type: Number,
-      default: 0,
-      index: true,
-    },
-    combinedScore: {
-      type: Number,
-      default: 0,
-      index: true,
-    },
+    tmcScore: [
+      {
+        type: Number
+      },
+    ],
+    arvScore: [
+      {
+        type: Number
+      }
+    ],
     leaderboardPosition: {
       type: Number,
       default: 0,
@@ -82,11 +78,24 @@ const userSchema = new Schema(
       type: Number,
       default: 0,
     },
+    targetsLeft: {
+      type: Number,
+      default: 0,
+    },
     successRate: {
       type: Number,
       default: 0,
       min: 0,
       max: 100,
+    },
+    pValue: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 1,
+    },
+    timeLeft: {
+      type: String,
     },
     phoneNumber: {
       type: String,
@@ -111,7 +120,7 @@ const userSchema = new Schema(
       sparse: true
     },
     facebookId: {
-      type: String,   
+      type: String,
       unique: true,
       sparse: true
     },
