@@ -2,18 +2,20 @@ import mongoose, { Schema } from "mongoose";
 
 const TMCTargetSchema = new Schema(
   {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User"
+    },
     code: {
       type: String,
       unique: true
     },
     targetImage: {
-      type: Schema.Types.ObjectId,
-      ref: "CategoryImage"
+      type: String
     },
     controlImages: [
       {
-        type: Schema.Types.ObjectId,
-        ref: "CategoryImage"
+        type: String
       },
     ],
     revealTime: { type: Date },

@@ -23,6 +23,8 @@ import adminRoute from './src/route/admin.route.js'
 import categoryImageRoute from "./src/route/categoryImage.route.js"
 import ARVTargetRoute from "./src/route/ARVTarget.route.js"
 import privacyPolicyRoute from './src/route/privacyPolicy.route.js';
+import TMCTargetRoute from "./src/route/TMCTarget.route.js"
+import userSubmissionTMCRoute from "./src/route/userSubmissionTMC.route.js"
 
 // set 
 app.use('/api/v1/user', userRoute);
@@ -31,6 +33,9 @@ app.use('/api/v1/admin', adminRoute);
 app.use('/api/v1/category', categoryImageRoute);
 app.use('/api/v1/ARVTarget', ARVTargetRoute);
 app.use('/api/v1/privacy-policy', privacyPolicyRoute);
+app.use('/api/v1/TMCTarget', TMCTargetRoute);
+app.use('/api/v1/userSubmissionTMC', userSubmissionTMCRoute);
+
 
 // not found route handler middleware
 app.use(notFoundHandler)
