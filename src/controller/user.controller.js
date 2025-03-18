@@ -77,7 +77,8 @@ const loginUser = async (req, res) => {
 
   // check if user exist or not with email
   const user = await User.findOne({
-    email, role: "user"
+    email,
+    role: "user",
   });
 
   // if user not found then throw error
@@ -333,6 +334,55 @@ const resetPassword = async (req, res) => {
     return res.status(500).json({ status: false, message: error.message });
   }
 };
+
+// Start session
+const startSession = async (req, res, next) => {
+  const { userId } = req.body;
+  try {
+    await User.findByIdAndUpdate(userId, {
+      $push: {
+        sessions: { sessionStartTime: Date.now() },
+      },
+    });
+    return res.json({ status: true });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// End session
+const endSession = async (req, res, next) => {
+  const { userId } = req.body;
+  try {
+    await User.findByIdAndUpdate(
+      userId,
+      {
+        $set: {
+          "sessions.$[elem].sessionEndTime": Date.now(),
+        },
+      },
+      {
+        arrayFilters: [{ "elem.sessionEndTime": { $exists: false } }],
+      }
+    );
+    return res.json({ status: true });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Heartbeat request
+const sendHeartbeat = async (req, res, next) => {
+  const { userId } = req.body;
+  try {
+    await User.findByIdAndUpdate(userId, {
+      $set: { lastActive: Date.now() },
+    });
+    return res.json({ status: true });
+  } catch (error) {
+    next(error);
+  }
+};
 export {
   registerUser,
   generateAccessAndRefreshTokens,
@@ -342,5 +392,8 @@ export {
   forgotPassword,
   verifyOtp,
   resendOTP,
-  resetPassword
+  resetPassword,
+  startSession,
+  endSession,
+  sendHeartbeat,
 };
