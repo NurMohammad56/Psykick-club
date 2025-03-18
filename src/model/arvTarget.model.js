@@ -2,6 +2,12 @@ import mongoose, { Schema } from "mongoose";
 
 const ARVTargetSchema = new Schema(
   {
+    userId: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User"
+      }
+    ],
     code: {
       type: String,
       unique: true
@@ -17,6 +23,12 @@ const ARVTargetSchema = new Schema(
     },
     outcomeTime: {
       type: Date
+    },
+    bufferTime: {
+      type: Date
+    },
+    gameTime: {
+      type: Date,
     },
     image1: { url: { type: String, required: true }, description: { type: String, required: true } },
     image2: { url: { type: String, required: true }, description: { type: String, required: true } },

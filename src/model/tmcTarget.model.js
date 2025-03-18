@@ -2,10 +2,12 @@ import mongoose, { Schema } from "mongoose";
 
 const TMCTargetSchema = new Schema(
   {
-    userId: {
-      type: Schema.Types.ObjectId,
-      ref: "User"
-    },
+    userId: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User"
+      }
+    ],
     code: {
       type: String,
       unique: true
@@ -19,6 +21,12 @@ const TMCTargetSchema = new Schema(
       },
     ],
     revealTime: { type: Date },
+    bufferTime: {
+      type: Date
+    },
+    gameTime: {
+      type: Date,
+    },
     isActive: {
       type: Boolean,
       default: false
