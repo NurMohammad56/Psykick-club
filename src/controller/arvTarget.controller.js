@@ -23,17 +23,17 @@ export const createARVTarget = async (req, res, next) => {
 
         // } while (arvCodes || tmcCodes); // Retry if any result is found
 
-        if (new Date(revealTime) < new Date(gameTime)) {
+        if (new Date(revealTime).getTime() < new Date(gameTime).getTime()) {
             return res.status(400).json({
                 message: "Reveal time should be in the future or equal to game time"
             });
         }
 
-        else if (new Date(revealTime) > new Date(outcomeTime)) {
-            return res.status(400).json({ message: "Outcome time should be in the future or equal to reveal time" })
+        else if (new Date(revealTime).getTime() >= new Date(outcomeTime).getTime()) {
+            return res.status(400).json({ message: "Outcome time should be in the future of reveal time" })
         }
 
-        else if (new Date(outcomeTime) > new Date(bufferTime)) {
+        else if (new Date(outcomeTime).getTime() > new Date(bufferTime).getTime()) {
             return res.status(400).json({ message: "Buffer time should be in the future or equal to outcome time" })
         }
 
@@ -169,7 +169,7 @@ export const updateGameTime = async (req, res, next) => {
 
     try {
 
-        if (new Date(revealTime) < new Date(gameTime)) {
+        if (new Date(revealTime).getTime() < new Date(gameTime).getTime()) {
             return res.status(400).json({
                 message: "Reveal time should be in the future or equal to game time"
             });
@@ -190,6 +190,11 @@ export const updateBufferTime = async (req, res, next) => {
     const { bufferTime } = req.body;
 
     try {
+
+        if (new Date(outcomeTime).getTime() > new Date(bufferTime).getTime()) {
+            return res.status(400).json({ message: "Buffer time should be in the future or equal to outcome time" })
+        }
+
         await ARVTarget.findByIdAndUpdate(id, { bufferTime });
         return res.status(200).json({ message: "Buffer time updated successfully" });
     }
