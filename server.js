@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import errorHandler from './src/middleware/errorHandler.middleware.js'
 import { notFoundHandler } from './src/middleware/notFoundHandler.middleware.js';
 
+
 dotenv.config();
 
 const app = express();

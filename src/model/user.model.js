@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken"
+import jwt from "jsonwebtoken";
 
 const userSchema = new Schema(
   {
@@ -51,7 +51,18 @@ const userSchema = new Schema(
     },
     tierRank: {
       type: String,
-      enum: ["novice seeker", "initiate", "apprentice", "explorer", "visionary", "adept", "seer", "oracle", "master remote viewer", "ascending master"],
+      enum: [
+        "novice seeker",
+        "initiate",
+        "apprentice",
+        "explorer",
+        "visionary",
+        "adept",
+        "seer",
+        "oracle",
+        "master remote viewer",
+        "ascending master",
+      ],
       default: "novice seeker",
     },
     totalPoints: {
@@ -61,13 +72,13 @@ const userSchema = new Schema(
     },
     tmcScore: [
       {
-        type: Number
+        type: Number,
       },
     ],
     arvScore: [
       {
-        type: Number
-      }
+        type: Number,
+      },
     ],
     leaderboardPosition: {
       type: Number,
@@ -117,12 +128,12 @@ const userSchema = new Schema(
     googleId: {
       type: String,
       unique: true,
-      sparse: true
+      sparse: true,
     },
     facebookId: {
       type: String,
       unique: true,
-      sparse: true
+      sparse: true,
     },
     role: {
       type: String,
@@ -132,6 +143,16 @@ const userSchema = new Schema(
     refreshToken: {
       type: String,
     },
+    sessions: [
+      {
+        sessionStartTime: {
+          type: Date,
+          default: Date.now,
+        },
+        sessionEndTime: Date,
+      },
+    ],
+    lastActive: Date,
   },
   {
     timestamps: true,
