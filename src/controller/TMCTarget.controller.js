@@ -9,13 +9,13 @@ export const createTMCTarget = async (req, res, next) => {
 
     try {
 
-        if (new Date(revealTime) < new Date(gameTime)) {
+        if (new Date(revealTime).getTime() < new Date(gameTime).getTime()) {
             return res.status(400).json({
                 message: "Reveal time should be in the future or equal to game time"
             });
         }
 
-        else if (new Date(revealTime) > new Date(bufferTime)) {
+        else if (new Date(revealTime).getTime() > new Date(bufferTime).getTime()) {
             return res.status(400).json({
                 message: "Buffer time should be in the future or equal to reveal time"
             });
@@ -114,7 +114,7 @@ export const updateBufferTime = async (req, res, next) => {
 
         const { revealTime } = await TMCTarget.findById(id).select("revealTime")
 
-        if (new Date(revealTime) > new Date(bufferTime)) {
+        if (new Date(revealTime).getTime() > new Date(bufferTime).getTime()) {
             return res.status(400).json({
                 message: "Buffer time should be in the future or equal to reveal time"
             });
@@ -140,7 +140,7 @@ export const updateGameTime = async (req, res, next) => {
 
         const { revealTime } = await TMCTarget.findById(id).select("revealTime")
 
-        if (new Date(revealTime) < new Date(gameTime)) {
+        if (new Date(revealTime).getTime() < new Date(gameTime).getTime()) {
             return res.status(400).json({
                 message: "Reveal time should be in the future or equal to game time"
             });
