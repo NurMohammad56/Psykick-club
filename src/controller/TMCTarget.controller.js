@@ -8,6 +8,19 @@ export const createTMCTarget = async (req, res, next) => {
     const { targetImage, controlImages, revealTime, bufferTime, gameTime } = req.body;
 
     try {
+
+        if (new Date(revealTime) < new Date(gameTime)) {
+            return res.status(400).json({
+                message: "Reveal time should be in the future or equal to game time"
+            });
+        }
+
+        else if (new Date(revealTime) > new Date(bufferTime)) {
+            return res.status(400).json({
+                message: "Buffer time should be in the future or equal to reveal time"
+            });
+        }
+
         const code = generateCode();
         const newTMCTarget = new TMCTarget({ code, targetImage, controlImages, revealTime, bufferTime, gameTime });
         await newTMCTarget.save();
@@ -66,7 +79,7 @@ export const getAllQueuedTMCTargets = async (_, res, next) => {
     }
 }
 
-export const updateTMCTargetAddToQueue = async (req, res, next) => {
+export const updateAddToQueue = async (req, res, next) => {
 
     const { id } = req.params
 
@@ -79,7 +92,7 @@ export const updateTMCTargetAddToQueue = async (req, res, next) => {
     }
 }
 
-export const updateTMCTargetRemoveFromQueue = async (req, res, next) => {
+export const updateRemoveFromQueue = async (req, res, next) => {
 
     const { id } = req.params
 
@@ -92,12 +105,21 @@ export const updateTMCTargetRemoveFromQueue = async (req, res, next) => {
     }
 }
 
-export const updateTMCTargetBufferTime = async (req, res, next) => {
+export const updateBufferTime = async (req, res, next) => {
 
     const { id } = req.params;
     const { bufferTime } = req.body;
 
     try {
+
+        const { revealTime } = await TMCTarget.findById(id).select("revealTime")
+
+        if (new Date(revealTime) > new Date(bufferTime)) {
+            return res.status(400).json({
+                message: "Buffer time should be in the future or equal to reveal time"
+            });
+        }
+
         await TMCTarget.findByIdAndUpdate(id, { bufferTime }, { new: true });
         return res.status(200).json({
             message: "Buffer time updated successfully"
@@ -109,12 +131,21 @@ export const updateTMCTargetBufferTime = async (req, res, next) => {
     }
 }
 
-export const updateTMCTargetGameTime = async (req, res, next) => {
+export const updateGameTime = async (req, res, next) => {
 
     const { id } = req.params;
     const { gameTime } = req.body;
 
     try {
+
+        const { revealTime } = await TMCTarget.findById(id).select("revealTime")
+
+        if (new Date(revealTime) < new Date(gameTime)) {
+            return res.status(400).json({
+                message: "Reveal time should be in the future or equal to game time"
+            });
+        }
+
         await TMCTarget.findByIdAndUpdate(id, { gameTime }, { new: true });
         return res.status(200).json({
             message: "Game time updated successfully"
