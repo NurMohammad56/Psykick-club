@@ -26,6 +26,7 @@ import privacyPolicyRoute from './src/route/privacyPolicy.route.js';
 import TMCTargetRoute from "./src/route/TMCTarget.route.js"
 import userSubmissionTMCRoute from "./src/route/userSubmissionTMC.route.js"
 import termsCondition from "./src/route/termsCondition.route.js";
+import aboutUsRoute from "./src/route/aboutUs.route.js";
 
 // set 
 app.use('/api/v1/user', userRoute);
@@ -37,6 +38,7 @@ app.use('/api/v1/privacy-policy', privacyPolicyRoute);
 app.use('/api/v1/TMCTarget', TMCTargetRoute);
 app.use('/api/v1/userSubmissionTMC', userSubmissionTMCRoute);
 app.use('/api/v1/terms-and-condition', termsCondition);
+app.use('/api/v1/about-us', aboutUsRoute);
 
 
 // not found route handler middleware
