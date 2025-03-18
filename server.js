@@ -22,6 +22,7 @@ import profileRoute from './src/route/profile.route.js';
 import adminRoute from './src/route/admin.route.js'
 import categoryImageRoute from "./src/route/categoryImage.route.js"
 import ARVTargetRoute from "./src/route/ARVTarget.route.js"
+import privacyPolicyRoute from './src/route/privacyPolicy.route.js';
 
 // set 
 app.use('/api/v1/user', userRoute);
@@ -29,6 +30,7 @@ app.use('/api/v1/profile', profileRoute);
 app.use('/api/v1/admin', adminRoute);
 app.use('/api/v1/category', categoryImageRoute);
 app.use('/api/v1/ARVTarget', ARVTargetRoute);
+app.use('/api/v1/privacy-policy', privacyPolicyRoute);
 
 // not found route handler middleware
 app.use(notFoundHandler)

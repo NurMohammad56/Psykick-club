@@ -44,7 +44,7 @@ const adminLogin = async (req, res) => {
   }
 };
 
-// Sent otp in email
+// Sent otp in email from admin
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -82,7 +82,7 @@ const forgotPassword = async (req, res) => {
   }
 };
 
-// Vrify OTP
+// Vrify OTP from admin
 const verifyOtp = async (req, res) => {
   try {
     const { otp } = req.body;
@@ -107,7 +107,7 @@ const verifyOtp = async (req, res) => {
   }
 };
 
-// Resend OTP
+// Resend OTP from admin
 const resendOTP = async (req, res) => {
   try {
     const { email } = req.body;
@@ -149,7 +149,7 @@ const resendOTP = async (req, res) => {
   }
 };
 
-// Reset pass
+// Reset pass from admin
 const resetPassword = async (req, res) => {
   try {
     const { newPassword, confirmPassword } = req.body;
@@ -186,6 +186,7 @@ const resetPassword = async (req, res) => {
   }
 };
 
+// Save and update the adminProfile from admin
 const updateAdminProfile = async (req, res, next) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -261,6 +262,7 @@ const updateAdminProfile = async (req, res, next) => {
   }
 };
 
+// Change password for admin
 const changePasswordAdmin = async (req, res) => {
   try {
     const { currentPassword, newPassword, confirmNewPassword } = req.body;
