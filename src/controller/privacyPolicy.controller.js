@@ -14,13 +14,11 @@ const createPrivacyPolicy = async (req, res, next) => {
 
     await newPrivacyPolicy.save();
 
-    return res
-      .status(201)
-      .json({
-        status: true,
-        message: "Privacy policy is created successfully",
-        data: newPrivacyPolicy,
-      });
+    return res.status(201).json({
+      status: true,
+      message: "Privacy policy is created successfully",
+      data: newPrivacyPolicy,
+    });
   } catch (error) {
     next(error);
   }
@@ -30,13 +28,11 @@ const createPrivacyPolicy = async (req, res, next) => {
 const getPrivacyPolicies = async (_, res, next) => {
   try {
     const privacyPolicies = await PrivacyPolicy.find({});
-    return res
-      .status(200)
-      .json({
-        status: true,
-        message: "Privacy policy fetched successfully",
-        data: privacyPolicies,
-      });
+    return res.status(200).json({
+      status: true,
+      message: "Privacy policy fetched successfully",
+      data: privacyPolicies,
+    });
   } catch (error) {
     next(error);
   }
@@ -60,16 +56,38 @@ const updatePrivacyPolicy = async (req, res, next) => {
     }
     privacyPolicy.content = content;
     await privacyPolicy.save();
-    return res
-      .status(200)
-      .json({
-        status: true,
-        message: "Privacy policy is updated successfully",
-        data: privacyPolicy,
-      });
+    return res.status(200).json({
+      status: true,
+      message: "Privacy policy is updated successfully",
+      data: privacyPolicy,
+    });
   } catch (error) {
     next(error);
   }
 };
 
-export { createPrivacyPolicy, getPrivacyPolicies, updatePrivacyPolicy };
+// Delete privacy policy from admin
+const deletePrivacyPolicy = async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const privacyPolicy = await PrivacyPolicy.findByIdAndDelete(id);
+    if (!privacyPolicy) {
+      return res
+        .status(404)
+        .json({ status: false, message: "Privacy policy not found" });
+    }
+    return res.status(200).json({
+      status: true,
+      message: "Privacy policy is deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export {
+  createPrivacyPolicy,
+  getPrivacyPolicies,
+  updatePrivacyPolicy,
+  deletePrivacyPolicy,
+};
