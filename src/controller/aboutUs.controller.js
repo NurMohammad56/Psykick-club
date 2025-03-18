@@ -16,7 +16,7 @@ const createAboutUs = async (req, res, next) => {
 // Get About Us content from admin
 const getAboutUs = async (req, res, next) => {
   try {
-    const aboutUs = await AboutUs.findOne();
+    const aboutUs = await AboutUs.find({});
     if (!aboutUs)
       return res
         .status(404)
@@ -54,10 +54,18 @@ const updateAboutUs = async (req, res, next) => {
 
 // Delete About Us content
 const deleteAboutUs = async (req, res, next) => {
+  const { id } = req.params;
   try {
-    const { id } = req.params.id;
-    await AboutUs.findByIdAndDelete(id);
-    return res.status(200).json({ status: true, message: "About Us deleted" });
+    const response = await AboutUs.findByIdAndDelete(id);
+    if (!response) {
+      return res
+        .status(404)
+        .json({ status: false, message: "AboutUs not found" });
+    }
+    return res.status(200).json({
+      status: true,
+      message: "AboutUs is deleted successfully",
+    });
   } catch (error) {
     next(error);
   }
