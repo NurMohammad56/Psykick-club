@@ -413,6 +413,33 @@ const getAllUsers = async (_, res, next) => {
     next(error);
   }
 };
+
+// Get all active users for admin
+const getActiveUsersCount = async (_, res, next) => {
+  const activeThreshold = 5 * 60 * 1000; 
+  try {
+    const currentTime = Date.now(); 
+
+    const activeUsers = await User.find({
+      $or: [
+        { lastActive: { $gte: new Date(currentTime - activeThreshold) } }, 
+        { "sessions.sessionEndTime": { $exists: false } }, 
+      ],
+    });
+
+    return res.status(200).json({
+      status: true,
+      message: "Fetched active users count for admin",
+      data: activeUsers.length,
+    });
+  } catch (error) {
+    console.error("Error getting active users count:", error);
+    next(error);
+  }
+};
+
+
+
 export {
   adminLogin,
   forgotPassword,
@@ -424,4 +451,5 @@ export {
   getAverageSessionDuration,
   getUserSessionDurations,
   getAllUsers,
+  getActiveUsersCount,
 };

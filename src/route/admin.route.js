@@ -1,5 +1,5 @@
 import express from 'express';
-import {adminLogin, forgotPassword, verifyOtp, resendOTP, resetPassword, updateAdminProfile, changePasswordAdmin, getAverageSessionDuration, getUserSessionDurations, getAllUsers} from "../controller/admin.controller.js"
+import {adminLogin, forgotPassword, verifyOtp, resendOTP, resetPassword, updateAdminProfile, changePasswordAdmin, getAverageSessionDuration, getUserSessionDurations, getAllUsers, getActiveUsersCount} from "../controller/admin.controller.js"
 import {isAdmin} from "../middleware/role.middleware.js"
 import {verifyJWT} from "../middleware/auth.middleware.js";
 import upload from "../middleware/multer.middleware.js"
@@ -24,6 +24,8 @@ router.get("/session-durations/:userId",verifyJWT, isAdmin, getUserSessionDurati
 router.get("/average-session-duration",verifyJWT, isAdmin, getAverageSessionDuration);
 // Get all users
 router.get("/all-users", verifyJWT, isAdmin, getAllUsers);
+// Get active users count
+router.get("/active-users-count", verifyJWT, isAdmin, getActiveUsersCount);
 
 
 
