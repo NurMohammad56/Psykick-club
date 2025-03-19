@@ -339,12 +339,17 @@ const resetPassword = async (req, res) => {
 const startSession = async (req, res, next) => {
   const { userId } = req.body;
   try {
-    await User.findByIdAndUpdate(userId, {
-      $push: {
-        sessions: { sessionStartTime: Date.now() },
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        $push: { sessions: { sessionStartTime: Date.now() } },
       },
-    });
-    return res.json({ status: true });
+      { new: true }
+    );
+
+    console.log("User after session start:", updatedUser);
+
+    return res.json({ status: true, message: "Session started successfully" });
   } catch (error) {
     next(error);
   }
@@ -358,14 +363,14 @@ const endSession = async (req, res, next) => {
       userId,
       {
         $set: {
-          "sessions.$[elem].sessionEndTime": Date.now(),
+          "sessions.$[elem].sessionEndTime": Date.now(), 
         },
       },
       {
         arrayFilters: [{ "elem.sessionEndTime": { $exists: false } }],
       }
     );
-    return res.json({ status: true });
+    res.json({ status: true, message: "Session ended successfully" });
   } catch (error) {
     next(error);
   }
@@ -375,14 +380,20 @@ const endSession = async (req, res, next) => {
 const sendHeartbeat = async (req, res, next) => {
   const { userId } = req.body;
   try {
-    await User.findByIdAndUpdate(userId, {
-      $set: { lastActive: Date.now() },
-    });
-    return res.json({ status: true });
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: { lastActive: Date.now() } },
+      { new: true }
+    );
+
+    console.log("Heartbeat Updated User:", updatedUser);
+    
+    res.json({ status: true, message: "Heartbeat received" });
   } catch (error) {
     next(error);
   }
 };
+
 
 export {
   registerUser,
