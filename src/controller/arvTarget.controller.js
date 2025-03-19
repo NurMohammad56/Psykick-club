@@ -1,4 +1,5 @@
 import { ARVTarget } from "../model/ARVTarget.model.js";
+import { TMCTarget } from "../model/tmcTarget.model.js";
 import { addToQueue } from "../utils/addToQueue.js";
 import { generateCode } from "../utils/generateCode.js";
 import { removeFromQueue } from "../utils/removeFromQueue.js";
@@ -9,19 +10,16 @@ export const createARVTarget = async (req, res, next) => {
 
     try {
 
-        // let code;
-        // let codeExists;
+        let code;
+        let arvCode, tmcCode;
 
-        // do {
+        do {
+            code = generateCode()
 
+            arvCode = await ARVTarget.findOne({ code })
+            tmcCode = await TMCTarget.findOne({ code })
 
-        //     // Check for code existence in both collections in a single query
-        //     const [arvCodes, tmcCodes] = await Promise.all([
-        //         ARVTarget.distinct("code"),
-        //         TMCTarget.distinct("code")
-        //     ])
-
-        // } while (arvCodes || tmcCodes); // Retry if any result is found
+        } while (arvCode || tmcCode)
 
         if (new Date(revealTime).getTime() < new Date(gameTime).getTime()) {
             return res.status(400).json({
@@ -36,8 +34,6 @@ export const createARVTarget = async (req, res, next) => {
         else if (new Date(outcomeTime).getTime() > new Date(bufferTime).getTime()) {
             return res.status(400).json({ message: "Buffer time should be in the future or equal to outcome time" })
         }
-
-        const code = generateCode();
 
         const newARVTarget = new ARVTarget({ code, eventName, eventDescription, revealTime, outcomeTime, bufferTime, gameTime, image1, image2, image3, controlImage });
 
@@ -95,6 +91,27 @@ export const getAllQueuedARVTargets = async (_, res) => {
 
     catch (error) {
         next(error);
+    }
+}
+
+//will start the next game in the queue
+export const getNextGame = async (_, res, next) => {
+
+    try {
+
+        const nextGame = await ARVTarget
+            .findOneAndUpdate({ isCompleted: false, isQueued: true }, { isActive: true }, { new: true })
+            .select("-isActive -isQueued -isCompleted -__v");
+
+        return res.status(200).json({
+            status: true,
+            message: "Next game started successfully",
+            data: nextGame
+        });
+    }
+
+    catch (error) {
+        next(error)
     }
 }
 
@@ -168,13 +185,14 @@ export const updateGameTime = async (req, res, next) => {
     const { gameTime } = req.body;
 
     try {
+        const { revealTime } = await ARVTarget.findById(id).select("revealTime")
 
         if (new Date(revealTime).getTime() < new Date(gameTime).getTime()) {
             return res.status(400).json({
                 message: "Reveal time should be in the future or equal to game time"
             });
         }
-        
+
         await ARVTarget.findByIdAndUpdate(id, { gameTime });
         return res.status(200).json({ message: "Game time updated successfully" });
     }
@@ -191,12 +209,46 @@ export const updateBufferTime = async (req, res, next) => {
 
     try {
 
+        const { outcomeTime } = await ARVTarget.findById(id).select("outcomeTime")
+
         if (new Date(outcomeTime).getTime() > new Date(bufferTime).getTime()) {
             return res.status(400).json({ message: "Buffer time should be in the future or equal to outcome time" })
         }
 
         await ARVTarget.findByIdAndUpdate(id, { bufferTime });
         return res.status(200).json({ message: "Buffer time updated successfully" });
+    }
+
+    catch (error) {
+        next(error);
+    }
+}
+
+export const updateMakeInactive = async (req, res, next) => {
+
+    const { id } = req.params;
+
+    try {
+        await makeInActive(id, ARVTarget, res);
+    }
+
+    catch (error) {
+        next(error);
+    }
+}
+
+export const updateMakeComplete = async (req, res, next) => {
+
+    const { id } = req.params;
+
+    try {
+        await ARVTarget.findByIdAndUpdate(id, { isCompleted: true }, { new: true });
+
+        await CompletedTargets.findByIdAndUpdate(process.env.COMPLETED_TARGETS_DOCUMENT_ID, { $push: { ARVTargets: id } }, { new: true })
+
+        return res.status(200).json({
+            message: "Target completed successfully"
+        });
     }
 
     catch (error) {
