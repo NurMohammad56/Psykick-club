@@ -1,5 +1,5 @@
 import express from "express";
-import { registerUser, loginUser, logoutUser, refreshAccessToken, forgotPassword, verifyOtp, resendOTP, resetPassword, startSession, endSession, sendHeartbeat, getUserSessionDurations, getAverageSessionDuration } from "../controller/user.controller.js";
+import { registerUser, loginUser, logoutUser, refreshAccessToken, forgotPassword, verifyOtp, resendOTP, resetPassword, startSession, endSession, sendHeartbeat } from "../controller/user.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js"
 
 const router = express.Router();
@@ -18,10 +18,6 @@ router.post("/reset-password", verifyJWT, resetPassword);
 router.post("/start-session",verifyJWT, startSession);
 router.post("/end-session",verifyJWT, endSession);
 router.post("/heartbeat",verifyJWT, sendHeartbeat);
-
-// Get session duration
-router.get("/session-durations/:userId",verifyJWT, getUserSessionDurations);
-router.get("/average-session-duration",verifyJWT, getAverageSessionDuration);
 
 
 
