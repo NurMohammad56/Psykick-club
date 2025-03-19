@@ -383,6 +383,32 @@ const sendHeartbeat = async (req, res, next) => {
     next(error);
   }
 };
+
+// Get user session durations
+const getUserSessionDurations = async (userId) => {
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const sessionDurations = user.sessions.map((session) => {
+      const startTime = session.sessionStartTime;
+      const endTime = session.sessionEndTime || Date.now(); 
+      const duration = endTime - startTime; 
+      return {
+        sessionId: session._id,
+        duration: duration, 
+        durationInMinutes: Math.floor(duration / (1000 * 60)),
+      };
+    });
+
+    return sessionDurations;
+  } catch (error) {
+    console.error("Error getting user session durations:", error);
+    return res.status(500).json({ status: false, message: error.message });
+  }
+};
 export {
   registerUser,
   generateAccessAndRefreshTokens,
@@ -396,4 +422,5 @@ export {
   startSession,
   endSession,
   sendHeartbeat,
+  getUserSessionDurations
 };
