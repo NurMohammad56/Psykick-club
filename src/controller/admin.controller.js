@@ -6,6 +6,7 @@ import { generateOTP } from "../utils/otp.util.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.util.js";
 import { deleteFromCloudinary } from "../utils/cloudinaryDestroy.util.js";
 
+// <<<<<<<<<<<<<<<<<<<<<<<<<<<AUTHENTICATION>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // Admin login controller
 const adminLogin = async (req, res) => {
   const { email, password } = req.body;
@@ -312,6 +313,7 @@ const changePasswordAdmin = async (req, res) => {
   }
 };
 
+// <<<<<<<<<<<<<<<<<<<<<<<<<<<DASHBOARD>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // Get user session durations for admin
 const getUserSessionDurations = async (req, res, next) => {
   try {
@@ -396,6 +398,21 @@ const getAverageSessionDuration = async (_, res, next) => {
 };
 
 // Get all user for admin
+const getAllUsers = async (_, res, next) => {
+  try {
+    const users = await User.find().select(
+      "-password -dob -tierRank -point -tmcScore -arvScore -combinedScore -leaderboardPosition -completedTargets -successRate -emailVerified -role -refreshToken"
+    );
+    return res.status(200).json({
+      status: true,
+      message: "Fetched all users for admin",
+      data: users,
+    });
+  } catch (error) {
+    console.error("Error getting all users:", error);
+    next(error);
+  }
+};
 export {
   adminLogin,
   forgotPassword,
@@ -405,5 +422,6 @@ export {
   updateAdminProfile,
   changePasswordAdmin,
   getAverageSessionDuration,
-  getUserSessionDurations
+  getUserSessionDurations,
+  getAllUsers,
 };
