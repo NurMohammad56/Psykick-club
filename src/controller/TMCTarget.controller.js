@@ -2,7 +2,6 @@ import { CompletedTargets } from "../model/completedTargets.model.js";
 import { TMCTarget } from "../model/tmcTarget.model.js";
 import { addToQueue } from "../utils/addToQueue.js";
 import { generateCode } from "../utils/generateCode.js";
-import { makeComplete } from "../utils/makeComplete.js";
 import { makeInActive } from "../utils/makeInActive.js";
 import { removeFromQueue } from "../utils/removeFromQueue.js";
 
