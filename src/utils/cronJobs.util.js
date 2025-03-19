@@ -1,7 +1,7 @@
 import { User } from "../model/user.model.js";
 
 const checkInactiveUsers = async () => {
-  const inactiveThreshold = 30 * 60 * 1000;
+  const inactiveThreshold = 10 * 60 * 1000;
   try {
     const inactiveUsers = await User.find({
       lastActive: { $lt: new Date(Date.now() - inactiveThreshold) },

@@ -384,88 +384,6 @@ const sendHeartbeat = async (req, res, next) => {
   }
 };
 
-// Get user session durations
-const getUserSessionDurations = async (req, res, next) => {
-  try {
-    const { userId } = req.params;
-    const user = await User.findById(userId);
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    const sessionDurations = user.sessions.map((session) => {
-      const startTime = session.sessionStartTime;
-      const endTime = session.sessionEndTime || Date.now();
-      const duration = endTime - startTime;
-      return {
-        sessionId: session._id,
-        duration: duration,
-        durationInMinutes: Math.floor(duration / (1000 * 60)),
-      };
-    });
-
-    return res.status(200).json({
-      status: true,
-      data: sessionDurations,
-    });
-  } catch (error) {
-    console.error("Error getting user session durations:", error);
-    next(error);
-  }
-};
-
-// Calculate average session duration
-const getAverageSessionDuration = async (_, res, next) => {
-  try {
-    const result = await User.aggregate([
-      { $unwind: "$sessions" },
-
-      {
-        $project: {
-          duration: {
-            $subtract: [
-              { $ifNull: ["$sessions.sessionEndTime", new Date()] },
-              "$sessions.sessionStartTime",
-            ],
-          },
-        },
-      },
-
-      {
-        $group: {
-          _id: null,
-          totalDuration: { $sum: "$duration" },
-          totalSessions: { $sum: 1 },
-        },
-      },
-
-      {
-        $project: {
-          _id: 0,
-          averageDuration: { $divide: ["$totalDuration", "$totalSessions"] },
-          averageDurationInMinutes: {
-            $divide: [{ $divide: ["$totalDuration", 1000] }, 60],
-          },
-        },
-      },
-    ]);
-
-    if (result.length === 0) {
-      return {
-        averageDuration: 0,
-        averageDurationInMinutes: 0,
-      };
-    }
-
-    return res.status(200).json({
-      status: true,
-      data: result[0],
-    });
-  } catch (error) {
-    console.error("Error calculating average session duration:", error);
-    next(error);
-  }
-};
 export {
   registerUser,
   generateAccessAndRefreshTokens,
@@ -479,6 +397,4 @@ export {
   startSession,
   endSession,
   sendHeartbeat,
-  getUserSessionDurations,
-  getAverageSessionDuration
 };
