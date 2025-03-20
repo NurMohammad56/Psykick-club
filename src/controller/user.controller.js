@@ -363,7 +363,7 @@ const endSession = async (req, res, next) => {
       userId,
       {
         $set: {
-          "sessions.$[elem].sessionEndTime": Date.now(), 
+          "sessions.$[elem].sessionEndTime": Date.now(),
         },
       },
       {
@@ -387,14 +387,58 @@ const sendHeartbeat = async (req, res, next) => {
     );
 
     console.log("Heartbeat Updated User:", updatedUser);
-    
+
     res.json({ status: true, message: "Heartbeat received" });
   } catch (error) {
     next(error);
   }
 };
 
+// Update user points and track challenges
+const updateUserPoints = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const { challengeScore } = req.body;
 
+    let user = await User.findById(userId);
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ status: false, message: "User profile not found" });
+    }
+
+    // Update last activity
+    user.lastActive = new Date();
+
+    // Add challenge score to history
+    user.challengeHistory.push({ score: challengeScore });
+
+    // Keep only last 10 challenges
+    if (user.challengeHistory.length > 10) {
+      user.challengeHistory.shift();
+    }
+
+    // Calculate total points from last 10 challenges
+    user.totalPoints = user.challengeHistory.reduce(
+      (acc, ch) => acc + ch.score,
+      0
+    );
+
+    // Save profile & trigger tier update middleware
+    await user.save();
+
+    return res.status(200).json({
+      status: true,
+      message: "User points updated successfully",
+      user: user.user,
+      totalPoints: user.totalPoints,
+      tierRank: user.tierRank,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 export {
   registerUser,
   generateAccessAndRefreshTokens,
@@ -408,4 +452,5 @@ export {
   startSession,
   endSession,
   sendHeartbeat,
+  updateUserPoints,
 };
