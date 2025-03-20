@@ -1,8 +1,7 @@
 import { ARVTarget } from "../model/ARVTarget.model.js";
-import { TMCTarget } from "../model/tmcTarget.model.js";
-import { addToQueue } from "../utils/addToQueue.js";
+import { TMCTarget } from "../model/TMCTarget.model.js";
+import { startNextGameService, updateAddToQueueService, updateGameTimeService, updateMakeCompleteService, updateMakeInActiveService, updateRemoveFromQueueService, userInclusionInGameService } from "../services/ARVTMCServices/ARVTMCServices.js";
 import { generateCode } from "../utils/generateCode.js";
-import { removeFromQueue } from "../utils/removeFromQueue.js";
 
 export const createARVTarget = async (req, res, next) => {
 
@@ -50,26 +49,6 @@ export const createARVTarget = async (req, res, next) => {
     }
 }
 
-// export const getARVTarget = async (req, res, next) => {
-
-//     const { id } = req.params;
-
-//     try {
-
-//         const arvTarget = await ARVTarget.findById(id).select("-__v");
-
-//         if (!arvTarget) {
-//             return res.status(404).json({ message: "ARV Target not found" });
-//         }
-
-//         return res.status(200).json({ data: arvTarget });
-//     }
-
-//     catch (error) {
-//         next(error);
-//     }
-// }
-
 export const getAllARVTargets = async (_, res, next) => {
 
     try {
@@ -94,20 +73,11 @@ export const getAllQueuedARVTargets = async (_, res) => {
     }
 }
 
-//will start the next game in the queue
-export const getNextGame = async (_, res, next) => {
+//will start the next game from the queue
+export const startNextGame = async (_, res, next) => {
 
     try {
-
-        const nextGame = await ARVTarget
-            .findOneAndUpdate({ isCompleted: false, isQueued: true }, { isActive: true }, { new: true })
-            .select("-isActive -isQueued -isCompleted -__v");
-
-        return res.status(200).json({
-            status: true,
-            message: "Next game started successfully",
-            data: nextGame
-        });
+        await startNextGameService(ARVTarget, res, next)
     }
 
     catch (error) {
@@ -158,7 +128,7 @@ export const updateAddToQueue = async (req, res, next) => {
     const { id } = req.params;
 
     try {
-        await addToQueue(id, ARVTarget, res);
+        await updateAddToQueueService(id, ARVTarget, res, next);
     }
 
     catch (error) {
@@ -171,30 +141,7 @@ export const updateRemoveFromQueue = async (req, res, next) => {
     const { id } = req.params;
 
     try {
-        await removeFromQueue(id, ARVTarget, res);
-    }
-
-    catch (error) {
-        next(error);
-    }
-}
-
-export const updateGameTime = async (req, res, next) => {
-
-    const { id } = req.params;
-    const { gameTime } = req.body;
-
-    try {
-        const { revealTime } = await ARVTarget.findById(id).select("revealTime")
-
-        if (new Date(revealTime).getTime() < new Date(gameTime).getTime()) {
-            return res.status(400).json({
-                message: "Reveal time should be in the future or equal to game time"
-            });
-        }
-
-        await ARVTarget.findByIdAndUpdate(id, { gameTime });
-        return res.status(200).json({ message: "Game time updated successfully" });
+        await updateRemoveFromQueueService(id, ARVTarget, res, next)
     }
 
     catch (error) {
@@ -224,12 +171,26 @@ export const updateBufferTime = async (req, res, next) => {
     }
 }
 
+export const updateGameTime = async (req, res, next) => {
+
+    const { id } = req.params;
+    const { gameTime } = req.body;
+
+    try {
+        await updateGameTimeService(id, gameTime, ARVTarget, res, next)
+    }
+
+    catch (error) {
+        next(error);
+    }
+}
+
 export const updateMakeInactive = async (req, res, next) => {
 
     const { id } = req.params;
 
     try {
-        await makeInActive(id, ARVTarget, res);
+        await updateMakeInActiveService(id, ARVTarget, res, next);
     }
 
     catch (error) {
@@ -242,16 +203,24 @@ export const updateMakeComplete = async (req, res, next) => {
     const { id } = req.params;
 
     try {
-        await ARVTarget.findByIdAndUpdate(id, { isCompleted: true }, { new: true });
-
-        await CompletedTargets.findByIdAndUpdate(process.env.COMPLETED_TARGETS_DOCUMENT_ID, { $push: { ARVTargets: id } }, { new: true })
-
-        return res.status(200).json({
-            message: "Target completed successfully"
-        });
+        await updateMakeCompleteService(id, ARVTarget, "ARVTarget", res, next)
     }
 
     catch (error) {
         next(error);
+    }
+}
+
+export const userInclusionInGame = async (req, res, next) => {
+
+    const { id } = req.params;
+    const userId = req.user._id;
+
+    try {
+        await userInclusionInGameService(id, userId, ARVTarget, res, next)
+    }
+
+    catch (error) {
+        next(error)
     }
 }
