@@ -37,6 +37,7 @@ import userSubmissionTMCRoute from "./src/route/userSubmissionTMC.route.js"
 import termsCondition from "./src/route/termsCondition.route.js";
 import aboutUsRoute from "./src/route/aboutUs.route.js";
 import OAuthRoute from "./src/route/OAuth.route.js"
+import contactUsRoute from "./src/route/contactUs.route.js"
 
 // set 
 app.use('/api/v1/user', userRoute);
@@ -50,6 +51,7 @@ app.use('/api/v1/userSubmissionTMC', userSubmissionTMCRoute);
 app.use('/api/v1/terms-and-condition', termsCondition);
 app.use('/api/v1/about-us', aboutUsRoute);
 app.use('/api/v1', OAuthRoute);
+app.use('/api/v1', contactUsRoute);
 
 
 // not found route handler middleware
