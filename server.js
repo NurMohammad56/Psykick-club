@@ -3,11 +3,19 @@ import { dbconfig } from './src/db/index.js';
 import dotenv from 'dotenv';
 import errorHandler from './src/middleware/errorHandler.middleware.js'
 import { notFoundHandler } from './src/middleware/notFoundHandler.middleware.js';
-
+import passport from 'passport';
+import session from 'express-session';
 
 dotenv.config();
 
 const app = express();
+
+// Passport Session Setup
+app.use(session({ secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: true }));
+app.use(passport.initialize());
+app.use(passport.session());
+
+
 const PORT = process.env.PORT || 5001;
 
 // Middleware
@@ -28,6 +36,8 @@ import TMCTargetRoute from "./src/route/TMCTarget.route.js"
 import userSubmissionTMCRoute from "./src/route/userSubmissionTMC.route.js"
 import termsCondition from "./src/route/termsCondition.route.js";
 import aboutUsRoute from "./src/route/aboutUs.route.js";
+import OAuthRoute from "./src/route/OAuth.route.js"
+import contactUsRoute from "./src/route/contactUs.route.js"
 
 // set 
 app.use('/api/v1/user', userRoute);
@@ -40,6 +50,8 @@ app.use('/api/v1/TMCTarget', TMCTargetRoute);
 app.use('/api/v1/userSubmissionTMC', userSubmissionTMCRoute);
 app.use('/api/v1/terms-and-condition', termsCondition);
 app.use('/api/v1/about-us', aboutUsRoute);
+app.use('/api/v1', OAuthRoute);
+app.use('/api/v1', contactUsRoute);
 
 
 // not found route handler middleware
