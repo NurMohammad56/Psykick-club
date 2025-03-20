@@ -363,7 +363,7 @@ const endSession = async (req, res, next) => {
       userId,
       {
         $set: {
-          "sessions.$[elem].sessionEndTime": Date.now(), 
+          "sessions.$[elem].sessionEndTime": Date.now(),
         },
       },
       {
@@ -387,14 +387,14 @@ const sendHeartbeat = async (req, res, next) => {
     );
 
     console.log("Heartbeat Updated User:", updatedUser);
-    
+
     res.json({ status: true, message: "Heartbeat received" });
   } catch (error) {
     next(error);
   }
 };
 
-
+// Update user points and track challenges
 export {
   registerUser,
   generateAccessAndRefreshTokens,
@@ -408,4 +408,5 @@ export {
   startSession,
   endSession,
   sendHeartbeat,
+  
 };
