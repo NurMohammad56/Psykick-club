@@ -5,6 +5,7 @@ import { sendMail } from "../utils/email.util.js";
 import { generateOTP } from "../utils/otp.util.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.util.js";
 import { deleteFromCloudinary } from "../utils/cloudinaryDestroy.util.js";
+import { ContactUs } from "../model/contactUs.model.js";
 
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<AUTHENTICATION>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // Admin login controller
@@ -416,14 +417,14 @@ const getAllUsers = async (_, res, next) => {
 
 // Get all active users for admin
 const getActiveUsersCount = async (_, res, next) => {
-  const activeThreshold = 5 * 60 * 1000; 
+  const activeThreshold = 5 * 60 * 1000;
   try {
-    const currentTime = Date.now(); 
+    const currentTime = Date.now();
 
     const activeUsers = await User.find({
       $or: [
-        { lastActive: { $gte: new Date(currentTime - activeThreshold) } }, 
-        { "sessions.sessionEndTime": { $exists: false } }, 
+        { lastActive: { $gte: new Date(currentTime - activeThreshold) } },
+        { "sessions.sessionEndTime": { $exists: false } },
       ],
     });
 
@@ -438,7 +439,25 @@ const getActiveUsersCount = async (_, res, next) => {
   }
 };
 
-
+// <<<<<<<<<<<<<<<<<<<<<<<CONTACT US>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// get all contact us for admin
+const getContactUs = async (req, res, next) => {
+  try {
+    const getAllContactUs = await ContactUs.find();
+    if (!getAllContactUs) {
+      return res
+        .status(404)
+        .json({ status: false, message: "Contact us not found" });
+    }
+    return res.status(200).json({
+      status: true,
+      message: "Fetched all contact us",
+      data: getAllContactUs,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 export {
   adminLogin,
@@ -452,4 +471,5 @@ export {
   getUserSessionDurations,
   getAllUsers,
   getActiveUsersCount,
+  getContactUs,
 };
