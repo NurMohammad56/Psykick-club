@@ -1,6 +1,6 @@
 import express from 'express';
 import { isAdmin } from '../middleware/role.middleware.js';
-import { createARVTarget, getAllARVTargets, getAllQueuedARVTargets, updateBufferTime, updateGameTime, updateResultImage, updateAddToQueue, updateUserSubmission, updateRemoveFromQueue, startNextGame, updateMakeInactive, updateMakeComplete, userInclusionInGame } from '../controller/ARVTarget.controller.js';
+import { createARVTarget, getAllARVTargets, getAllQueuedARVTargets, updateBufferTime, updateGameTime, updateResultImage, updateAddToQueue, updateUserSubmission, updateRemoveFromQueue, startNextGame, updateMakeInactive, updateMakeComplete} from '../controller/ARVTarget.controller.js';
 import { verifyJWT } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
@@ -17,6 +17,5 @@ router.patch("/update-ARVTarget-gameTime/:id", verifyJWT, isAdmin, updateGameTim
 router.patch("/update-ARVTarget-bufferTime/:id", verifyJWT, isAdmin, updateBufferTime)
 router.patch("/update-ARVTarget-makeInactive/:id", verifyJWT, updateMakeInactive)
 router.patch("/update-ARVTarget-makeComplete/:id", verifyJWT, updateMakeComplete)
-router.patch("/update-ARVTarget-userInclusionInGame/:id", verifyJWT, userInclusionInGame)
 
 export default router;

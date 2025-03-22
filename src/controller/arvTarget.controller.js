@@ -1,6 +1,6 @@
 import { ARVTarget } from "../model/ARVTarget.model.js";
 import { TMCTarget } from "../model/TMCTarget.model.js";
-import { startNextGameService, updateAddToQueueService, updateGameTimeService, updateMakeCompleteService, updateMakeInActiveService, updateRemoveFromQueueService, userInclusionInGameService } from "../services/ARVTMCServices/ARVTMCServices.js";
+import { startNextGameService, updateAddToQueueService, updateGameTimeService, updateMakeCompleteService, updateMakeInActiveService, updateRemoveFromQueueService } from "../services/ARVTMCServices/ARVTMCServices.js";
 import { generateCode } from "../utils/generateCode.js";
 
 export const createARVTarget = async (req, res, next) => {
@@ -208,19 +208,5 @@ export const updateMakeComplete = async (req, res, next) => {
 
     catch (error) {
         next(error);
-    }
-}
-
-export const userInclusionInGame = async (req, res, next) => {
-
-    const { id } = req.params;
-    const userId = req.user._id;
-
-    try {
-        await userInclusionInGameService(id, userId, ARVTarget, res, next)
-    }
-
-    catch (error) {
-        next(error)
     }
 }

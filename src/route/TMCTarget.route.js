@@ -1,7 +1,7 @@
 import express from "express";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { isAdmin } from '../middleware/role.middleware.js';
-import { createTMCTarget, getAllQueuedTMCTargets, getAllTMCTargets, updateAddToQueue, updateBufferTime, updateGameTime, updateRemoveFromQueue, updateMakeInactive, updateMakeComplete, startNextGame, userInclusionInGame } from "../controller/TMCTarget.controller.js";
+import { createTMCTarget, getAllQueuedTMCTargets, getAllTMCTargets, updateAddToQueue, updateBufferTime, updateGameTime, updateRemoveFromQueue, updateMakeInactive, updateMakeComplete, startNextGame } from "../controller/TMCTarget.controller.js";
 
 const router = express.Router();
 
@@ -15,6 +15,5 @@ router.patch("/update-TMCTarget-bufferTime/:id", verifyJWT, isAdmin, updateBuffe
 router.patch("/update-TMCTarget-gameTime/:id", verifyJWT, isAdmin, updateGameTime)
 router.patch("/update-TMCTarget-makeInactive/:id", verifyJWT, updateMakeInactive)
 router.patch("/update-TMCTarget-makeComplete/:id", verifyJWT, updateMakeComplete)
-router.patch("/update-TMCTarget-userInclusionInGame/:id", verifyJWT, userInclusionInGame)
 
 export default router;
