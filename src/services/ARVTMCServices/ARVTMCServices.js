@@ -116,7 +116,6 @@ export const updateGameTimeService = async (id, gameTime, model, res, next) => {
     catch (error) {
         next(error)
     }
-
 }
 
 export const updateMakeInActiveService = async (id, model, res, next) => {
@@ -147,42 +146,6 @@ export const updateMakeCompleteService = async (id, model, targetName, res, next
             status: true,
             message: "Target completed successfully"
         });
-    }
-
-    catch (error) {
-        next(error)
-    }
-}
-
-export const userInclusionInGameService = async (id, userId, model, res, next) => {
-
-    try {
-        const isGameInActive = await model.findOne({ _id: id, isActive: false })
-
-        if (isGameInActive) {
-            return res.status(403).json({
-                status: false,
-                message: "Game time is over"
-            })
-        }
-
-        const isUserIncluded = await model.findOne({ _id: id, userId: { $in: [userId] } })
-
-        if (isUserIncluded) {
-            return res.status(403).json({
-                status: false,
-                message: "User is already included to play the game"
-            })
-        }
-
-        else {
-            await model.findByIdAndUpdate(id, { $push: { userId } })
-
-            return res.status(200).json({
-                status: true,
-                message: "User added to the game successfully"
-            })
-        }
     }
 
     catch (error) {
