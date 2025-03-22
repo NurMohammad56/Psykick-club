@@ -73,7 +73,6 @@ export const getAllQueuedARVTargets = async (_, res) => {
     }
 }
 
-//will start the next game from the queue
 export const startNextGame = async (_, res, next) => {
 
     try {
@@ -141,7 +140,8 @@ export const updateRemoveFromQueue = async (req, res, next) => {
     const { id } = req.params;
 
     try {
-        await updateRemoveFromQueueService(id, ARVTarget, res, next)
+        const { outcomeTime } = await ARVTarget.findById(id).select("outcomeTime")
+        await updateRemoveFromQueueService(id, ARVTarget, outcomeTime, res, next)
     }
 
     catch (error) {
@@ -203,7 +203,7 @@ export const updateMakeComplete = async (req, res, next) => {
     const { id } = req.params;
 
     try {
-        await updateMakeCompleteService(id, ARVTarget, "ARVTarget", res, next)
+        await updateMakeCompleteService(id, ARVTarget, "ARVTargets", res, next)
     }
 
     catch (error) {

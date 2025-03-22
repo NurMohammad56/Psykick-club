@@ -1,8 +1,37 @@
 import { CompletedTargets } from "../../model/completedTargets.model.js";
 
+const checkIsGameActive = async (model, id, message, res, next) => {
+
+    try {
+        let isGameActive
+
+        if (id) {
+            isGameActive = await model.findOne({ _id: id, isActive: true })
+        }
+
+        else {
+            isGameActive = await model.findOne({ isActive: true })
+        }
+
+
+        if (isGameActive) {
+            return res.status(403).json({
+                status: false,
+                message
+            })
+        }
+    }
+
+    catch (error) {
+        next(error)
+    }
+}
+
 export const startNextGameService = async (model, res, next) => {
 
     try {
+        await checkIsGameActive(model, null, "Currently a game is running", res, next)
+
         const nextGame = await model
             .findOneAndUpdate({ isCompleted: false, isQueued: true }, { isActive: true }, { new: true })
             .select("-isActive -isQueued -isCompleted -createdAt -updatedAt -__v")
@@ -43,16 +72,16 @@ export const updateAddToQueueService = async (id, model, res, next) => {
     }
 }
 
-export const updateRemoveFromQueueService = async (id, model, res, next) => {
+export const updateRemoveFromQueueService = async (id, model, revealOrOutcomeTime, res, next) => {
 
     try {
-        const isGameActive = await model.findOne({ _id: id, isActive: true })
+        await checkIsGameActive(model, id, "Active game cannot be removed from queue", res, next)
 
-        if (isGameActive) {
+        if (new Date(revealOrOutcomeTime).getTime() > new Date().getTime()) {
             return res.status(403).json({
                 status: false,
-                message: "Active game cannot be removed from queue"
-            })
+                message: "Cannot remove from queue unless the game result is published"
+            });
         }
 
         await model.findByIdAndUpdate(id, { isQueued: false }, { new: true })
@@ -108,14 +137,7 @@ export const updateMakeInActiveService = async (id, model, res, next) => {
 export const updateMakeCompleteService = async (id, model, targetName, res, next) => {
 
     try {
-        const isGameActive = await model.findOne({ _id: id, isActive: true })
-
-        if (isGameActive) {
-            return res.status(403).json({
-                status: false,
-                message: "Active game cannot be marked as completed"
-            })
-        }
+        await checkIsGameActive(model, id, "Active game cannot be marked as completed", res, next)
 
         await model.findByIdAndUpdate(id, { isCompleted: true, isQueued: false });
 
