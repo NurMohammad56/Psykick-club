@@ -2,12 +2,6 @@ import mongoose, { Schema } from "mongoose";
 
 const ARVTargetSchema = new Schema(
   {
-    userId: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "User"
-      }
-    ],
     code: {
       type: String,
       unique: true
@@ -35,10 +29,6 @@ const ARVTargetSchema = new Schema(
     image3: { url: { type: String, required: true }, description: { type: String, required: true } },
     controlImage: {
       type: String
-    },
-    userSubmittedImage: {
-      type: String,
-      default: ""
     },
     resultImage: {
       type: String,
