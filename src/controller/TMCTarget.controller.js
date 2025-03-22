@@ -73,7 +73,6 @@ export const getAllQueuedTMCTargets = async (_, res, next) => {
     }
 }
 
-//will start the next game in the queue
 export const startNextGame = async (_, res, next) => {
 
     try {
@@ -103,8 +102,8 @@ export const updateRemoveFromQueue = async (req, res, next) => {
     const { id } = req.params
 
     try {
-
-        await updateRemoveFromQueueService(id, TMCTarget, res, next)
+        const { revealTime } = await TMCTarget.findById(id).select("revealTime")
+        await updateRemoveFromQueueService(id, TMCTarget, revealTime, res, next)
     }
 
     catch (error) {
@@ -170,7 +169,7 @@ export const updateMakeComplete = async (req, res, next) => {
     const { id } = req.params;
 
     try {
-        await updateMakeCompleteService(id, TMCTarget, "TMCTarget", res, next)
+        await updateMakeCompleteService(id, TMCTarget, "TMCTargets", res, next)
     }
 
     catch (error) {
