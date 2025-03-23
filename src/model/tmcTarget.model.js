@@ -2,12 +2,6 @@ import mongoose, { Schema } from "mongoose";
 
 const TMCTargetSchema = new Schema(
   {
-    userId: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "User"
-      }
-    ],
     code: {
       type: String,
       unique: true

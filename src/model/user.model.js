@@ -58,40 +58,14 @@ const userSchema = new Schema(
       default: 0,
       index: true,
     },
-    tmcScore: [
-      {
-        type: Number,
-      },
-    ],
-    arvScore: [
-      {
-        type: Number,
-      },
-    ],
     leaderboardPosition: {
       type: Number,
       default: 0,
       index: true,
     },
-    completedTargets: {
-      type: Number,
-      default: 0,
-    },
     targetsLeft: {
       type: Number,
       default: 0,
-    },
-    successRate: {
-      type: Number,
-      default: 0,
-      min: 0,
-      max: 100,
-    },
-    pValue: {
-      type: Number,
-      default: 0,
-      min: 0,
-      max: 1,
     },
     timeLeft: {
       type: Date,

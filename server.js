@@ -33,7 +33,7 @@ import categoryImageRoute from "./src/route/categoryImage.route.js"
 import ARVTargetRoute from "./src/route/ARVTarget.route.js"
 import privacyPolicyRoute from './src/route/privacyPolicy.route.js';
 import TMCTargetRoute from "./src/route/TMCTarget.route.js"
-import userSubmissionTMCRoute from "./src/route/userSubmissionTMC.route.js"
+import userSubmissionRoute from "./src/route/userSubmission.route.js"
 import termsCondition from "./src/route/termsCondition.route.js";
 import aboutUsRoute from "./src/route/aboutUs.route.js";
 import OAuthRoute from "./src/route/OAuth.route.js"
@@ -47,7 +47,7 @@ app.use('/api/v1/category', categoryImageRoute);
 app.use('/api/v1/ARVTarget', ARVTargetRoute);
 app.use('/api/v1/privacy-policy', privacyPolicyRoute);
 app.use('/api/v1/TMCTarget', TMCTargetRoute);
-app.use('/api/v1/userSubmissionTMC', userSubmissionTMCRoute);
+app.use('/api/v1/userSubmissionTMC', userSubmissionRoute);
 app.use('/api/v1/terms-and-condition', termsCondition);
 app.use('/api/v1/about-us', aboutUsRoute);
 app.use('/api/v1', OAuthRoute);
