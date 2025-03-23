@@ -4,42 +4,57 @@ const UserSubmissionSchema = new Schema(
   {
     userId: {
       type: Schema.Types.ObjectId,
-      ref: "User"
+      ref: "User",
     },
     participatedTMCTargets: [
       {
         id: {
           type: Schema.Types.ObjectId,
-          ref: "TMCTarget"
+          ref: "TMCTarget",
         },
         firstChoiceImage: {
           type: String,
-          default: ""
+          default: "",
         },
         secondChoiceImage: {
           type: String,
-          default: ""
+          default: "",
         },
         points: {
           type: Number,
-        }
-      }
+        },
+      },
     ],
     participatedARVTargets: [
       {
         id: {
           type: Schema.Types.ObjectId,
-          ref: "ARVTarget"
+          ref: "ARVTarget",
         },
         submittedImage: {
           type: String,
-          default: ""
+          default: "",
         },
         points: {
           type: Number,
-        }
-      }
+        },
+      },
     ],
+    completedChallenges: {
+      type: Number,
+      default: 0,
+    },
+    totalPoints: {
+      type: Number,
+      default: 0, 
+    },
+    lastChallengeDate: {
+      type: Date,
+    },
+    tierRank: {
+      type: String,
+      default: "NOVICE SEEKER", 
+    },
   },
   { timestamps: true }
 );

@@ -152,26 +152,26 @@ const userSchema = new Schema(
 );
 
 // Middleware to update tier based on points
-userSchema.pre("save", function (next) {
+userSchema.pre('save', function (next) {
   const points = this.totalPoints;
   const tierTable = [
-    { name: "NOVICE SEEKER", up: 1, retain: [0], down: null },
-    { name: "INITIATE", up: 1, retain: [-29, 0], down: -30 },
-    { name: "APPRENTICE", up: 31, retain: [1, 30], down: 0 },
-    { name: "EXPLORER", up: 61, retain: [1, 60], down: 0 },
-    { name: "VISIONARY", up: 81, retain: [31, 80], down: 30 },
-    { name: "ADEPT", up: 101, retain: [31, 100], down: 30 },
-    { name: "SEER", up: 121, retain: [61, 120], down: 60 },
-    { name: "ORACLE", up: 141, retain: [61, 140], down: 60 },
-    { name: "MASTER REMOTE VIEWER", up: 161, retain: [101, 160], down: 100 },
-    { name: "ASCENDING MASTER", up: null, retain: [121], down: 120 },
+    { name: 'NOVICE SEEKER', up: 1, retain: [0], down: null },
+    { name: 'INITIATE', up: 1, retain: [-29, 0], down: -30 },
+    { name: 'APPRENTICE', up: 31, retain: [1, 30], down: 0 },
+    { name: 'EXPLORER', up: 61, retain: [1, 60], down: 0 },
+    { name: 'VISIONARY', up: 81, retain: [31, 80], down: 30 },
+    { name: 'ADEPT', up: 101, retain: [31, 100], down: 30 },
+    { name: 'SEER', up: 121, retain: [61, 120], down: 60 },
+    { name: 'ORACLE', up: 141, retain: [61, 140], down: 60 },
+    { name: 'MASTER REMOTE VIEWER', up: 161, retain: [101, 160], down: 100 },
+    { name: 'ASCENDING MASTER', up: null, retain: [121], down: 120 },
   ];
 
   let currentTierIndex = tierTable.findIndex(
     (tier) => tier.name === this.tierRank
   );
   if (currentTierIndex === -1) {
-    currentTierIndex = 0; // Default to NOVICE SEEKER if not found
+    currentTierIndex = 0; 
   }
 
   let nextTier = tierTable[currentTierIndex + 1] || tierTable[currentTierIndex];
