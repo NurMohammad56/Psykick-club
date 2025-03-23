@@ -84,29 +84,6 @@ export const startNextGame = async (_, res, next) => {
     }
 }
 
-export const updateUserSubmission = async (req, res, next) => {
-
-    const { id } = req.params;
-    const { userSubmittedImage } = req.body;
-
-    try {
-        const updatedARVTarget = await ARVTarget.findByIdAndUpdate(id, { userSubmittedImage }, { new: true }).select("-__v")
-
-        if (!updatedARVTarget) {
-            return res.status(404).json({ message: "ARV Target not found" });
-        }
-
-        return res.status(200).json({
-            data: updatedARVTarget,
-            message: "User submitted image successfully"
-        });
-    }
-
-    catch (error) {
-        next(error);
-    }
-}
-
 export const updateResultImage = async (req, res, next) => {
 
     const { id } = req.params;
