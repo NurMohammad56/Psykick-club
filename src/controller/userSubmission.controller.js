@@ -69,28 +69,42 @@ export const createUserSubmissionTMC = async (req, res, next) => {
             }
         );
 
-        // Check if the user has completed 10 challenges, and update tier if necessary
+        // Check if the user has completed 10 challenges and check the cycle
         const userSubmission = await UserSubmission.findOne({ userId });
-        if (userSubmission.completedChallenges >= 10) {
-            const newTier = await updateUserTier(userSubmission.totalPoints);
+        const timeDiff = new Date() - userSubmission.lastChallengeDate;
+        const cycleTime = 15 * 24 * 60 * 60 * 1000; // 15 days in milliseconds
+
+        // If 15 days have passed and the user has completed less than 10 challenges, reset points and tier
+        if (userSubmission.completedChallenges >= 10 && timeDiff <= cycleTime) {
+            // Check if the user has completed the challenge within the 15 days cycle and update tier
+            const newTier = updateUserTier(userSubmission.totalPoints);
             await UserSubmission.findOneAndUpdate(
                 { userId },
                 { tierRank: newTier, completedChallenges: 0, totalPoints: 0 }
             );
+        } else if (timeDiff > cycleTime) {
+            // If more than 15 days have passed, reset the cycle
+            await UserSubmission.findOneAndUpdate(
+                { userId },
+                {
+                    completedChallenges: 0,
+                    totalPoints: 0,
+                    tierRank: "NOVICE SEEKER",
+                }
+            );
         }
-
-        // Update the user's tierRank in the main User model
-        await User.findByIdAndUpdate(userId, {
-            tierRank: userSubmission.tierRank,
-        });
 
         return res.status(201).json({
             message: "TMC challenge submitted successfully",
+            points,
+            tierRank: userSubmission.tierRank,
         });
     } catch (error) {
         next(error);
     }
 };
+
+
 
 // Function to calculate the tier based on the total points
 const updateUserTier = (points) => {
