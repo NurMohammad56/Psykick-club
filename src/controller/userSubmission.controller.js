@@ -25,20 +25,25 @@ export const createUserSubmissionTMC = async (req, res, next) => {
     try {
         let points = 0;
 
-        // Check if the user has participated in a TMC challenge before
+        // Ensure userSubmission exists
         let userSubmission = await UserSubmission.findOne({ userId });
-
         if (!userSubmission) {
-            // Create a new user submission if doesn't exist
-            const newUserParticipation = new UserSubmission({
+            userSubmission = new UserSubmission({
                 userId,
+                completedChallenges: 0,
+                totalPoints: 0,
+                tierRank: "NOVICE SEEKER",
+                participatedTMCTargets: [],
+                lastChallengeDate: new Date(),
             });
-            await newUserParticipation.save();
-            userSubmission = await UserSubmission.findOne({ userId });
+            await userSubmission.save();
         }
 
-        // Find the target image
+        // Find the TMC target
         const TMC = await TMCTarget.findById(TMCTargetId);
+        if (!TMC) {
+            return res.status(404).json({ message: "TMC target not found" });
+        }
 
         // Calculate points for TMC challenge
         if (TMC.targetImage === firstChoiceImage) {
@@ -49,7 +54,7 @@ export const createUserSubmissionTMC = async (req, res, next) => {
             points = -10;
         }
 
-        // Update user submission with the challenge details and calculate points
+        // Update userSubmission
         await UserSubmission.findOneAndUpdate(
             { userId },
             {
@@ -68,62 +73,41 @@ export const createUserSubmissionTMC = async (req, res, next) => {
                 $set: {
                     lastChallengeDate: new Date(),
                 },
-            }
+            },
+            { new: true }
         );
 
-        // Re-fetch the updated user submission to check the challenge status
+        // Re-fetch updated submission
         userSubmission = await UserSubmission.findOne({ userId });
 
-        // Sync totalPoints from UserSubmission to UserProfile
+        // Update totalPoints in UserProfile
         await User.findByIdAndUpdate(
             userId,
             { totalPoints: userSubmission.totalPoints },
             { new: true, runValidators: true }
         );
 
-        // Check if 10 challenges have been completed and if the tier needs to be updated
+        // Handle tier updates (every 10 challenges)
         if (userSubmission.completedChallenges >= 10) {
-            const newTier = updateUserTier(userSubmission.totalPoints);
+            const newTier = updateUserTier(userSubmission.tierRank, userSubmission.totalPoints);
 
-            // Only update the tier once after completing 10 challenges
             if (userSubmission.tierRank !== newTier) {
-                // Update tier rank in UserSubmission
-                await UserSubmission.findOneAndUpdate(
-                    { userId },
-                    { tierRank: newTier }
-                );
-
-                // Update tier rank in UserProfile as well
-                await User.findByIdAndUpdate(
-                    userId,
-                    { tierRank: newTier },
-                    { new: true, runValidators: true }
-                );
-
-                // Reset completedChallenges after tier update
-                await UserSubmission.findOneAndUpdate(
-                    { userId },
-                    { completedChallenges: 0 }
-                );
+                // Update tier rank in UserSubmission and UserProfile
+                await UserSubmission.findOneAndUpdate({ userId }, { tierRank: newTier, completedChallenges: 0 });
+                await User.findByIdAndUpdate(userId, { tierRank: newTier }, { new: true });
             }
         }
 
-        // Check if the user has completed less than 10 challenges and if 15 days have passed
+        // Handle tier downgrade after 15 days if <10 challenges are completed
         const timeDiff = new Date() - userSubmission.lastChallengeDate;
         const cycleTime = 15 * 24 * 60 * 60 * 1000; // 15 days in milliseconds
 
-        // If more than 15 days have passed and the user has completed less than 10 challenges, reset points and tier
         if (timeDiff > cycleTime && userSubmission.completedChallenges < 10) {
             await UserSubmission.findOneAndUpdate(
                 { userId },
-                {
-                    completedChallenges: 0,
-                    totalPoints: 0,
-                    tierRank: "NOVICE SEEKER", // Reset to default tier
-                }
+                { completedChallenges: 0, totalPoints: 0, tierRank: "NOVICE SEEKER" }
             );
 
-            // Reset tier in UserProfile as well
             await UserProfile.findByIdAndUpdate(
                 userId,
                 { tierRank: "NOVICE SEEKER", totalPoints: 0 },
@@ -140,6 +124,7 @@ export const createUserSubmissionTMC = async (req, res, next) => {
         next(error);
     }
 };
+
 
 // Function to calculate the tier based on the total points
 const updateUserTier = (points) => {
@@ -182,7 +167,7 @@ export const createUserSubmissionARV = async (req, res, next) => {
     const userId = req.user._id
 
     try {
-        const doesUserExists = await UserSubmission.findById(userId)
+        const doesUserExists = await UserSubmission.findOne({ userId })
 
         if (!doesUserExists) {
             const newUserParticipation = new UserSubmission({
@@ -271,45 +256,74 @@ export const getPreviousARVResults = async (req, res) => {
 }
 
 export const getTMCTargetResult = async (req, res, next) => {
-
-    const { TMCTargetId } = req.params
-    const userId = req.user._id
+    const { TMCTargetId } = req.params;
+    const userId = req.user._id;
 
     try {
-        const result = await UserSubmission.findOne({
-            userId,
-            "participatedTMCTargets.TMCId": TMCTargetId,
-        },
+        // Find UserSubmission for the user
+        const result = await UserSubmission.findOne(
+            { userId, "participatedTMCTargets.TMCId": TMCTargetId },
             { "participatedTMCTargets": 1, _id: 0 }
-        )
-
-        const matchedTMC = result.participatedTMCTargets.find(
-            (tmc) => tmc.TMCId.toString() === TMCTargetId
         );
+
+
+        // If no result found, return a proper error message
+        if (!result) {
+            return res.status(404).json({
+                status: false,
+                message: "No submission found for this TMC Target.",
+            });
+        }
+
+        // Find the matching TMC submission
+        const matchedTMC = result.participatedTMCTargets?.find(
+            (tmc) => tmc.TMCId && tmc.TMCId.toString() === TMCTargetId.toString()
+        );
+
+        // If no matching submission found, return a message
+        if (!matchedTMC) {
+            return res.status(404).json({
+                status: false,
+                message: "No result found for the provided TMC Target ID.",
+            });
+        }
 
         return res.status(200).json({
             status: true,
             message: "TMC Result fetched successfully",
-            data: matchedTMC
+            data: matchedTMC,
         });
+    } catch (error) {
+        next(error);
     }
+};
 
-    catch (error) {
-        next(error)
-    }
-}
 
 export const getARVTargetResult = async (req, res, next) => {
 
     const { ARVTargetId } = req.params
     const userId = req.user._id
+    console.log(userId, ARVTargetId);
 
     try {
-        const result = UserSubmission.findOne({
-            userId, participatedARVTargets: {
-                $elemMatch: { ARVId: ARVTargetId }
-            }
-        })
+        const result = await UserSubmission.findOne({
+            userId, "participatedARVTargets.ARVId": ARVTargetId
+        }
+            ,
+            { "participatedARVTargets": 1, _id: 0 }
+        )
+
+        const matchedARV = result.participatedARVTargets?.find(
+            (arv) => arv.ARVId && arv.ARVId.toString() === ARVTargetId.toString()
+        );
+
+        if (!matchedARV) {
+            return res.status(404).json({
+                status: false,
+                message: "No result found for the provided ARV Target ID.",
+            });
+        }
+
 
         return res.status(200).json({
             status: true,
@@ -355,10 +369,20 @@ export const updateARVAnalytics = async (req, res, next) => {
     const userId = req.user._id
 
     try {
-        const totalARVChallenges = await UserSubmission.countDocuments({ userId, "participatedARVTargets.points": { $ne: null } })
-        const successfulARVChallenges = await UserSubmission.countDocuments({ userId, "participatedARVTargets.points": { $gt: 0 } })
-        const successRate = (successfulARVChallenges / totalARVChallenges) * 100
-        const pValue = calculatePValue(successfulARVChallenges, totalARVChallenges)
+        const totalARVChallenges = await UserSubmission.aggregate([
+            { $match: { userId } },
+            { $unwind: "$participatedARVTargets" },
+            { $match: { "participatedARVTargets.points": { $ne: null } } },
+            { $count: "total" }
+        ]);
+        const successfulARVChallenges = await UserSubmission.aggregate([
+            { $match: { userId } },
+            { $unwind: "$participatedARVTargets" },
+            { $match: { "participatedARVTargets.points": { $gt: 0 } } },
+            { $count: "successful" }
+        ]);
+        const successRate = (successfulARVChallenges[0]?.successful / totalARVChallenges[0]?.total) * 100 || 0;
+        const pValue = calculatePValue(successfulARVChallenges[0]?.successful || 0, totalARVChallenges[0]?.total || 0)
 
         await User.findByIdAndUpdate(userId, { ARVSuccessRate: successRate, ARVpValue: pValue })
 
