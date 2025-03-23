@@ -8,7 +8,7 @@ const UserSubmissionSchema = new Schema(
     },
     participatedTMCTargets: [
       {
-        id: {
+        TMCId: {
           type: Schema.Types.ObjectId,
           ref: "TMCTarget"
         },
@@ -27,7 +27,7 @@ const UserSubmissionSchema = new Schema(
     ],
     participatedARVTargets: [
       {
-        id: {
+        ARVId: {
           type: Schema.Types.ObjectId,
           ref: "ARVTarget"
         },

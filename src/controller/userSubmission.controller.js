@@ -173,16 +173,23 @@ export const getTMCTargetResult = async (req, res, next) => {
     const userId = req.user._id
 
     try {
-        const result = UserSubmission.findOne({
-            userId, participatedTMCTargets: {
-                $elemMatch: { id: TMCTargetId }
-            }
-        })
+        const result = await UserSubmission.findOne({
+            userId,
+            "participatedTMCTargets.TMCId": TMCTargetId,
+        },
+            { "participatedTMCTargets": 1, _id: 0 }
+        )
+
+        console.log(result)
+
+        const matchedTMC = result.participatedTMCTargets.find(
+            (tmc) => tmc.TMCId.toString() === TMCTargetId
+        );
 
         return res.status(200).json({
             status: true,
             message: "TMC Result fetched successfully",
-            data: result
+            data: matchedTMC
         });
     }
 
