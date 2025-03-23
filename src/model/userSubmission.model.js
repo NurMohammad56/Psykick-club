@@ -22,19 +22,7 @@ const UserSubmissionSchema = new Schema(
         },
         points: {
           type: Number,
-        },
-        successRate: {
-          type: Number,
-          default: 0,
-          min: 0,
-          max: 100,
-        },
-        pValue: {
-          type: Number,
-          default: 0,
-          min: 0,
-          max: 1,
-        },
+        }
       }
     ],
     participatedARVTargets: [
@@ -49,19 +37,7 @@ const UserSubmissionSchema = new Schema(
         },
         points: {
           type: Number,
-        },
-        successRate: {
-          type: Number,
-          default: 0,
-          min: 0,
-          max: 100,
-        },
-        pValue: {
-          type: Number,
-          default: 0,
-          min: 0,
-          max: 1,
-        },
+        }
       }
     ],
   },

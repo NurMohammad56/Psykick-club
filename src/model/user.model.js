@@ -67,6 +67,30 @@ const userSchema = new Schema(
       type: Number,
       default: 0,
     },
+    TMCSuccessRate: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
+    },
+    TMCpValue: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 1,
+    },
+    ARVSuccessRate: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
+    },
+    ARVpValue: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 1,
+    },
     timeLeft: {
       type: Date,
     },
