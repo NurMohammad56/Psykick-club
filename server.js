@@ -47,7 +47,7 @@ app.use('/api/v1/category', categoryImageRoute);
 app.use('/api/v1/ARVTarget', ARVTargetRoute);
 app.use('/api/v1/privacy-policy', privacyPolicyRoute);
 app.use('/api/v1/TMCTarget', TMCTargetRoute);
-app.use('/api/v1/userSubmissionTMC', userSubmissionRoute);
+app.use('/api/v1/userSubmission', userSubmissionRoute);
 app.use('/api/v1/terms-and-condition', termsCondition);
 app.use('/api/v1/about-us', aboutUsRoute);
 app.use('/api/v1', OAuthRoute);
