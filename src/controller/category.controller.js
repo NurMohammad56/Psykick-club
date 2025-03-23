@@ -238,7 +238,7 @@ const getCategoryImages = async (req, res, next) => {
       return {
         name: subCategory.name,
         images: paginatedImages,
-        pagination: {
+        MetaPagination: {
           currentPage: validPage,
           totalPages,
           totalItems,
@@ -258,30 +258,61 @@ const getCategoryImages = async (req, res, next) => {
 };
 
 // get sub category images for frontend
-const getSubCategoryImages = async (req, res) => {
+const getSubCategoryImages = async (req, res, next) => {
   try {
     const { categoryName, subCategoryName } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+
     const category = await CategoryImage.findOne({ categoryName });
     if (!category) {
-      return res
-        .status(404)
-        .json({ status: false, message: "Did not find the category" });
+      return res.status(404).json({
+        status: false,
+        message: "Did not find category",
+      });
     }
+
     const subCategory = category.subCategories.find(
       (subCat) => subCat.name === subCategoryName
     );
+
     if (!subCategory) {
-      return res
-        .status(404)
-        .json({ status: false, message: "Did not find sub category" });
+      return res.status(404).json({
+        status: false,
+        message: "Did not find sub category",
+      });
     }
+
+    // Default pagination values
+    const itemsPerPage = parseInt(limit) || 10;
+    const currentPage = parseInt(page) || 1;
+
+    // Pagination calculations
+    const totalItems = subCategory.images.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const validPage = Math.max(1, Math.min(currentPage, totalPages));
+
+    const startIndex = (validPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedImages = subCategory.images.slice(startIndex, endIndex);
+
     return res.status(200).json({
-      status: false,
-      message: "Sub category image fetch successfully",
-      data: subCategory.images,
+      status: true,
+      message: "Sub category images fetched successfully",
+      data: [
+        {
+          name: subCategory.name,
+          images: paginatedImages,
+          MetaPagination: {
+            currentPage: validPage,
+            totalPages,
+            totalItems,
+            itemsPerPage,
+          },
+        },
+      ],
     });
   } catch (error) {
-    return res.status(500).json({ status: false, message: error.message });
+    next(error);
   }
 };
 
