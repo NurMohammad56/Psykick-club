@@ -19,59 +19,114 @@ const calculatePValue = (successfulChallenges, totalChallenges) => {
 };
 
 export const createUserSubmissionTMC = async (req, res, next) => {
-
     const { firstChoiceImage, secondChoiceImage, TMCTargetId } = req.body;
-    const userId = req.user._id
+    const userId = req.user._id;
 
     try {
-        let points
-        const doesUserExists = await UserSubmission.findById(userId)
+        let points = 0;
 
-        if (!doesUserExists) {
+        // Check if the user has participated in a TMC challenge before
+        const doesUserExist = await UserSubmission.findOne({ userId });
+
+        if (!doesUserExist) {
             const newUserParticipation = new UserSubmission({
-                userId
+                userId,
             });
-
             await newUserParticipation.save();
         }
 
-        const TMC = await TMCTarget.findById(TMCTargetId)
+        // Find the target image
+        const TMC = await TMCTarget.findById(TMCTargetId);
 
+        // Calculate points for TMC challenge
         if (TMC.targetImage === firstChoiceImage) {
-            points = 25
+            points = 25;
+        } else if (TMC.targetImage === secondChoiceImage) {
+            points = 10;
+        } else {
+            points = -10;
         }
 
-        else if (TMC.targetImage === secondChoiceImage) {
-            points = 10
-        }
-
-        else {
-            points = -10
-        }
-
-        await UserSubmission.findOneAndUpdate({ userId },
+        // Update user submission with the challenge details and calculate points
+        await UserSubmission.findOneAndUpdate(
+            { userId },
             {
                 $push: {
                     participatedTMCTargets: {
                         id: TMCTargetId,
                         firstChoiceImage,
                         secondChoiceImage,
-                        points
-                    }
-                }
-            },
-        )
+                        points,
+                    },
+                },
+                $inc: {
+                    completedChallenges: 1,
+                    totalPoints: points,
+                },
+                $set: {
+                    lastChallengeDate: new Date(),
+                },
+            }
+        );
 
+        // Check if the user has completed 10 challenges, and update tier if necessary
+        const userSubmission = await UserSubmission.findOne({ userId });
+        if (userSubmission.completedChallenges >= 10) {
+            const newTier = await updateUserTier(userSubmission.totalPoints);
+            await UserSubmission.findOneAndUpdate(
+                { userId },
+                { tierRank: newTier, completedChallenges: 0, totalPoints: 0 }
+            );
+        }
+
+        // Update the user's tierRank in the main User model
+        await User.findByIdAndUpdate(userId, {
+            tierRank: userSubmission.tierRank,
+        });
 
         return res.status(201).json({
             message: "TMC challenge submitted successfully",
         });
-    }
-
-    catch (error) {
+    } catch (error) {
         next(error);
     }
-}
+};
+
+// Function to calculate the tier based on the total points
+const updateUserTier = (points) => {
+    const tierTable = [
+        { name: "NOVICE SEEKER", up: 1, retain: [0], down: null },
+        { name: "INITIATE", up: 1, retain: [-29, 0], down: -30 },
+        { name: "APPRENTICE", up: 31, retain: [1, 30], down: 0 },
+        { name: "EXPLORER", up: 61, retain: [1, 60], down: 0 },
+        { name: "VISIONARY", up: 81, retain: [31, 80], down: 30 },
+        { name: "ADEPT", up: 101, retain: [31, 100], down: 30 },
+        { name: "SEER", up: 121, retain: [61, 120], down: 60 },
+        { name: "ORACLE", up: 141, retain: [61, 140], down: 60 },
+        { name: "MASTER REMOTE VIEWER", up: 161, retain: [101, 160], down: 100 },
+        { name: "ASCENDING MASTER", up: null, retain: [121], down: 120 },
+    ];
+
+    let currentTierIndex = tierTable.findIndex(
+        (tier) => tier.name === "NOVICE SEEKER"
+    );
+
+    for (let i = 0; i < tierTable.length; i++) {
+        if (points >= tierTable[i].up) {
+            currentTierIndex = i;
+        }
+    }
+
+    // Determine the next tier or previous tier transition based on points
+    if (points >= tierTable[currentTierIndex].up) {
+        return tierTable[currentTierIndex].name;
+    } else if (points <= tierTable[currentTierIndex].down) {
+        return tierTable[currentTierIndex - 1].name || tierTable[0].name;
+    }
+
+    return tierTable[currentTierIndex].name;
+};
+
 
 export const createUserSubmissionARV = async (req, res, next) => {
 
