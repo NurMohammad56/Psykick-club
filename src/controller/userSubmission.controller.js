@@ -180,8 +180,6 @@ export const getTMCTargetResult = async (req, res, next) => {
             { "participatedTMCTargets": 1, _id: 0 }
         )
 
-        console.log(result)
-
         const matchedTMC = result.participatedTMCTargets.find(
             (tmc) => tmc.TMCId.toString() === TMCTargetId
         );
