@@ -26,13 +26,15 @@ export const createUserSubmissionTMC = async (req, res, next) => {
         let points = 0;
 
         // Check if the user has participated in a TMC challenge before
-        const doesUserExist = await UserSubmission.findOne({ userId });
+        let userSubmission = await UserSubmission.findOne({ userId });
 
-        if (!doesUserExist) {
+        if (!userSubmission) {
+            // Create a new user submission if doesn't exist
             const newUserParticipation = new UserSubmission({
                 userId,
             });
             await newUserParticipation.save();
+            userSubmission = await UserSubmission.findOne({ userId });
         }
 
         // Find the target image
@@ -69,28 +71,63 @@ export const createUserSubmissionTMC = async (req, res, next) => {
             }
         );
 
-        // Check if the user has completed 10 challenges and check the cycle
-        const userSubmission = await UserSubmission.findOne({ userId });
+        // Re-fetch the updated user submission to check the challenge status
+        userSubmission = await UserSubmission.findOne({ userId });
+
+        // Sync totalPoints from UserSubmission to UserProfile
+        await User.findByIdAndUpdate(
+            userId,
+            { totalPoints: userSubmission.totalPoints },
+            { new: true, runValidators: true }
+        );
+
+        // Check if 10 challenges have been completed and if the tier needs to be updated
+        if (userSubmission.completedChallenges >= 10) {
+            const newTier = updateUserTier(userSubmission.totalPoints);
+
+            // Only update the tier once after completing 10 challenges
+            if (userSubmission.tierRank !== newTier) {
+                // Update tier rank in UserSubmission
+                await UserSubmission.findOneAndUpdate(
+                    { userId },
+                    { tierRank: newTier }
+                );
+
+                // Update tier rank in UserProfile as well
+                await User.findByIdAndUpdate(
+                    userId,
+                    { tierRank: newTier },
+                    { new: true, runValidators: true }
+                );
+
+                // Reset completedChallenges after tier update
+                await UserSubmission.findOneAndUpdate(
+                    { userId },
+                    { completedChallenges: 0 }
+                );
+            }
+        }
+
+        // Check if the user has completed less than 10 challenges and if 15 days have passed
         const timeDiff = new Date() - userSubmission.lastChallengeDate;
         const cycleTime = 15 * 24 * 60 * 60 * 1000; // 15 days in milliseconds
 
-        // If 15 days have passed and the user has completed less than 10 challenges, reset points and tier
-        if (userSubmission.completedChallenges >= 10 && timeDiff <= cycleTime) {
-            // Check if the user has completed the challenge within the 15 days cycle and update tier
-            const newTier = updateUserTier(userSubmission.totalPoints);
-            await UserSubmission.findOneAndUpdate(
-                { userId },
-                { tierRank: newTier, completedChallenges: 0, totalPoints: 0 }
-            );
-        } else if (timeDiff > cycleTime) {
-            // If more than 15 days have passed, reset the cycle
+        // If more than 15 days have passed and the user has completed less than 10 challenges, reset points and tier
+        if (timeDiff > cycleTime && userSubmission.completedChallenges < 10) {
             await UserSubmission.findOneAndUpdate(
                 { userId },
                 {
                     completedChallenges: 0,
                     totalPoints: 0,
-                    tierRank: "NOVICE SEEKER",
+                    tierRank: "NOVICE SEEKER", // Reset to default tier
                 }
+            );
+
+            // Reset tier in UserProfile as well
+            await UserProfile.findByIdAndUpdate(
+                userId,
+                { tierRank: "NOVICE SEEKER", totalPoints: 0 },
+                { new: true, runValidators: true }
             );
         }
 
@@ -103,8 +140,6 @@ export const createUserSubmissionTMC = async (req, res, next) => {
         next(error);
     }
 };
-
-
 
 // Function to calculate the tier based on the total points
 const updateUserTier = (points) => {
@@ -140,7 +175,6 @@ const updateUserTier = (points) => {
 
     return tierTable[currentTierIndex].name;
 };
-
 
 export const createUserSubmissionARV = async (req, res, next) => {
 
