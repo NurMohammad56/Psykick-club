@@ -53,7 +53,7 @@ export const createUserSubmissionTMC = async (req, res, next) => {
             {
                 $push: {
                     participatedTMCTargets: {
-                        id: TMCTargetId,
+                        TMCId: TMCTargetId,
                         firstChoiceImage,
                         secondChoiceImage,
                         points,
@@ -162,7 +162,7 @@ export const createUserSubmissionARV = async (req, res, next) => {
             {
                 $push: {
                     participatedARVTargets: {
-                        id: ARVTargetId,
+                        ARVId: ARVTargetId,
                         submittedImage,
                         points: null
                     }
@@ -193,7 +193,7 @@ export const getPreviousTMCResults = async (req, res) => {
         }
 
         const previousTMCResults = userSubmission.participatedTMCTargets.filter(
-            target => target.id.toString() !== currentTMCTargetId
+            target => target.TMCId.toString() !== currentTMCTargetId
         );
 
         return res.status(200).json({
@@ -221,7 +221,7 @@ export const getPreviousARVResults = async (req, res) => {
         }
 
         const previousARVResults = userSubmission.participatedARVTargets.filter(
-            target => target.id.toString() !== currentARVTargetId
+            target => target.ARVId.toString() !== currentARVTargetId
         );
 
         return res.status(200).json({
@@ -273,7 +273,7 @@ export const getARVTargetResult = async (req, res, next) => {
     try {
         const result = UserSubmission.findOne({
             userId, participatedARVTargets: {
-                $elemMatch: { id: ARVTargetId }
+                $elemMatch: { ARVId: ARVTargetId }
             }
         })
 
@@ -302,7 +302,7 @@ export const updateARVTargetPoints = async (req, res, next) => {
         points = ARV.resultImage === submittedImage ? 25 : -10;
 
         await UserSubmission.findOneAndUpdate(
-            { userId, "participatedARVTargets.id": ARVTargetId },
+            { userId, "participatedARVTargets.ARVId": ARVTargetId },
             { $set: { "participatedARVTargets.$.points": points } },
         );
 
