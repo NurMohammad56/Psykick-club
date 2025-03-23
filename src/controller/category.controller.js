@@ -135,7 +135,9 @@ const updateCategoryById = async (req, res, next) => {
     // Find the category by ID
     let category = await CategoryImage.findById(id);
     if (!category) {
-      return res.status(404).json({ status: false, message: "Category not found" });
+      return res
+        .status(404)
+        .json({ status: false, message: "Category not found" });
     }
 
     // Update category name if provided
@@ -146,7 +148,9 @@ const updateCategoryById = async (req, res, next) => {
     // Find the first subcategory
     let subCategory = category.subCategories[0];
     if (!subCategory) {
-      return res.status(404).json({ status: false, message: "Subcategory not found" });
+      return res
+        .status(404)
+        .json({ status: false, message: "Subcategory not found" });
     }
 
     // Update subcategory name if provided
@@ -157,7 +161,9 @@ const updateCategoryById = async (req, res, next) => {
     // Upload new image if provided
     if (req.file) {
       // Upload to Cloudinary
-      const cloudinaryUpload = await uploadOnCloudinary(req.file.buffer, { resource_type: "auto" });
+      const cloudinaryUpload = await uploadOnCloudinary(req.file.buffer, {
+        resource_type: "auto",
+      });
 
       // Delete old Cloudinary image if exists
       if (subCategory.images.length > 0) {
@@ -189,59 +195,124 @@ const deleteCategoryById = async (req, res, next) => {
     const { id } = req.params;
     const category = await CategoryImage.findByIdAndDelete(id);
     if (!category) {
-      return res.status(404).json({ status: false, message: "Category not found" });
+      return res
+        .status(404)
+        .json({ status: false, message: "Category not found" });
     }
-    return res.status(200).json({ status: true, message: "Category deleted successfully" });
+    return res
+      .status(200)
+      .json({ status: true, message: "Category deleted successfully" });
   } catch (error) {
     next(error);
   }
 };
 
 // get category image for frontend
-const getCategoryImages = async (req, res) => {
+const getCategoryImages = async (req, res, next) => {
   try {
     const { categoryName } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+
     const category = await CategoryImage.findOne({ categoryName });
     if (!category) {
-      return res
-        .status(404)
-        .json({ status: false, message: "Did not find category" });
+      return res.status(404).json({
+        status: false,
+        message: "Did not find category",
+      });
     }
+
+    // Default pagination values
+    const itemsPerPage = parseInt(limit) || 10;
+    const currentPage = parseInt(page) || 1;
+
+    // Loop through subcategories and paginate their images
+    const paginatedSubCategories = category.subCategories.map((subCategory) => {
+      const totalItems = subCategory.images.length;
+      const totalPages = Math.ceil(totalItems / itemsPerPage);
+      const validPage = Math.max(1, Math.min(currentPage, totalPages));
+
+      const startIndex = (validPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const paginatedImages = subCategory.images.slice(startIndex, endIndex);
+
+      return {
+        name: subCategory.name,
+        images: paginatedImages,
+        MetaPagination: {
+          currentPage: validPage,
+          totalPages,
+          totalItems,
+          itemsPerPage,
+        },
+      };
+    });
+
     return res.status(200).json({
       status: true,
       message: "Category images fetched successfully",
-      data: category.subCategories,
+      data: paginatedSubCategories,
     });
   } catch (error) {
-    return res.status(500).json({ status: false, message: error.message });
+    next(error);
   }
 };
 
 // get sub category images for frontend
-const getSubCategoryImages = async (req, res) => {
+const getSubCategoryImages = async (req, res, next) => {
   try {
     const { categoryName, subCategoryName } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+
     const category = await CategoryImage.findOne({ categoryName });
     if (!category) {
-      return res
-        .status(404)
-        .json({ status: false, message: "Did not find the category" });
+      return res.status(404).json({
+        status: false,
+        message: "Did not find category",
+      });
     }
+
     const subCategory = category.subCategories.find(
       (subCat) => subCat.name === subCategoryName
     );
+
     if (!subCategory) {
-      return res
-        .status(404)
-        .json({ status: false, message: "Did not find sub category" });
+      return res.status(404).json({
+        status: false,
+        message: "Did not find sub category",
+      });
     }
+
+    // Default pagination values
+    const itemsPerPage = parseInt(limit) || 10;
+    const currentPage = parseInt(page) || 1;
+
+    // Pagination calculations
+    const totalItems = subCategory.images.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const validPage = Math.max(1, Math.min(currentPage, totalPages));
+
+    const startIndex = (validPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedImages = subCategory.images.slice(startIndex, endIndex);
+
     return res.status(200).json({
-      status: false,
-      message: "Sub category image fetch successfully",
-      data: subCategory.images,
+      status: true,
+      message: "Sub category images fetched successfully",
+      data: [
+        {
+          name: subCategory.name,
+          images: paginatedImages,
+          MetaPagination: {
+            currentPage: validPage,
+            totalPages,
+            totalItems,
+            itemsPerPage,
+          },
+        },
+      ],
     });
   } catch (error) {
-    return res.status(500).json({ status: false, message: error.message });
+    next(error);
   }
 };
 
@@ -252,5 +323,5 @@ export {
   getSubCategoryImages,
   getAllCategories,
   updateCategoryById,
-  deleteCategoryById
+  deleteCategoryById,
 };
