@@ -1,7 +1,6 @@
 import { TMCTarget } from "../model/TMCTarget.model.js";
 import { ARVTarget } from "../model/ARVTarget.model.js";
 import { UserSubmission } from "../model/userSubmission.model.js";
-// import { cumulativeStdNormalProbability } from 'simple-statistics';
 import { User } from "../model/user.model.js";
 
 const erf = (x) => {
