@@ -1,19 +1,42 @@
 import { TMCTarget } from "../model/TMCTarget.model.js";
 import { ARVTarget } from "../model/ARVTarget.model.js";
 import { UserSubmission } from "../model/userSubmission.model.js";
-import { cumulativeStdNormalProbability } from 'simple-statistics';
+// import { cumulativeStdNormalProbability } from 'simple-statistics';
 import { User } from "../model/user.model.js";
 
-const calculatePValue = (successfulChallenges, totalChallenges) => {
-    if (totalChallenges === 0) return 0; // Avoid division by zero
+const erf = (x) => {
+    const a1 = 0.254829592;
+    const a2 = -0.284496736;
+    const a3 = 1.421413741;
+    const a4 = -1.453152027;
+    const a5 = 1.061405429;
+    const p = 0.3275911;
 
-    const p0 = 0.5; // Null hypothesis probability
+    const sign = (x >= 0) ? 1 : -1;
+    x = Math.abs(x);
+
+    const t = 1.0 / (1.0 + p * x);
+    const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+
+    return sign * y;
+};
+
+const cumulativeStdNormalProbability = (z) => {
+    return 0.5 * (1 + erf(z / Math.sqrt(2)));
+};
+
+const calculatePValue = (successfulChallenges, totalChallenges) => {
+    if (totalChallenges === 0) return 1; // Avoid division by zero, return max p-value
+    if (successfulChallenges === 0) return 1; // If no success, p-value is 1
+    if (successfulChallenges === totalChallenges) return 0.0001; // If 100% success, p-value is very small
+
+    const p0 = 0.5; // Null hypothesis probability (50% chance)
     const pHat = successfulChallenges / totalChallenges; // Observed success rate
     const SE = Math.sqrt((p0 * (1 - p0)) / totalChallenges); // Standard error
     const Z = (pHat - p0) / SE; // Z-score
 
     // Calculate two-tailed p-value using cumulative standard normal probability
-    const pValue = 2 * (1 - cumulativeStdNormalProbability(Z))
+    const pValue = 2 * (1 - cumulativeStdNormalProbability(Z));
 
     return pValue;
 };
@@ -364,60 +387,88 @@ export const updateARVTargetPoints = async (req, res, next) => {
     }
 }
 
-export const updateARVAnalytics = async (req, res, next) => {
-    const userId = req.user._id
-
-    try {
-        const totalARVChallenges = await UserSubmission.aggregate([
-            { $match: { userId } },
-            { $unwind: "$participatedARVTargets" },
-            { $match: { "participatedARVTargets.points": { $ne: null } } },
-            { $count: "total" }
-        ]);
-
-        const successfulARVChallenges = await UserSubmission.aggregate([
-            { $match: { userId } },
-            { $unwind: "$participatedARVTargets" },
-            { $match: { "participatedARVTargets.points": { $gt: 0 } } },
-            { $count: "successful" }
-        ]);
-
-
-        const successRate = (successfulARVChallenges[0]?.successful / totalARVChallenges[0]?.total) * 100 || 0;
-        const pValue = calculatePValue(successfulARVChallenges[0]?.successful || 0, totalARVChallenges[0]?.total || 0)
-
-        await User.findByIdAndUpdate(userId, { ARVSuccessRate: successRate, ARVpValue: pValue })
-
-        return res.status(200).json({
-            status: true,
-            message: "ARV analytics updated successfully",
-            data: { successRate, pValue }
-        })
-    }
-
-    catch (error) {
-        next(error)
-    }
-}
-
 export const updateTMCAnalytics = async (req, res, next) => {
-    const userId = req.user._id
+    const userId = req.user._id;
 
     try {
-        const totalTMCChallenges = await UserSubmission.countDocuments({ userId, "participatedTMCTargets.points": { $ne: null } })
-        const successfulTMCChallenges = await UserSubmission.countDocuments({ userId, "participatedTMCTargets.points": { $gt: 0 } })
-        const successRate = (successfulTMCChallenges / totalTMCChallenges) * 100
-        const pValue = calculatePValue(successfulTMCChallenges, totalTMCChallenges)
-        await User.findByIdAndUpdate(userId, { TMCSuccessRate: successRate, TMCpValue: pValue })
+        const tmcStats = await UserSubmission.aggregate([
+            { $match: { userId } },
+            { $unwind: "$participatedTMCTargets" },
+            {
+                $group: {
+                    _id: "$userId",
+                    totalChallenges: { $sum: 1 },
+                    successfulChallenges: {
+                        $sum: {
+                            $cond: [{ $gt: ["$participatedTMCTargets.points", 0] }, 1, 0]
+                        }
+                    }
+                }
+            }
+        ]);
+
+        const totalChallenges = tmcStats.length > 0 ? tmcStats[0].totalChallenges : 0;
+        const successfulChallenges = tmcStats.length > 0 ? tmcStats[0].successfulChallenges : 0;
+
+        const successRate = totalChallenges > 0 ? (successfulChallenges / totalChallenges) * 100 : 0;
+
+        const pValue = calculatePValue(successfulChallenges, totalChallenges);
+
+        await User.findByIdAndUpdate(userId, {
+            TMCSuccessRate: successRate,
+            TMCpValue: pValue
+        });
 
         return res.status(200).json({
             status: true,
             message: "TMC analytics updated successfully",
             data: { successRate, pValue }
-        })
-    }
+        });
 
-    catch (error) {
-        next(error)
+    } catch (error) {
+        next(error);
     }
-}
+};
+
+export const updateARVAnalytics = async (req, res, next) => {
+    const userId = req.user._id;
+
+    try {
+        const arvStats = await UserSubmission.aggregate([
+            { $match: { userId } },
+            { $unwind: "$participatedARVTargets" },
+            {
+                $group: {
+                    _id: "$userId",
+                    totalChallenges: { $sum: 1 },
+                    successfulChallenges: {
+                        $sum: {
+                            $cond: [{ $gt: ["$participatedARVTargets.points", 0] }, 1, 0]
+                        }
+                    }
+                }
+            }
+        ]);
+
+        const totalChallenges = arvStats.length > 0 ? arvStats[0].totalChallenges : 0;
+        const successfulChallenges = arvStats.length > 0 ? arvStats[0].successfulChallenges : 0;
+
+        const successRate = totalChallenges > 0 ? (successfulChallenges / totalChallenges) * 100 : 0;
+
+        const pValue = calculatePValue(successfulChallenges, totalChallenges);
+
+        await User.findByIdAndUpdate(userId, {
+            ARVSuccessRate: successRate,
+            ARVpValue: pValue
+        });
+
+        return res.status(200).json({
+            status: true,
+            message: "ARV analytics updated successfully",
+            data: { successRate, pValue }
+        });
+
+    } catch (error) {
+        next(error);
+    }
+};
