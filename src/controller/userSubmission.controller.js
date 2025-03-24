@@ -18,6 +18,41 @@ const calculatePValue = (successfulChallenges, totalChallenges) => {
     return pValue;
 };
 
+// Function to calculate the tier based on the total points
+const updateUserTier = (points) => {
+    const tierTable = [
+        { name: "NOVICE SEEKER", up: 1, retain: [0], down: null },
+        { name: "INITIATE", up: 1, retain: [-29, 0], down: -30 },
+        { name: "APPRENTICE", up: 31, retain: [1, 30], down: 0 },
+        { name: "EXPLORER", up: 61, retain: [1, 60], down: 0 },
+        { name: "VISIONARY", up: 81, retain: [31, 80], down: 30 },
+        { name: "ADEPT", up: 101, retain: [31, 100], down: 30 },
+        { name: "SEER", up: 121, retain: [61, 120], down: 60 },
+        { name: "ORACLE", up: 141, retain: [61, 140], down: 60 },
+        { name: "MASTER REMOTE VIEWER", up: 161, retain: [101, 160], down: 100 },
+        { name: "ASCENDING MASTER", up: null, retain: [121], down: 120 },
+    ];
+
+    let currentTierIndex = tierTable.findIndex(
+        (tier) => tier.name === "NOVICE SEEKER"
+    );
+
+    for (let i = 0; i < tierTable.length; i++) {
+        if (points >= tierTable[i].up) {
+            currentTierIndex = i;
+        }
+    }
+
+    // Determine the next tier or previous tier transition based on points
+    if (points >= tierTable[currentTierIndex].up) {
+        return tierTable[currentTierIndex].name;
+    } else if (points <= tierTable[currentTierIndex].down) {
+        return tierTable[currentTierIndex - 1].name || tierTable[0].name;
+    }
+
+    return tierTable[currentTierIndex].name;
+};
+
 export const createUserSubmissionTMC = async (req, res, next) => {
     const { firstChoiceImage, secondChoiceImage, TMCTargetId } = req.body;
     const userId = req.user._id;
@@ -123,42 +158,6 @@ export const createUserSubmissionTMC = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
-};
-
-
-// Function to calculate the tier based on the total points
-const updateUserTier = (points) => {
-    const tierTable = [
-        { name: "NOVICE SEEKER", up: 1, retain: [0], down: null },
-        { name: "INITIATE", up: 1, retain: [-29, 0], down: -30 },
-        { name: "APPRENTICE", up: 31, retain: [1, 30], down: 0 },
-        { name: "EXPLORER", up: 61, retain: [1, 60], down: 0 },
-        { name: "VISIONARY", up: 81, retain: [31, 80], down: 30 },
-        { name: "ADEPT", up: 101, retain: [31, 100], down: 30 },
-        { name: "SEER", up: 121, retain: [61, 120], down: 60 },
-        { name: "ORACLE", up: 141, retain: [61, 140], down: 60 },
-        { name: "MASTER REMOTE VIEWER", up: 161, retain: [101, 160], down: 100 },
-        { name: "ASCENDING MASTER", up: null, retain: [121], down: 120 },
-    ];
-
-    let currentTierIndex = tierTable.findIndex(
-        (tier) => tier.name === "NOVICE SEEKER"
-    );
-
-    for (let i = 0; i < tierTable.length; i++) {
-        if (points >= tierTable[i].up) {
-            currentTierIndex = i;
-        }
-    }
-
-    // Determine the next tier or previous tier transition based on points
-    if (points >= tierTable[currentTierIndex].up) {
-        return tierTable[currentTierIndex].name;
-    } else if (points <= tierTable[currentTierIndex].down) {
-        return tierTable[currentTierIndex - 1].name || tierTable[0].name;
-    }
-
-    return tierTable[currentTierIndex].name;
 };
 
 export const createUserSubmissionARV = async (req, res, next) => {
@@ -375,12 +374,15 @@ export const updateARVAnalytics = async (req, res, next) => {
             { $match: { "participatedARVTargets.points": { $ne: null } } },
             { $count: "total" }
         ]);
+
         const successfulARVChallenges = await UserSubmission.aggregate([
             { $match: { userId } },
             { $unwind: "$participatedARVTargets" },
             { $match: { "participatedARVTargets.points": { $gt: 0 } } },
             { $count: "successful" }
         ]);
+
+
         const successRate = (successfulARVChallenges[0]?.successful / totalARVChallenges[0]?.total) * 100 || 0;
         const pValue = calculatePValue(successfulARVChallenges[0]?.successful || 0, totalARVChallenges[0]?.total || 0)
 
