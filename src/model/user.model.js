@@ -51,7 +51,19 @@ const userSchema = new Schema(
     },
     tierRank: {
       type: String,
-      default: "novice seeker",
+      default: "NOVICE SEEKER",
+      enum: [
+        "NOVICE SEEKER",
+        "INITIATE",
+        "APPRENTICE",
+        "EXPLORER",
+        "VISIONARY",
+        "ADEPT",
+        "SEER",
+        "ORACLE",
+        "MASTER REMOTE VIEWER",
+        "ASCENDING MASTER",
+      ],
     },
     totalPoints: {
       type: Number,

@@ -37,7 +37,16 @@ const UserSubmissionSchema = new Schema(
         },
         points: {
           type: Number,
+          default: 0,
         },
+        submittedAt: {
+          type: Date,
+          default: Date.now
+        },
+        resultChecked: {
+          type: Boolean,
+          default: false
+        }
       },
     ],
     completedChallenges: {
@@ -46,14 +55,14 @@ const UserSubmissionSchema = new Schema(
     },
     totalPoints: {
       type: Number,
-      default: 0, 
+      default: 0,
     },
     lastChallengeDate: {
       type: Date,
     },
     tierRank: {
       type: String,
-      default: "NOVICE SEEKER", 
+      default: "NOVICE SEEKER",
     },
   },
   { timestamps: true }
