@@ -1,6 +1,6 @@
 import express from "express";
 import { verifyJWT } from "../middleware/auth.middleware.js";
-import { submitARVGame, submitTMCGame, getTMCTargetResult, getARVTargetResult, updateARVTargetPoints, updateARVAnalytics, updateTMCAnalytics, getPreviousTMCResults, getPreviousARVResults } from "../controller/userSubmission.controller.js";
+import {submitARVGame, submitTMCGame, getTMCTargetResult, getARVTargetResult, updateARVTargetPoints, updateARVAnalytics, updateTMCAnalytics, getPreviousTMCResults, getPreviousARVResults } from "../controller/userSubmission.controller.js";
 import { updateUserTier } from "../controller/tier.controller.js"
 
 const router = express.Router();
