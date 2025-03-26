@@ -30,8 +30,8 @@ import userRoute from './src/route/user.route.js';
 import profileRoute from './src/route/profile.route.js';
 import adminRoute from './src/route/admin.route.js'
 import categoryImageRoute from "./src/route/categoryImage.route.js"
-import ARVTargetRoute from "./src/route/ARVTarget.route.js"
 import privacyPolicyRoute from './src/route/privacyPolicy.route.js';
+import ARVTargetRoute from "./src/route/arvTarget.route.js"
 import TMCTargetRoute from "./src/route/TMCTarget.route.js"
 import userSubmissionRoute from "./src/route/userSubmission.route.js"
 import termsCondition from "./src/route/termsCondition.route.js";

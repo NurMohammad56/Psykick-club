@@ -2,7 +2,90 @@ import { TMCTarget } from "../model/TMCTarget.model.js";
 import { ARVTarget } from "../model/ARVTarget.model.js";
 import { UserSubmission } from "../model/userSubmission.model.js";
 import { User } from "../model/user.model.js";
+import { updateUserTier } from "./tier.controller.js";
 
+export const submitTMCGame = async (req, res, next) => {
+    const { firstChoiceImage, secondChoiceImage, TMCTargetId } = req.body;
+    const userId = req.user._id;
+
+    try {
+        let points = 0;
+
+        // Find or create user submission
+        let userSubmission = await UserSubmission.findOne({ userId });
+        if (!userSubmission) {
+            userSubmission = new UserSubmission({
+                userId,
+                completedChallenges: 0,
+                totalPoints: 0,
+                tierRank: "NOVICE SEEKER",
+                participatedTMCTargets: [],
+                participatedARVTargets: [],
+                lastChallengeDate: new Date()
+            });
+            await userSubmission.save();
+        }
+
+        // Find the TMC target
+        const TMC = await TMCTarget.findById(TMCTargetId);
+        if (!TMC) {
+            return res.status(404).json({ status: false, message: "TMC target not found" });
+        }
+
+        // Calculate points based on choices
+        if (TMC.targetImage === firstChoiceImage) {
+            points = 25;
+        } else if (TMC.targetImage === secondChoiceImage) {
+            points = 10;
+        } else {
+            points = -10;
+        }
+
+        // Update user submission
+        userSubmission.participatedTMCTargets.push({
+            TMCId: TMCTargetId,
+            firstChoiceImage,
+            secondChoiceImage,
+            points
+        });
+
+        userSubmission.completedChallenges += 1;
+        userSubmission.totalPoints += points;
+        userSubmission.lastChallengeDate = new Date();
+
+        await userSubmission.save();
+
+        // Update user profile
+        const user = await User.findByIdAndUpdate(
+            userId,
+            {
+                totalPoints: userSubmission.totalPoints,
+                $inc: { targetsLeft: -1 }
+            },
+            { new: true }
+        );
+
+        // Check for tier update
+        const tierUpdate = await checkTierUpdate(userId, userSubmission);
+
+        return res.status(200).json({
+            status: true,
+            message: "TMC game submitted successfully",
+            points,
+            currentTier: user.tierRank,
+            totalPoints: user.totalPoints,
+            gamesCompleted: userSubmission.completedChallenges,
+            tierUpdate
+        });
+
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+
+// P value
 const erf = (x) => {
     const a1 = 0.254829592;
     const a2 = -0.284496736;
@@ -39,186 +122,6 @@ const calculatePValue = (successfulChallenges, totalChallenges) => {
 
     return pValue;
 };
-
-// Function to calculate the tier based on the total points
-const updateUserTier = (points) => {
-    const tierTable = [
-        { name: "NOVICE SEEKER", up: 1, retain: [0], down: null },
-        { name: "INITIATE", up: 1, retain: [-29, 0], down: -30 },
-        { name: "APPRENTICE", up: 31, retain: [1, 30], down: 0 },
-        { name: "EXPLORER", up: 61, retain: [1, 60], down: 0 },
-        { name: "VISIONARY", up: 81, retain: [31, 80], down: 30 },
-        { name: "ADEPT", up: 101, retain: [31, 100], down: 30 },
-        { name: "SEER", up: 121, retain: [61, 120], down: 60 },
-        { name: "ORACLE", up: 141, retain: [61, 140], down: 60 },
-        { name: "MASTER REMOTE VIEWER", up: 161, retain: [101, 160], down: 100 },
-        { name: "ASCENDING MASTER", up: null, retain: [121], down: 120 },
-    ];
-
-    let currentTierIndex = tierTable.findIndex(
-        (tier) => tier.name === "NOVICE SEEKER"
-    );
-
-    for (let i = 0; i < tierTable.length; i++) {
-        if (points >= tierTable[i].up) {
-            currentTierIndex = i;
-        }
-    }
-
-    // Determine the next tier or previous tier transition based on points
-    if (points >= tierTable[currentTierIndex].up) {
-        return tierTable[currentTierIndex].name;
-    } else if (points <= tierTable[currentTierIndex].down) {
-        return tierTable[currentTierIndex - 1].name || tierTable[0].name;
-    }
-
-    return tierTable[currentTierIndex].name;
-};
-
-export const createUserSubmissionTMC = async (req, res, next) => {
-    const { firstChoiceImage, secondChoiceImage, TMCTargetId } = req.body;
-    const userId = req.user._id;
-
-    try {
-        let points = 0;
-
-        // Ensure userSubmission exists
-        let userSubmission = await UserSubmission.findOne({ userId });
-        if (!userSubmission) {
-            userSubmission = new UserSubmission({
-                userId,
-                completedChallenges: 0,
-                totalPoints: 0,
-                tierRank: "NOVICE SEEKER",
-                participatedTMCTargets: [],
-                lastChallengeDate: new Date(),
-            });
-            await userSubmission.save();
-        }
-
-        // Find the TMC target
-        const TMC = await TMCTarget.findById(TMCTargetId);
-        if (!TMC) {
-            return res.status(404).json({ message: "TMC target not found" });
-        }
-
-        // Calculate points for TMC challenge
-        if (TMC.targetImage === firstChoiceImage) {
-            points = 25;
-        } else if (TMC.targetImage === secondChoiceImage) {
-            points = 10;
-        } else {
-            points = -10;
-        }
-
-        // Update userSubmission
-        await UserSubmission.findOneAndUpdate(
-            { userId },
-            {
-                $push: {
-                    participatedTMCTargets: {
-                        TMCId: TMCTargetId,
-                        firstChoiceImage,
-                        secondChoiceImage,
-                        points,
-                    },
-                },
-                $inc: {
-                    completedChallenges: 1,
-                    totalPoints: points,
-                },
-                $set: {
-                    lastChallengeDate: new Date(),
-                },
-            },
-            { new: true }
-        );
-
-        // Re-fetch updated submission
-        userSubmission = await UserSubmission.findOne({ userId });
-
-        // Update totalPoints in UserProfile
-        await User.findByIdAndUpdate(
-            userId,
-            { totalPoints: userSubmission.totalPoints },
-            { new: true, runValidators: true }
-        );
-
-        // Handle tier updates (every 10 challenges)
-        if (userSubmission.completedChallenges >= 10) {
-            const newTier = updateUserTier(userSubmission.tierRank, userSubmission.totalPoints);
-
-            if (userSubmission.tierRank !== newTier) {
-                // Update tier rank in UserSubmission and UserProfile
-                await UserSubmission.findOneAndUpdate({ userId }, { tierRank: newTier, completedChallenges: 0 });
-                await User.findByIdAndUpdate(userId, { tierRank: newTier }, { new: true });
-            }
-        }
-
-        // Handle tier downgrade after 15 days if <10 challenges are completed
-        const timeDiff = new Date() - userSubmission.lastChallengeDate;
-        const cycleTime = 15 * 24 * 60 * 60 * 1000; // 15 days in milliseconds
-
-        if (timeDiff > cycleTime && userSubmission.completedChallenges < 10) {
-            await UserSubmission.findOneAndUpdate(
-                { userId },
-                { completedChallenges: 0, totalPoints: 0, tierRank: "NOVICE SEEKER" }
-            );
-
-            await UserProfile.findByIdAndUpdate(
-                userId,
-                { tierRank: "NOVICE SEEKER", totalPoints: 0 },
-                { new: true, runValidators: true }
-            );
-        }
-
-        return res.status(201).json({
-            message: "TMC challenge submitted successfully",
-            points,
-            tierRank: userSubmission.tierRank,
-        });
-    } catch (error) {
-        next(error);
-    }
-};
-
-export const createUserSubmissionARV = async (req, res, next) => {
-
-    const { submittedImage, ARVTargetId } = req.body;
-    const userId = req.user._id
-
-    try {
-        const doesUserExists = await UserSubmission.findOne({ userId })
-
-        if (!doesUserExists) {
-            const newUserParticipation = new UserSubmission({
-                userId
-            });
-
-            await newUserParticipation.save();
-        }
-
-        await UserSubmission.findOneAndUpdate({ userId },
-            {
-                $push: {
-                    participatedARVTargets: {
-                        ARVId: ARVTargetId,
-                        submittedImage,
-                        points: null
-                    }
-                }
-            },
-        )
-
-        return res.status(201).json({
-            message: "ARV challenge submitted successfully",
-        });
-    }
-
-    catch (error) {
-        next(error);
-    }
-}
 
 export const getPreviousTMCResults = async (req, res) => {
 

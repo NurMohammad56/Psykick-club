@@ -1,7 +1,8 @@
 import express from 'express';
-import {adminLogin, forgotPassword, verifyOtp, resendOTP, resetPassword, updateAdminProfile, changePasswordAdmin, getAverageSessionDuration, getUserSessionDurations, getAllUsers, getActiveUsersCount, getContactUs} from "../controller/admin.controller.js"
-import {isAdmin} from "../middleware/role.middleware.js"
-import {verifyJWT} from "../middleware/auth.middleware.js";
+import { adminLogin, forgotPassword, verifyOtp, resendOTP, resetPassword, updateAdminProfile, changePasswordAdmin, getAverageSessionDuration, getUserSessionDurations, getAllUsers, getActiveUsersCount, getContactUs } from "../controller/admin.controller.js"
+import { getCompletedTargets } from "../controller/userSubmission.controller.js"
+import { isAdmin } from "../middleware/role.middleware.js"
+import { verifyJWT } from "../middleware/auth.middleware.js";
 import upload from "../middleware/multer.middleware.js"
 const router = express.Router();
 
@@ -20,8 +21,8 @@ router.patch("/change-password", verifyJWT, isAdmin, changePasswordAdmin);
 
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<DASHBOARD>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // Get session duration
-router.get("/session-durations/:userId",verifyJWT, isAdmin, getUserSessionDurations);
-router.get("/average-session-duration",verifyJWT, isAdmin, getAverageSessionDuration);
+router.get("/session-durations/:userId", verifyJWT, isAdmin, getUserSessionDurations);
+router.get("/average-session-duration", verifyJWT, isAdmin, getAverageSessionDuration);
 // Get all users
 router.get("/all-users", verifyJWT, isAdmin, getAllUsers);
 // Get active users count
@@ -29,6 +30,8 @@ router.get("/active-users-count", verifyJWT, isAdmin, getActiveUsersCount);
 
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<CONTACT US>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 router.get("/all-contact-us", verifyJWT, isAdmin, getContactUs);
+
+router.get('/completedTargets/:userId', getCompletedTargets);
 
 
 
