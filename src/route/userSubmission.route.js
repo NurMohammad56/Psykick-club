@@ -1,6 +1,6 @@
 import express from "express";
 import { verifyJWT } from "../middleware/auth.middleware.js";
-import { submitARVGame, checkARVOutcome, submitTMCGame, getTMCTargetResult, getARVTargetResult, updateARVTargetPoints, updateARVAnalytics, updateTMCAnalytics, getPreviousTMCResults, getPreviousARVResults } from "../controller/userSubmission.controller.js";
+import { submitARVGame, submitTMCGame, getTMCTargetResult, getARVTargetResult, updateARVTargetPoints, updateARVAnalytics, updateTMCAnalytics, getPreviousTMCResults, getPreviousARVResults } from "../controller/userSubmission.controller.js";
 import { updateUserTier } from "../controller/tier.controller.js"
 
 const router = express.Router();
@@ -18,7 +18,6 @@ router.patch("/update-ARVPoints/:ARVTargetId", verifyJWT, updateARVTargetPoints)
 router.patch("/update-ARVAnalytics", verifyJWT, updateARVAnalytics);
 router.patch("/update-TMCAnalytics", verifyJWT, updateTMCAnalytics);
 router.post('/update-tier/:userId',verifyJWT, updateUserTier);
-router.post('/check-outcome', checkARVOutcome);
 
 
 export default router;

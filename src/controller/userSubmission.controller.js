@@ -129,6 +129,65 @@ export const checkTierUpdate = async (userId) => {
     }
 };
 
+export const submitARVGame = async (req, res) => {
+    try {
+        const { submittedImage, ARVTargetId } = req.body;
+        const userId = req.user._id;
+
+        const ARV = await ARVTarget.findById(ARVTargetId);
+        if (!ARV) {
+            return res.status(404).json({ message: "ARV target not found" });
+        }
+
+        const currentTime = new Date();
+
+
+        if (currentTime > ARV.bufferTime) {
+            return res.status(400).json({
+                message: "Submission period has ended",
+                details: {
+                    lastSubmissionTime: ARV.bufferTime,
+                    currentTime: currentTime
+                }
+            });
+        }
+
+        let userSubmission = await UserSubmission.findOne({ userId }) ||
+            new UserSubmission({ userId, tierRank: "NOVICE SEEKER" });
+
+        userSubmission.participatedARVTargets.push({
+            ARVId: ARVTargetId,
+            submittedImage,
+            points: 0, 
+            submittedAt: currentTime,
+            resultChecked: false
+        });
+
+        userSubmission.completedChallenges += 1;
+        await userSubmission.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "ARV game submitted successfully",
+            data: {
+                revealTime: ARV.revealTime,
+                outcomeTime: ARV.outcomeTime,
+                bufferTime: ARV.bufferTime,
+                submissionStatus: {
+                    canSubmit: true,
+                    until: ARV.bufferTime
+                }
+            }
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+};
+
 
 
 // P value
