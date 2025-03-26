@@ -83,6 +83,52 @@ export const submitTMCGame = async (req, res, next) => {
     }
 };
 
+export const checkTierUpdate = async (userId) => {
+    try {
+        // Get user data from database
+        const userSubmission = await UserSubmission.findOne({ userId });
+        if (!userSubmission) {
+            return {
+                status: false,
+                message: "User submission not found"
+            };
+        }
+
+        // Calculate cycle status
+        const gamesCompleted = userSubmission.completedChallenges;
+        const cycleStartDate = userSubmission.lastChallengeDate || userSubmission.createdAt;
+        const daysInCycle = Math.floor((new Date() - cycleStartDate) / (1000 * 60 * 60 * 24));
+        const shouldEndCycle = gamesCompleted >= 10 || daysInCycle >= 15;
+
+        if (!shouldEndCycle) {
+            return {
+                status: true,
+                message: "Cycle not yet complete",
+                data: {
+                    gamesCompleted,
+                    daysInCycle,
+                    cycleComplete: false
+                }
+            };
+        }
+
+        // If cycle should end, update tier
+        const updateResult = await updateUserTier(userId);
+
+        return {
+            status: true,
+            message: "Tier update checked successfully",
+            data: {
+                ...updateResult,
+                cycleComplete: true
+            }
+        };
+
+    } catch (error) {
+        throw error;
+    }
+};
+
 
 
 // P value
