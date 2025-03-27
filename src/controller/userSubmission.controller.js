@@ -205,8 +205,6 @@ export const submitARVGame = async (req, res) => {
         });
     }
 };
-export const getCompletedTargets = async (_, res, next) => {
-
 export const getCompletedTargets = async (req, res, next) => {
     try {
       // Aggregate all user submissions
