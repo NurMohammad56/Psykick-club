@@ -49,13 +49,9 @@ const cumulativeStdNormalProbability = (z) => {
 // Check if user's tier should be updated
 export const checkTierUpdate = async (userId) => {
     try {
-        // Get user data from database
         const userSubmission = await UserSubmission.findOne({ userId });
         if (!userSubmission) {
-            return {
-                status: false,
-                message: "User submission not found"
-            };
+            return { status: false, message: "User submission not found" };
         }
 
         // Calculate cycle status
@@ -76,8 +72,11 @@ export const checkTierUpdate = async (userId) => {
             };
         }
 
-        // If cycle should end, update tier
+        // If cycle should end, update tier and reset cycle
         const updateResult = await updateUserTier(userId);
+
+        // Reset targetsLeft for new cycle
+        await User.findByIdAndUpdate(userId, { $set: { targetsLeft: 10 } });
 
         return {
             status: true,
@@ -87,7 +86,6 @@ export const checkTierUpdate = async (userId) => {
                 cycleComplete: true
             }
         };
-
     } catch (error) {
         throw error;
     }
@@ -168,6 +166,14 @@ export const submitTMCGame = async (req, res, next) => {
             return res.status(403).json({
                 status: false,
                 message: "No targets left in current cycle"
+            });
+        }
+        if (currentUser.targetsLeft <= 0) {
+            return res.status(403).json({
+                status: false,
+                message: "No targets left in current cycle",
+                cycleComplete: true,
+                nextCycleStarts: "Immediately after tier update"
             });
         }
 
@@ -255,6 +261,15 @@ export const submitARVGame = async (req, res, next) => {
             });
         }
 
+        if (currentUser.targetsLeft <= 0) {
+            return res.status(403).json({
+                status: false,
+                message: "No targets left in current cycle",
+                cycleComplete: true,
+                nextCycleStarts: "Immediately after tier update"
+            });
+        }
+
         userSubmission.participatedARVTargets.push({
             ARVId: ARVTargetId,
             submittedImage,
@@ -265,7 +280,7 @@ export const submitARVGame = async (req, res, next) => {
         userSubmission.completedChallenges += 1;
         await userSubmission.save();
 
-                const updatedUser = await User.findByIdAndUpdate(
+        const updatedUser = await User.findByIdAndUpdate(
             userId,
             {
                 totalPoints: userSubmission.totalPoints,
