@@ -18,7 +18,6 @@ export const submitTMCGame = async (req, res, next) => {
                 userId,
                 completedChallenges: 0,
                 totalPoints: 0,
-                tierRank: "NOVICE SEEKER",
                 participatedTMCTargets: [],
                 participatedARVTargets: [],
                 lastChallengeDate: new Date()
@@ -28,16 +27,28 @@ export const submitTMCGame = async (req, res, next) => {
 
         // Find the TMC target
         const TMC = await TMCTarget.findById(TMCTargetId);
+
         if (!TMC) {
             return res.status(404).json({ status: false, message: "TMC target not found" });
+        }
+
+        if (TMC.gameTime.getTime() < new Date().getTime()) {
+            return res.status(403).json({
+                status: false,
+                message: "Game time has ended"
+            });
         }
 
         // Calculate points based on choices
         if (TMC.targetImage === firstChoiceImage) {
             points = 25;
-        } else if (TMC.targetImage === secondChoiceImage) {
+        }
+
+        else if (TMC.targetImage === secondChoiceImage) {
             points = 10;
-        } else {
+        }
+
+        else {
             points = -10;
         }
 
@@ -78,7 +89,9 @@ export const submitTMCGame = async (req, res, next) => {
             tierUpdate
         });
 
-    } catch (error) {
+    }
+
+    catch (error) {
         next(error);
     }
 };
@@ -139,8 +152,13 @@ export const submitARVGame = async (req, res) => {
             return res.status(404).json({ message: "ARV target not found" });
         }
 
-        const currentTime = new Date();
+        if (ARV.gameTime.getTime() < new Date().getTime()) {
+            return res.status(403).json({
+                message: "Game time has ended"
+            });
+        }
 
+        const currentTime = new Date();
 
         if (currentTime > ARV.bufferTime) {
             return res.status(400).json({
@@ -158,7 +176,7 @@ export const submitARVGame = async (req, res) => {
         userSubmission.participatedARVTargets.push({
             ARVId: ARVTargetId,
             submittedImage,
-            points: 0, 
+            points: 0,
             submittedAt: currentTime,
             resultChecked: false
         });
@@ -187,6 +205,7 @@ export const submitARVGame = async (req, res) => {
         });
     }
 };
+
 export const getCompletedTargets = async (req, res, next) => {
     try {
         const { userId } = req.params;

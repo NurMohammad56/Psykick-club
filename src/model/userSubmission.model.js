@@ -38,14 +38,6 @@ const UserSubmissionSchema = new Schema(
         points: {
           type: Number,
           default: 0,
-        },
-        submittedAt: {
-          type: Date,
-          default: Date.now
-        },
-        resultChecked: {
-          type: Boolean,
-          default: false
         }
       },
     ],
