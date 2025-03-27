@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { TMCTarget } from "../model/TMCTarget.model.js";
 import { ARVTarget } from "../model/ARVTarget.model.js";
 import { UserSubmission } from "../model/userSubmission.model.js";
@@ -147,6 +148,29 @@ export const submitTMCGame = async (req, res, next) => {
             points = -10;
         }
 
+        // Calculate points based on choices
+        if (TMC.targetImage === firstChoiceImage) {
+            points = 25;
+        } else if (TMC.targetImage === secondChoiceImage) {
+            points = 10;
+        } else {
+            points = -10;
+        }
+
+        // Get current user to check targetsLeft
+        const currentUser = await User.findById(userId);
+        if (!currentUser) {
+            return res.status(404).json({ status: false, message: "User not found" });
+        }
+
+        // Check if user has targets left
+        if (currentUser.targetsLeft <= 0) {
+            return res.status(403).json({
+                status: false,
+                message: "No targets left in current cycle"
+            });
+        }
+
         // Update user submission
         userSubmission.participatedTMCTargets.push({
             TMCId: TMCTargetId,
@@ -162,7 +186,7 @@ export const submitTMCGame = async (req, res, next) => {
         await userSubmission.save();
 
         // Update user profile
-        const user = await User.findByIdAndUpdate(
+        const updatedUser = await User.findByIdAndUpdate(
             userId,
             {
                 totalPoints: userSubmission.totalPoints,
@@ -178,8 +202,9 @@ export const submitTMCGame = async (req, res, next) => {
             status: true,
             message: "TMC game submitted successfully",
             points,
-            currentTier: user.tierRank,
-            totalPoints: user.totalPoints,
+            currentTier: updatedUser.tierRank,
+            totalPoints: updatedUser.totalPoints,
+            targetsLeft: updatedUser.targetsLeft,
             gamesCompleted: userSubmission.completedChallenges,
             tierUpdate
         });
@@ -215,6 +240,20 @@ export const submitARVGame = async (req, res, next) => {
         let userSubmission = await UserSubmission.findOne({ userId }) ||
             new UserSubmission({ userId, tierRank: "NOVICE SEEKER" });
 
+        // Get current user to check targetsLeft
+        const currentUser = await User.findById(userId);
+        if (!currentUser) {
+            return res.status(404).json({ status: false, message: "User not found" });
+        }
+
+        // Check if user has targets left
+        if (currentUser.targetsLeft <= 0) {
+            return res.status(403).json({
+                status: false,
+                message: "No targets left in current cycle"
+            });
+        }
+
         userSubmission.participatedARVTargets.push({
             ARVId: ARVTargetId,
             submittedImage,
@@ -223,6 +262,15 @@ export const submitARVGame = async (req, res, next) => {
 
         userSubmission.completedChallenges += 1;
         await userSubmission.save();
+
+                const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            {
+                totalPoints: userSubmission.totalPoints,
+                $inc: { targetsLeft: -1 }
+            },
+            { new: true }
+        );
 
 
         return res.status(200).json({
@@ -236,7 +284,8 @@ export const submitARVGame = async (req, res, next) => {
                     canSubmit: true,
                     until: ARV.gameTime
                 }
-            }
+            },
+            targetsLeft: updatedUser.targetsLeft,
         });
     }
 
@@ -244,6 +293,7 @@ export const submitARVGame = async (req, res, next) => {
         next(error);
     }
 };
+
 
 // Get completed targets for a user for admin dashboard
 export const getCompletedTargets = async (req, res, next) => {
@@ -460,35 +510,53 @@ export const getARVTargetResult = async (req, res, next) => {
 
 // Update ARV target points
 export const updateARVTargetPoints = async (req, res, next) => {
-
-    const { ARVTargetId } = req.params
-    const { submittedImage } = req.body
-    const userId = req.user._id
+    const { ARVTargetId } = req.params;
+    const { submittedImage } = req.body;
+    const userId = req.user._id;
 
     try {
-        let points
-        const ARV = await ARVTarget.findById(ARVTargetId)
+        let points;
+        const ARV = await ARVTarget.findById(ARVTargetId);
+        if (!ARV) {
+            return res.status(404).json({ status: false, message: "ARV target not found" });
+        }
 
+        // Calculate points
         points = ARV.resultImage === submittedImage ? 25 : -10;
 
+        // Update points inside UserSubmission -> participatedARVTargets
         const userSubmission = await UserSubmission.findOneAndUpdate(
             { userId, "participatedARVTargets.ARVId": ARVTargetId },
-            { $set: { "participatedARVTargets.$.points": points } },
+            { $set: { "participatedARVTargets.$.points": points }, $inc: { totalPoints: points } },
             { new: true }
         );
+
+        if (!userSubmission) {
+            return res.status(404).json({ status: false, message: "User submission not found" });
+        }
+
+        // Update User totalPoints
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { $inc: { totalPoints: points } },
+            { new: true }
+        );
+
+        // Update User totalPoints
         const tierUpdate = await checkTierUpdate(userId, userSubmission);
 
         return res.status(200).json({
             status: true,
-            message: "Points calculated successfully",
-            tierUpdate
-        })
+            message: "Points updated successfully",
+            points,
+            totalPoints: updatedUser.totalPoints,
+            tierUpdate: tierUpdate || { changed: false }
+        });
+    } catch (error) {
+        next(error);
     }
+};
 
-    catch (error) {
-        next(error)
-    }
-}
 
 // Update TMC analytics
 export const updateTMCAnalytics = async (req, res, next) => {

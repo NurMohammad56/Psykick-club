@@ -77,7 +77,7 @@ const userSchema = new Schema(
     },
     targetsLeft: {
       type: Number,
-      default: 0,
+      default: 10,
     },
     TMCSuccessRate: {
       type: Number,
