@@ -4,6 +4,48 @@ import { UserSubmission } from "../model/userSubmission.model.js";
 import { User } from "../model/user.model.js";
 import { updateUserTier } from "./tier.controller.js";
 
+
+// P value
+const erf = (x) => {
+    const a1 = 0.254829592;
+    const a2 = -0.284496736;
+    const a3 = 1.421413741;
+    const a4 = -1.453152027;
+    const a5 = 1.061405429;
+    const p = 0.3275911;
+
+    const sign = (x >= 0) ? 1 : -1;
+    x = Math.abs(x);
+
+    const t = 1.0 / (1.0 + p * x);
+    const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+
+    return sign * y;
+};
+
+// Calculate p-value
+const calculatePValue = (successfulChallenges, totalChallenges) => {
+    if (totalChallenges === 0) return 1; // Avoid division by zero, return max p-value
+    if (successfulChallenges === 0) return 1; // If no success, p-value is 1
+    if (successfulChallenges === totalChallenges) return 0.0001; // If 100% success, p-value is very small
+
+    const p0 = 0.5; // Null hypothesis probability (50% chance)
+    const pHat = successfulChallenges / totalChallenges; // Observed success rate
+    const SE = Math.sqrt((p0 * (1 - p0)) / totalChallenges); // Standard error
+    const Z = (pHat - p0) / SE; // Z-score
+
+    // Calculate two-tailed p-value using cumulative standard normal probability
+    const pValue = 2 * (1 - cumulativeStdNormalProbability(Z));
+
+    return pValue;
+};
+
+// Cumulative standard normal probability
+const cumulativeStdNormalProbability = (z) => {
+    return 0.5 * (1 + erf(z / Math.sqrt(2)));
+};
+
+// Submit TMC game
 export const submitTMCGame = async (req, res, next) => {
     const { firstChoiceImage, secondChoiceImage, TMCTargetId } = req.body;
     const userId = req.user._id;
@@ -101,6 +143,7 @@ export const submitTMCGame = async (req, res, next) => {
     }
 };
 
+// Check if user's tier should be updated
 export const checkTierUpdate = async (userId) => {
     try {
         // Get user data from database
@@ -147,6 +190,7 @@ export const checkTierUpdate = async (userId) => {
     }
 };
 
+// Submit ARV game
 export const submitARVGame = async (req, res, next) => {
     try {
         const { submittedImage, ARVTargetId } = req.body;
@@ -200,6 +244,8 @@ export const submitARVGame = async (req, res, next) => {
         next(error);
     }
 };
+
+// Get completed targets for a user for admin dashboard
 export const getCompletedTargets = async (req, res, next) => {
     try {
         // 1. Fetch all user submissions with populated target data
@@ -271,44 +317,7 @@ export const getCompletedTargets = async (req, res, next) => {
     }
 };
 
-// P value
-const erf = (x) => {
-    const a1 = 0.254829592;
-    const a2 = -0.284496736;
-    const a3 = 1.421413741;
-    const a4 = -1.453152027;
-    const a5 = 1.061405429;
-    const p = 0.3275911;
-
-    const sign = (x >= 0) ? 1 : -1;
-    x = Math.abs(x);
-
-    const t = 1.0 / (1.0 + p * x);
-    const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
-
-    return sign * y;
-};
-
-const cumulativeStdNormalProbability = (z) => {
-    return 0.5 * (1 + erf(z / Math.sqrt(2)));
-};
-
-const calculatePValue = (successfulChallenges, totalChallenges) => {
-    if (totalChallenges === 0) return 1; // Avoid division by zero, return max p-value
-    if (successfulChallenges === 0) return 1; // If no success, p-value is 1
-    if (successfulChallenges === totalChallenges) return 0.0001; // If 100% success, p-value is very small
-
-    const p0 = 0.5; // Null hypothesis probability (50% chance)
-    const pHat = successfulChallenges / totalChallenges; // Observed success rate
-    const SE = Math.sqrt((p0 * (1 - p0)) / totalChallenges); // Standard error
-    const Z = (pHat - p0) / SE; // Z-score
-
-    // Calculate two-tailed p-value using cumulative standard normal probability
-    const pValue = 2 * (1 - cumulativeStdNormalProbability(Z));
-
-    return pValue;
-};
-
+// Get previous TMC results for a user
 export const getPreviousTMCResults = async (req, res) => {
 
     const userId = req.user._id
@@ -337,6 +346,7 @@ export const getPreviousTMCResults = async (req, res) => {
     }
 }
 
+// Get previous ARV results for a user
 export const getPreviousARVResults = async (req, res) => {
 
     const userId = req.user._id
@@ -365,6 +375,7 @@ export const getPreviousARVResults = async (req, res) => {
     }
 }
 
+// Get TMC target result
 export const getTMCTargetResult = async (req, res, next) => {
     const { TMCTargetId } = req.params;
     const userId = req.user._id;
@@ -408,7 +419,7 @@ export const getTMCTargetResult = async (req, res, next) => {
     }
 };
 
-
+// Get ARV target result
 export const getARVTargetResult = async (req, res, next) => {
 
     const { ARVTargetId } = req.params
@@ -447,6 +458,7 @@ export const getARVTargetResult = async (req, res, next) => {
     }
 }
 
+// Update ARV target points
 export const updateARVTargetPoints = async (req, res, next) => {
 
     const { ARVTargetId } = req.params
@@ -475,6 +487,7 @@ export const updateARVTargetPoints = async (req, res, next) => {
     }
 }
 
+// Update TMC analytics
 export const updateTMCAnalytics = async (req, res, next) => {
     const userId = req.user._id;
 
@@ -518,6 +531,7 @@ export const updateTMCAnalytics = async (req, res, next) => {
     }
 };
 
+// Calculate cumulative standard normal probability using the Z-score
 export const updateARVAnalytics = async (req, res, next) => {
     const userId = req.user._id;
 

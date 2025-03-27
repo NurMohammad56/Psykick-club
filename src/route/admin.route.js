@@ -28,11 +28,12 @@ router.get("/all-users", verifyJWT, isAdmin, getAllUsers);
 // Get active users count
 router.get("/active-users-count", verifyJWT, isAdmin, getActiveUsersCount);
 
+// Get completed targets for a user
+router.get('/completedTargets/:userId', getCompletedTargets);
+
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<CONTACT US>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 router.get("/all-contact-us", verifyJWT, isAdmin, getContactUs);
 
-// Get completed targets for a user
-router.get('/completedTargets/:userId', getCompletedTargets);
 
 
 
