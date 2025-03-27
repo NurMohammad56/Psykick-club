@@ -32,10 +32,16 @@ export const submitTMCGame = async (req, res, next) => {
             return res.status(404).json({ status: false, message: "TMC target not found" });
         }
 
-        if (TMC.gameTime.getTime() < new Date().getTime()) {
+        const currentTime = new Date();
+
+        if (TMC.gameTime.getTime() < currentTime.getTime()) {
             return res.status(403).json({
                 status: false,
-                message: "Game time has ended"
+                message: "Game time has ended",
+                details: {
+                    lastSubmissionTime: TMC.gameTime,
+                    currentTime: currentTime
+                }
             });
         }
 
@@ -88,7 +94,6 @@ export const submitTMCGame = async (req, res, next) => {
             gamesCompleted: userSubmission.completedChallenges,
             tierUpdate
         });
-
     }
 
     catch (error) {
@@ -142,7 +147,7 @@ export const checkTierUpdate = async (userId) => {
     }
 };
 
-export const submitARVGame = async (req, res) => {
+export const submitARVGame = async (req, res, next) => {
     try {
         const { submittedImage, ARVTargetId } = req.body;
         const userId = req.user._id;
@@ -152,19 +157,13 @@ export const submitARVGame = async (req, res) => {
             return res.status(404).json({ message: "ARV target not found" });
         }
 
-        if (ARV.gameTime.getTime() < new Date().getTime()) {
-            return res.status(403).json({
-                message: "Game time has ended"
-            });
-        }
-
         const currentTime = new Date();
 
-        if (currentTime > ARV.bufferTime) {
-            return res.status(400).json({
-                message: "Submission period has ended",
+        if (ARV.gameTime.getTime() < currentTime.getTime()) {
+            return res.status(403).json({
+                message: "Game time has ended",
                 details: {
-                    lastSubmissionTime: ARV.bufferTime,
+                    lastSubmissionTime: ARV.gameTime,
                     currentTime: currentTime
                 }
             });
@@ -176,9 +175,7 @@ export const submitARVGame = async (req, res) => {
         userSubmission.participatedARVTargets.push({
             ARVId: ARVTargetId,
             submittedImage,
-            points: 0,
-            submittedAt: currentTime,
-            resultChecked: false
+            points: 0
         });
 
         userSubmission.completedChallenges += 1;
@@ -190,19 +187,17 @@ export const submitARVGame = async (req, res) => {
             data: {
                 revealTime: ARV.revealTime,
                 outcomeTime: ARV.outcomeTime,
-                bufferTime: ARV.bufferTime,
+                gameTime: ARV.gameTime,
                 submissionStatus: {
                     canSubmit: true,
-                    until: ARV.bufferTime
+                    until: ARV.gameTime
                 }
             }
         });
+    }
 
-    } catch (error) {
-        return res.status(500).json({
-            success: false,
-            error: error.message
-        });
+    catch (error) {
+        next(error);
     }
 };
 export const getCompletedTargets = async (req, res, next) => {
