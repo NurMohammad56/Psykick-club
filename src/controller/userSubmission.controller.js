@@ -176,7 +176,8 @@ export const submitTMCGame = async (req, res, next) => {
             TMCId: TMCTargetId,
             firstChoiceImage,
             secondChoiceImage,
-            points
+            points,
+            submissionTime: currentTime
         });
 
         userSubmission.completedChallenges += 1;
@@ -257,7 +258,8 @@ export const submitARVGame = async (req, res, next) => {
         userSubmission.participatedARVTargets.push({
             ARVId: ARVTargetId,
             submittedImage,
-            points: 0
+            points: 0,
+            submissionTime: currentTime
         });
 
         userSubmission.completedChallenges += 1;

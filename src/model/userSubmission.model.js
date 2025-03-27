@@ -23,6 +23,9 @@ const UserSubmissionSchema = new Schema(
         points: {
           type: Number,
         },
+        submissionTime: {
+          type: Date,
+        },
       },
     ],
     participatedARVTargets: [
@@ -38,7 +41,10 @@ const UserSubmissionSchema = new Schema(
         points: {
           type: Number,
           default: 0,
-        }
+        },
+        submissionTime: {
+          type: Date,
+        },
       },
     ],
     completedChallenges: {
