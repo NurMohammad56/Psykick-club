@@ -54,7 +54,6 @@ export const checkTierUpdate = async (userId) => {
             return { status: false, message: "User submission not found" };
         }
 
-        // Calculate cycle status
         const gamesCompleted = userSubmission.completedChallenges;
         const cycleStartDate = userSubmission.lastChallengeDate || userSubmission.createdAt;
         const daysInCycle = Math.floor((new Date() - cycleStartDate) / (1000 * 60 * 60 * 24));
@@ -72,15 +71,12 @@ export const checkTierUpdate = async (userId) => {
             };
         }
 
-        // If cycle should end, update tier and reset cycle
+        // If cycle should end, update tier and reset everything
         const updateResult = await updateUserTier(userId);
-
-        // Reset targetsLeft for new cycle
-        await User.findByIdAndUpdate(userId, { $set: { targetsLeft: 10 } });
 
         return {
             status: true,
-            message: "Tier update checked successfully",
+            message: "Cycle completed. Points reset and new cycle started.",
             data: {
                 ...updateResult,
                 cycleComplete: true

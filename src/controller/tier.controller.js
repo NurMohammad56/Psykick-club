@@ -31,7 +31,7 @@ export const updateUserTier = async (userId) => {
             let finalPoints = userSubmission.totalPoints;
             const daysInCycle = Math.floor((new Date() - (userSubmission.lastChallengeDate || userSubmission.createdAt)) / (1000 * 60 * 60 * 24));
 
-            // Apply penalty only if 15 days passed
+            // Apply penalty only if 15 days passed and not completed 10 games
             if (daysInCycle >= 15 && userSubmission.completedChallenges < 10) {
                 const missingGames = 10 - userSubmission.completedChallenges;
                 finalPoints -= missingGames * 10;
@@ -40,24 +40,27 @@ export const updateUserTier = async (userId) => {
 
             const newTier = calculateNewTier(user.tierRank, finalPoints);
 
+            // Reset points to 0 for new cycle
+            const resetPoints = 0;
+
             await Promise.all([
                 User.updateOne(
                     { _id: userId },
-                    {
-                        $set: {
-                            tierRank: newTier,
-                            totalPoints: finalPoints,
+                    { 
+                        $set: { 
+                            tierRank: newTier, 
+                            totalPoints: resetPoints, // Reset to 0
                             targetsLeft: 10 // Reset for new cycle
-                        }
+                        } 
                     },
                     { session }
                 ),
                 UserSubmission.updateOne(
                     { userId },
-                    {
-                        $set: {
-                            tierRank: newTier,
-                            totalPoints: finalPoints,
+                    { 
+                        $set: { 
+                            tierRank: newTier, 
+                            totalPoints: resetPoints, // Reset to 0
                             completedChallenges: 0, // Reset counter
                             lastChallengeDate: new Date() // Reset cycle
                         }
@@ -65,6 +68,15 @@ export const updateUserTier = async (userId) => {
                     { session }
                 )
             ]);
+
+            return {
+                status: true,
+                message: "Tier updated and points reset for new cycle",
+                previousTier: user.tierRank,
+                newTier,
+                pointsReset: true,
+                resetValue: resetPoints
+            };
         });
     } catch (error) {
         console.error("Tier update failed:", error);
@@ -73,7 +85,6 @@ export const updateUserTier = async (userId) => {
         session.endSession();
     }
 };
-
 function calculateNewTier(currentTier, points) {
     const currentIndex = tierTable.findIndex(t => t.name === currentTier);
     if (currentIndex === -1) return 'NOVICE SEEKER';
