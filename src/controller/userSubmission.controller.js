@@ -2,7 +2,7 @@ import { TMCTarget } from "../model/TMCTarget.model.js";
 import { ARVTarget } from "../model/ARVTarget.model.js";
 import { UserSubmission } from "../model/userSubmission.model.js";
 import { User } from "../model/user.model.js";
-import { updateUserTier } from "./tier.controller.js"; // Ensure this import is correct and the function exists in tier.controller.js
+import { updateUserTier } from "./tier.controller.js";
 
 export const submitTMCGame = async (req, res, next) => {
     const { firstChoiceImage, secondChoiceImage, TMCTargetId } = req.body;
@@ -187,43 +187,42 @@ export const submitARVGame = async (req, res) => {
         });
     }
 };
-export const getCompletedTargets = async (req, res, next) => {
+export const getCompletedTargets = async (_, res, next) => {
     try {
-        const { userId } = req.params;
-
-        // Find user submission
-        const userSubmission = await UserSubmission.findOne({ userId });
-
-        if (!userSubmission) {
-            return res.status(200).json({
-                success: true,
-                data: {
-                    completedTargets: 0,
-                    remainingTargets: 10,
-                    progressPercentage: 0
-                }
-            });
-        }
-
-        // Calculate progress
-        const completedTargets = userSubmission.completedChallenges;
-        const remainingTargets = Math.max(0, 10 - completedTargets);
-        const progressPercentage = Math.min(100, (completedTargets / 10) * 100);
-
-        return res.status(200).json({
-            status: true,
-            message: "Completed targets retrieved successfully",
-            data: {
-                completedTargets,
-                remainingTargets,
-                progressPercentage
-            }
-        });
-
+      // Aggregate all user submissions
+      const allSubmissions = await UserSubmission.find({});
+  
+      // Calculate totals
+      const totalCompletedTargets = allSubmissions.reduce(
+        (sum, submission) => sum + submission.completedChallenges,
+        0
+      );
+  
+      const totalUsers = allSubmissions.length;
+      const averageCompletedTargets = totalUsers > 0 
+        ? totalCompletedTargets / totalUsers 
+        : 0;
+  
+      return res.status(200).json({
+        status: true,
+        message: "All targets retrieved successfully",
+        data: {
+          totalCompletedTargets,
+          totalUsers,
+          averageCompletedTargets,
+          submissions: allSubmissions.map(submission => ({
+            userId: submission.userId,
+            completedTargets: submission.completedChallenges,
+            remainingTargets: Math.max(0, 10 - submission.completedChallenges),
+            progressPercentage: Math.min(100, (submission.completedChallenges / 10) * 100),
+          })),
+        },
+      });
+  
     } catch (error) {
-        next(error);
+      next(error);
     }
-};
+  };
 
 // P value
 const erf = (x) => {
