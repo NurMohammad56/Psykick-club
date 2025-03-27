@@ -45,6 +45,53 @@ const cumulativeStdNormalProbability = (z) => {
     return 0.5 * (1 + erf(z / Math.sqrt(2)));
 };
 
+// Check if user's tier should be updated
+export const checkTierUpdate = async (userId) => {
+    try {
+        // Get user data from database
+        const userSubmission = await UserSubmission.findOne({ userId });
+        if (!userSubmission) {
+            return {
+                status: false,
+                message: "User submission not found"
+            };
+        }
+
+        // Calculate cycle status
+        const gamesCompleted = userSubmission.completedChallenges;
+        const cycleStartDate = userSubmission.lastChallengeDate || userSubmission.createdAt;
+        const daysInCycle = Math.floor((new Date() - cycleStartDate) / (1000 * 60 * 60 * 24));
+        const shouldEndCycle = gamesCompleted >= 10 || daysInCycle >= 15;
+
+        if (!shouldEndCycle) {
+            return {
+                status: true,
+                message: "Cycle not yet complete",
+                data: {
+                    gamesCompleted,
+                    daysInCycle,
+                    cycleComplete: false
+                }
+            };
+        }
+
+        // If cycle should end, update tier
+        const updateResult = await updateUserTier(userId);
+
+        return {
+            status: true,
+            message: "Tier update checked successfully",
+            data: {
+                ...updateResult,
+                cycleComplete: true
+            }
+        };
+
+    } catch (error) {
+        throw error;
+    }
+};
+
 // Submit TMC game
 export const submitTMCGame = async (req, res, next) => {
     const { firstChoiceImage, secondChoiceImage, TMCTargetId } = req.body;
@@ -143,53 +190,6 @@ export const submitTMCGame = async (req, res, next) => {
     }
 };
 
-// Check if user's tier should be updated
-export const checkTierUpdate = async (userId) => {
-    try {
-        // Get user data from database
-        const userSubmission = await UserSubmission.findOne({ userId });
-        if (!userSubmission) {
-            return {
-                status: false,
-                message: "User submission not found"
-            };
-        }
-
-        // Calculate cycle status
-        const gamesCompleted = userSubmission.completedChallenges;
-        const cycleStartDate = userSubmission.lastChallengeDate || userSubmission.createdAt;
-        const daysInCycle = Math.floor((new Date() - cycleStartDate) / (1000 * 60 * 60 * 24));
-        const shouldEndCycle = gamesCompleted >= 10 || daysInCycle >= 15;
-
-        if (!shouldEndCycle) {
-            return {
-                status: true,
-                message: "Cycle not yet complete",
-                data: {
-                    gamesCompleted,
-                    daysInCycle,
-                    cycleComplete: false
-                }
-            };
-        }
-
-        // If cycle should end, update tier
-        const updateResult = await updateUserTier(userId);
-
-        return {
-            status: true,
-            message: "Tier update checked successfully",
-            data: {
-                ...updateResult,
-                cycleComplete: true
-            }
-        };
-
-    } catch (error) {
-        throw error;
-    }
-};
-
 // Submit ARV game
 export const submitARVGame = async (req, res, next) => {
     try {
@@ -202,7 +202,6 @@ export const submitARVGame = async (req, res, next) => {
         }
 
         const currentTime = new Date();
-
         if (ARV.gameTime.getTime() < currentTime.getTime()) {
             return res.status(403).json({
                 message: "Game time has ended",
@@ -224,6 +223,7 @@ export const submitARVGame = async (req, res, next) => {
 
         userSubmission.completedChallenges += 1;
         await userSubmission.save();
+
 
         return res.status(200).json({
             success: true,
@@ -471,14 +471,17 @@ export const updateARVTargetPoints = async (req, res, next) => {
 
         points = ARV.resultImage === submittedImage ? 25 : -10;
 
-        await UserSubmission.findOneAndUpdate(
+        const userSubmission = await UserSubmission.findOneAndUpdate(
             { userId, "participatedARVTargets.ARVId": ARVTargetId },
             { $set: { "participatedARVTargets.$.points": points } },
+            { new: true }
         );
+        const tierUpdate = await checkTierUpdate(userId, userSubmission);
 
         return res.status(200).json({
             status: true,
-            message: "Points calculated successfully"
+            message: "Points calculated successfully",
+            tierUpdate
         })
     }
 

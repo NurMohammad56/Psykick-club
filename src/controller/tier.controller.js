@@ -29,7 +29,6 @@ export const updateUserTier = async (userId) => {
                 throw new Error("User data not found");
             }
 
-            // পয়েন্ট ক্যালকুলেশন
             let finalPoints = userSubmission.totalPoints;
             if (userSubmission.completedChallenges < 10) {
                 const missingGames = 10 - userSubmission.completedChallenges;
@@ -37,10 +36,8 @@ export const updateUserTier = async (userId) => {
                 finalPoints = Math.max(finalPoints, -29);
             }
 
-            // নতুন টিয়ার নির্ধারণ
             const newTier = calculateNewTier(user.tierRank, finalPoints);
 
-            // একই ট্রানজেকশনে আপডেট
             await Promise.all([
                 User.updateOne(
                     { _id: userId },
