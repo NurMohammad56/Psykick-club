@@ -5,6 +5,7 @@ import errorHandler from './src/middleware/errorHandler.middleware.js'
 import { notFoundHandler } from './src/middleware/notFoundHandler.middleware.js';
 import passport from 'passport';
 import session from 'express-session';
+import cors from "cors";
 
 dotenv.config();
 
@@ -15,11 +16,17 @@ app.use(session({ secret: process.env.SESSION_SECRET, resave: false, saveUniniti
 app.use(passport.initialize());
 app.use(passport.session());
 
-
 const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(express.json());
+
+app.use(
+  cors({
+    origin: "*",
+    credentials: true,
+  })
+);
 
 app.get('/', (req, res) => {
   res.send('Welcome to the server');
@@ -54,7 +61,6 @@ app.use('/api/v1/terms-and-condition', termsCondition);
 app.use('/api/v1/about-us', aboutUsRoute);
 app.use('/api/v1', OAuthRoute);
 app.use('/api/v1', contactUsRoute);
-
 
 // not found route handler middleware
 app.use(notFoundHandler)
