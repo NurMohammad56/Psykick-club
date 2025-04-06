@@ -114,6 +114,7 @@ const loginUser = async (req, res) => {
     status: true,
     message: "User logged in successfully",
     data: loggedUser,
+    token: accessToken
   });
 };
 
