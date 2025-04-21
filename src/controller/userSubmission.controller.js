@@ -161,12 +161,6 @@ export const submitTMCGame = async (req, res, next) => {
         if (currentUser.targetsLeft <= 0) {
             return res.status(403).json({
                 status: false,
-                message: "No targets left in current cycle"
-            });
-        }
-        if (currentUser.targetsLeft <= 0) {
-            return res.status(403).json({
-                status: false,
                 message: "No targets left in current cycle",
                 cycleComplete: true,
                 nextCycleStarts: "Immediately after tier update"
@@ -250,12 +244,6 @@ export const submitARVGame = async (req, res, next) => {
         }
 
         // Check if user has targets left
-        if (currentUser.targetsLeft <= 0) {
-            return res.status(403).json({
-                status: false,
-                message: "No targets left in current cycle"
-            });
-        }
 
         if (currentUser.targetsLeft <= 0) {
             return res.status(403).json({
@@ -271,10 +259,10 @@ export const submitARVGame = async (req, res, next) => {
             submittedImage,
             points: 0,
             submissionTime: currentTime
-        });
+        })
 
-        userSubmission.completedChallenges += 1;
-        await userSubmission.save();
+        userSubmission.completedChallenges += 1
+        await userSubmission.save()
 
         const updatedUser = await User.findByIdAndUpdate(
             userId,
@@ -570,7 +558,6 @@ export const updateARVTargetPoints = async (req, res, next) => {
     }
 };
 
-
 // Update TMC analytics
 export const updateTMCAnalytics = async (req, res, next) => {
     const userId = req.user._id;
@@ -658,3 +645,145 @@ export const updateARVAnalytics = async (req, res, next) => {
         next(error);
     }
 };
+
+//get graph data for arv and tmc for a single user
+export const getARVTMCGraphData = async (req, res, next) => {
+
+    const { userId } = req.params;
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    try {
+        // TMC aggregation
+        const tmcData = await UserSubmission.aggregate([
+            {
+                $match: {
+                    userId: userObjectId,
+                    "participatedTMCTargets.submissionTime": { $ne: null }
+                }
+            },
+            { $unwind: "$participatedTMCTargets" },
+            {
+                $group: {
+                    _id: {
+                        year: { $year: "$participatedTMCTargets.submissionTime" },
+                        month: { $month: "$participatedTMCTargets.submissionTime" }
+                    },
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { "_id.year": 1, "_id.month": 1 } }
+        ]);
+
+        // ARV aggregation
+        const arvData = await UserSubmission.aggregate([
+            {
+                $match: {
+                    userId: userObjectId,
+                    "participatedTMCTargets.submissionTime": { $ne: null }
+                }
+            },
+            { $unwind: "$participatedARVTargets" },
+            {
+                $group: {
+                    _id: {
+                        year: { $year: "$participatedARVTargets.submissionTime" },
+                        month: { $month: "$participatedARVTargets.submissionTime" }
+                    },
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { "_id.year": 1, "_id.month": 1 } }
+        ]);
+
+        // Format both results
+        const format = (data, label) =>
+            data.map(item => ({
+                date: `${monthNames[item._id.month - 1]} ${item._id.year}`,
+                type: label,
+                value: item.count
+            }));
+
+        const graphData = [...format(tmcData, "TMC"), ...format(arvData, "ARV")];
+
+        return res.status(200).json({
+            status: true,
+            message: "Graph data fetched successfully",
+            data: graphData
+        });
+    }
+
+    catch (error) {
+        next(error)
+    }
+
+}
+
+//get total graph data for arv and tmc 
+export const getTotalARVTMCGraphData = async (req, res, next) => {
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    try {
+        // TMC aggregation
+        const tmcData = await UserSubmission.aggregate([
+            {
+                $match: {
+                    "participatedTMCTargets.submissionTime": { $ne: null }
+                }
+            },
+            { $unwind: "$participatedTMCTargets" },
+            {
+                $group: {
+                    _id: {
+                        year: { $year: "$participatedTMCTargets.submissionTime" },
+                        month: { $month: "$participatedTMCTargets.submissionTime" }
+                    },
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { "_id.year": 1, "_id.month": 1 } }
+        ]);
+
+        // ARV aggregation
+        const arvData = await UserSubmission.aggregate([
+            {
+                $match: {
+                    "participatedTMCTargets.submissionTime": { $ne: null }
+                }
+            },
+            { $unwind: "$participatedARVTargets" },
+            {
+                $group: {
+                    _id: {
+                        year: { $year: "$participatedARVTargets.submissionTime" },
+                        month: { $month: "$participatedARVTargets.submissionTime" }
+                    },
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { "_id.year": 1, "_id.month": 1 } }
+        ]);
+
+        // Format both results
+        const format = (data, label) =>
+            data.map(item => ({
+                date: `${monthNames[item._id.month - 1]} ${item._id.year}`,
+                type: label,
+                value: item.count
+            }));
+
+        const graphData = [...format(tmcData, "TMC"), ...format(arvData, "ARV")];
+
+        return res.status(200).json({
+            status: true,
+            message: "Graph data fetched successfully",
+            data: graphData
+        });
+    }
+    
+    catch (error) {
+        next(error)
+    }
+}
