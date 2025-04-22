@@ -40,6 +40,7 @@ import categoryImageRoute from "./src/route/categoryImage.route.js"
 import privacyPolicyRoute from './src/route/privacyPolicy.route.js';
 import ARVTargetRoute from "./src/route/arvTarget.route.js"
 import TMCTargetRoute from "./src/route/TMCTarget.route.js"
+import runningEventsRoute from "./src/route/runningEvents.route.js"
 import leaderboardRoute from "./src/route/leaderboard.route.js"
 import userSubmissionRoute from "./src/route/userSubmission.route.js"
 import termsCondition from "./src/route/termsCondition.route.js";
@@ -55,6 +56,7 @@ app.use('/api/v1/category', categoryImageRoute);
 app.use('/api/v1/ARVTarget', ARVTargetRoute);
 app.use('/api/v1/privacy-policy', privacyPolicyRoute);
 app.use('/api/v1/TMCTarget', TMCTargetRoute);
+app.use('/api/v1/runningEvents', runningEventsRoute);
 app.use('/api/v1/leaderboard', leaderboardRoute);
 app.use('/api/v1/userSubmission', userSubmissionRoute);
 app.use('/api/v1/terms-and-condition', termsCondition);

@@ -7,6 +7,7 @@ import {
   getAllCategories,
   updateCategoryById,
   deleteCategoryById,
+  getAllImages,
 } from "../controller/category.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { isAdmin } from "../middleware/role.middleware.js";
@@ -48,6 +49,14 @@ router.get(
   "/get-subcategory-images/:categoryName/:subCategoryName",
   verifyJWT,
   getSubCategoryImages
+);
+
+//Get all images
+router.get(
+  "/get-all-images",
+  verifyJWT,
+  isAdmin,
+  getAllImages
 );
 
 export default router;
