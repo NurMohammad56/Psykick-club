@@ -32,7 +32,7 @@ export const updateUserProfile = async (req, res) => {
 
   try {
     const user = await User.findOne({ screenName });
-
+ 
     if (user && user._id.toString() !== id) {
       return res
         .status(400)
@@ -47,10 +47,17 @@ export const updateUserProfile = async (req, res) => {
       "-title -password -tierRank -point -tmcScore -arvScore -combinedScore -leaderboardPosition -completedTargets -successRate -emailVerified -role -refreshToken -otpExpiration -createdAt -updatedAt -__v"
     );
 
+    // Calculate profile completeness percentage
+    const fields = { screenName, fullName, phone, country, dob, gender };
+    const totalFields = Object.keys(fields).length;
+    const filledFields = Object.values(fields).filter((value) => value).length;
+    const completenessPercentage = Math.round((filledFields / totalFields) * 100);
+
     return res.status(200).json({
       status: true,
       message: "Profile updated successfully",
       data: updatedUser,
+      profileCompleteness: `${completenessPercentage}%`,
     });
   } catch (error) {
     console.error(error);
