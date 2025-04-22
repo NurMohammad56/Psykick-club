@@ -1,5 +1,5 @@
 import express from 'express';
-import { adminLogin, forgotPassword, verifyOtp, resendOTP, resetPassword, updateAdminProfile, changePasswordAdmin, getAverageSessionDuration, getUserSessionDurations, getAllUsers, getActiveUsersCount, getContactUs } from "../controller/admin.controller.js"
+import { adminLogin, forgotPassword, verifyOtp, resendOTP, resetPassword, updateAdminProfile, changePasswordAdmin, getGameParticipationStats, getAverageSessionDuration, getUserSessionDurations, getAllUsers, getActiveUsersCount, getContactUs } from "../controller/admin.controller.js"
 import { getCompletedTargets } from "../controller/userSubmission.controller.js"
 import { isAdmin } from "../middleware/role.middleware.js"
 import { verifyJWT } from "../middleware/auth.middleware.js";
@@ -27,6 +27,9 @@ router.get("/average-session-duration", verifyJWT, isAdmin, getAverageSessionDur
 router.get("/all-users", verifyJWT, isAdmin, getAllUsers);
 // Get active users count
 router.get("/active-users-count", verifyJWT, isAdmin, getActiveUsersCount);
+
+// Get game participation stats
+router.get("/game-graph", verifyJWT, isAdmin, getGameParticipationStats);
 
 // Get completed targets for a user
 router.get('/completedTargets/:userId', getCompletedTargets);
