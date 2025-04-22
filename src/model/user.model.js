@@ -183,7 +183,7 @@ userSchema.pre('save', function (next) {
     (tier) => tier.name === this.tierRank
   );
   if (currentTierIndex === -1) {
-    currentTierIndex = 0; 
+    currentTierIndex = 0;
   }
 
   let nextTier = tierTable[currentTierIndex + 1] || tierTable[currentTierIndex];
@@ -239,6 +239,25 @@ userSchema.methods.generateRefreshToken = function () {
       expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
     }
   );
+};
+
+// Add this method to userSchema methods
+userSchema.methods.updateSession = async function () {
+  const now = new Date();
+  this.lastActive = now;
+
+  // Check if there's an active session (no sessionEndTime)
+  const activeSession = this.sessions.find(s => !s.sessionEndTime);
+
+  if (!activeSession) {
+    // No active session, create a new one
+    this.sessions.push({
+      sessionStartTime: now
+    });
+  }
+
+  await this.save();
+  return this;
 };
 
 export const User = mongoose.model("User", userSchema);
