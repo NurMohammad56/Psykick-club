@@ -403,9 +403,9 @@ const getAverageSessionDuration = async (_, res, next) => {
 // Get all user for admin
 const getAllUsers = async (_, res, next) => {
   try {
-    const users = await User.find().select(
-      "-password -dob -tierRank -point -tmcScore -arvScore -combinedScore -leaderboardPosition -completedTargets -successRate -emailVerified -role -refreshToken"
-    );
+    const users = await User.countDocuments({
+      role: "user",
+    });
     return res.status(200).json({
       status: true,
       message: "Fetched all users for admin",
