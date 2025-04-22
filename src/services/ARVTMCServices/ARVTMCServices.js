@@ -34,7 +34,8 @@ export const startNextGameService = async (model, res, next) => {
 
         const nextGame = await model
             .findOneAndUpdate({ isCompleted: false, isQueued: true }, { isActive: true }, { new: true })
-            .select("-isActive -isQueued -isCompleted -createdAt -updatedAt -__v")
+            .select("-createdAt -updatedAt -__v")
+            .lean()
 
         if (nextGame) {
             return res.status(200).json({
@@ -60,7 +61,7 @@ export const startNextGameService = async (model, res, next) => {
 export const updateAddToQueueService = async (id, model, res, next) => {
 
     try {
-        await model.findByIdAndUpdate(id, { isQueued: true }, { new: true })
+        await model.findByIdAndUpdate(id, { isQueued: true }, { new: true }).lean()
         return res.status(200).json({
             status: true,
             message: "Added to queue successfully"
@@ -84,7 +85,7 @@ export const updateRemoveFromQueueService = async (id, model, revealOrOutcomeTim
             });
         }
 
-        await model.findByIdAndUpdate(id, { isQueued: false }, { new: true })
+        await model.findByIdAndUpdate(id, { isQueued: false }, { new: true }).lean()
         return res.status(200).json({
             status: true,
             message: "Removed from queue successfully"
@@ -103,12 +104,14 @@ export const updateGameTimeService = async (id, gameTime, model, res, next) => {
 
         if (new Date(revealTime).getTime() < new Date(gameTime).getTime()) {
             return res.status(400).json({
+                status: false,
                 message: "Reveal time should be in the future or equal to game time"
             });
         }
 
         await model.findByIdAndUpdate(id, { gameTime })
         return res.status(200).json({
+            status: true,
             message: "Game time updated successfully"
         });
     }
