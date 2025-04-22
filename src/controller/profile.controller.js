@@ -28,7 +28,7 @@ export const getUserProfile = async (req, res) => {
 
 export const updateUserProfile = async (req, res) => {
   const { id } = req.params;
-  const { screenName, fullName, phone, country, dob, gender } = req.body;
+  const { screenName, fullName, phoneNumber, country, dob, gender } = req.body;
 
   try {
     const user = await User.findOne({ screenName });
@@ -41,16 +41,36 @@ export const updateUserProfile = async (req, res) => {
 
     const updatedUser = await User.findByIdAndUpdate(
       id,
-      { screenName, fullName, phone, country, dob, gender },
+      { screenName, fullName, phoneNumber, country, dob, gender },
       { new: true }
     ).select(
       "-title -password -tierRank -point -tmcScore -arvScore -combinedScore -leaderboardPosition -completedTargets -successRate -emailVerified -role -refreshToken -otpExpiration -createdAt -updatedAt -__v"
     );
 
+    // Define fields to check for completeness
+    const fieldsToCheck = [
+      'screenName',
+      'fullName',
+      'phone',
+      'country',
+      'dob',
+      'gender',
+    ];
+
+    let completedFields = 0;
+
+    fieldsToCheck.forEach(fieldPath => {
+      const value = fieldPath.split('.').reduce((obj, key) => obj?.[key], updatedUser);
+      if (value) completedFields++;
+    });
+
+    const completeness = Math.round((completedFields / fieldsToCheck.length) * 100);
+
     return res.status(200).json({
       status: true,
       message: "Profile updated successfully",
       data: updatedUser,
+      completeness,
     });
   } catch (error) {
     console.error(error);
@@ -61,6 +81,27 @@ export const updateUserProfile = async (req, res) => {
     });
   }
 };
+
+export const getProfileCompleteness = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const profile = await User.findById(userId).select('screenName fullName phoneNumber country dob gender');
+
+    if (!profile) {
+      return res.status(404).json({ message: 'User profile not found' });
+    }
+
+    const fieldsToCheck = ['screenName', 'fullName', 'phoneNumber', 'country', 'dob', 'gender'];
+    const completedFields = fieldsToCheck.filter(field => !!profile[field]).length;
+    const completeness = Math.round((completedFields / fieldsToCheck.length) * 100);
+
+    return res.status(200).json({ completeness }); 
+  } catch (error) {
+    console.error('Error:', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+
 
 export const updateUserPassword = async (req, res) => {
   const { newPassword } = req.body;

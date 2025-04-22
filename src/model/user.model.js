@@ -19,27 +19,7 @@ const userSchema = new Schema(
     fullName: {
       type: String,
     },
-    title: {
-      type: String,
-      default: "",
-    },
     country: {
-      type: String,
-      default: "",
-    },
-    avatar: {
-      type: String,
-      default: "",
-    },
-    city: {
-      type: String,
-      default: "",
-    },
-    streetAddress: {
-      type: String,
-      default: "",
-    },
-    about: {
       type: String,
       default: "",
     },
