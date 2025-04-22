@@ -22,16 +22,23 @@ export const createARVTarget = async (req, res, next) => {
 
         if (new Date(revealTime).getTime() < new Date(gameTime).getTime()) {
             return res.status(400).json({
+                status: false,
                 message: "Reveal time should be in the future or equal to game time"
             });
         }
 
         else if (new Date(revealTime).getTime() >= new Date(outcomeTime).getTime()) {
-            return res.status(400).json({ message: "Outcome time should be in the future of reveal time" })
+            return res.status(400).json({
+                status: false,
+                message: "Outcome time should be in the future of reveal time"
+            })
         }
 
         else if (new Date(outcomeTime).getTime() > new Date(bufferTime).getTime()) {
-            return res.status(400).json({ message: "Buffer time should be in the future or equal to outcome time" })
+            return res.status(400).json({
+                status: false,
+                message: "Buffer time should be in the future or equal to outcome time"
+            })
         }
 
         const newARVTarget = new ARVTarget({ code, eventName, eventDescription, revealTime, outcomeTime, bufferTime, gameTime, image1, image2, image3, controlImage });
@@ -39,6 +46,7 @@ export const createARVTarget = async (req, res, next) => {
         await newARVTarget.save();
 
         return res.status(201).json({
+            status: true,
             data: newARVTarget,
             message: "ARV Target created successfully"
         });
@@ -49,11 +57,34 @@ export const createARVTarget = async (req, res, next) => {
     }
 }
 
-export const getAllARVTargets = async (_, res, next) => {
+export const getAllARVTargets = async (req, res, next) => {
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
 
     try {
-        const ARVTargets = await ARVTarget.find().select("-__v");
-        return res.status(200).json({ data: ARVTargets })
+        const [totalItems, ARVTargets] = await Promise.all([
+            ARVTarget.countDocuments(),
+            ARVTarget.find()
+                .select("-__v")
+                .skip(skip)
+                .limit(limit)
+        ]);
+
+        const totalPages = Math.ceil(totalItems / limit);
+
+        return res.status(200).json({
+            status: true,
+            data: ARVTargets,
+            pagination: {
+                currentPage: page,
+                totalPages,
+                totalItems,
+                itemsPerPage: limit
+            },
+            message: "All ARVTargets fetched successfully"
+        });
     }
 
     catch (error) {
@@ -61,15 +92,58 @@ export const getAllARVTargets = async (_, res, next) => {
     }
 }
 
-export const getAllQueuedARVTargets = async (_, res) => {
+export const getAllQueuedARVTargets = async (req, res, next) => {
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
 
     try {
-        const ARVTargets = await ARVTarget.find({ isQueued: true }).select("-__v");
-        return res.status(200).json({ data: ARVTargets })
+
+        const [totalItems, ARVTargets] = await Promise.all([
+            ARVTarget.countDocuments({ isQueued: true }),
+            ARVTarget.find({ isQueued: true })
+                .select("-__v")
+                .skip(skip)
+                .limit(limit)
+        ]);
+
+        const totalPages = Math.ceil(totalItems / limit);
+
+        return res.status(200).json({
+            status: true,
+            data: ARVTargets,
+            pagination: {
+                currentPage: page,
+                totalPages,
+                totalItems,
+                itemsPerPage: limit
+            },
+            message: "All queued ARVTargets fetched successfully"
+        });
     }
 
     catch (error) {
         next(error);
+    }
+}
+
+export const getActiveARVTarget = async (_, res, next) => {
+
+    try {
+        const activeARVTarget = await ARVTarget.findOne({ isActive: true, isQueued: true })
+            .select("-__v")
+            .lean()
+
+        return res.status(200).json({
+            status: true,
+            data: activeARVTarget,
+            message: "Active ARVTarget fetched successfully"
+        });
+    }
+
+    catch (error) {
+        next(error)
     }
 }
 
@@ -91,7 +165,10 @@ export const updateResultImage = async (req, res, next) => {
 
     try {
         await ARVTarget.findByIdAndUpdate(id, { resultImage });
-        return res.status(200).json({ message: "Result image updated successfully" });
+        return res.status(200).json({
+            status: true,
+            message: "Result image updated successfully"
+        });
     }
 
     catch (error) {
@@ -136,11 +213,17 @@ export const updateBufferTime = async (req, res, next) => {
         const { outcomeTime } = await ARVTarget.findById(id).select("outcomeTime")
 
         if (new Date(outcomeTime).getTime() > new Date(bufferTime).getTime()) {
-            return res.status(400).json({ message: "Buffer time should be in the future or equal to outcome time" })
+            return res.status(400).json({
+                status: false,
+                message: "Buffer time should be in the future or equal to outcome time"
+            })
         }
 
         await ARVTarget.findByIdAndUpdate(id, { bufferTime });
-        return res.status(200).json({ message: "Buffer time updated successfully" });
+        return res.status(200).json({
+            status: true,
+            message: "Buffer time updated successfully"
+        });
     }
 
     catch (error) {

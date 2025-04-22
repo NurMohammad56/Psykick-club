@@ -11,8 +11,7 @@ import {
 import { generateCode } from "../utils/generateCode.js";
 
 export const createTMCTarget = async (req, res, next) => {
-  const { targetImage, controlImages, revealTime, bufferTime, gameTime } =
-    req.body;
+  const { targetImage, controlImages, revealTime, bufferTime, gameTime } = req.body;
 
   try {
     let code;
@@ -27,12 +26,14 @@ export const createTMCTarget = async (req, res, next) => {
 
     if (new Date(revealTime).getTime() < new Date(gameTime).getTime()) {
       return res.status(400).json({
+        status: false,
         message: "Reveal time should be in the future or equal to game time",
       });
-    } else if (
-      new Date(revealTime).getTime() > new Date(bufferTime).getTime()
-    ) {
+    }
+
+    else if (new Date(revealTime).getTime() > new Date(bufferTime).getTime()) {
       return res.status(400).json({
+        status: false,
         message: "Buffer time should be in the future or equal to reveal time",
       });
     }
@@ -48,38 +49,106 @@ export const createTMCTarget = async (req, res, next) => {
     await newTMCTarget.save();
 
     return res.status(201).json({
+      status: true,
       message: "TMCTarget created successfully",
     });
-  } catch (error) {
+  }
+
+  catch (error) {
     next(error);
   }
 };
 
-export const getAllTMCTargets = async (_, res, next) => {
+export const getAllTMCTargets = async (req, res, next) => {
+
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
   try {
-    const TMCTargets = await TMCTarget.find().select(
-      "-targetImage -controlImages -__v"
-    );
+
+    const [totalItems, TMCTargets] = await Promise.all([
+      TMCTarget.countDocuments(),
+      TMCTarget.find()
+        .select("-__v")
+        .skip(skip)
+        .limit(limit)
+    ]);
+
+    const totalPages = Math.ceil(totalItems / limit);
+
     return res.status(200).json({
+      status: true,
       data: TMCTargets,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalItems,
+        itemsPerPage: limit
+      },
+      message: "All TMCTargets fetched successfully"
     });
-  } catch (error) {
+  }
+
+  catch (error) {
     next(error);
   }
 };
 
-export const getAllQueuedTMCTargets = async (_, res, next) => {
+export const getAllQueuedTMCTargets = async (req, res, next) => {
+
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
   try {
-    const TMCTargets = await TMCTarget.find({ isQueued: true }).select(
-      "-targetImage -controlImages -__v"
-    );
+
+    const [totalItems, TMCTargets] = await Promise.all([
+      TMCTarget.countDocuments({ isQueued: true }),
+      TMCTarget.find({ isQueued: true })
+        .select("-__v")
+        .skip(skip)
+        .limit(limit)
+    ]);
+
+    const totalPages = Math.ceil(totalItems / limit);
+
     return res.status(200).json({
+      status: true,
       data: TMCTargets,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalItems,
+        itemsPerPage: limit
+      },
+      message: "All queued TMCTargets fetched successfully"
     });
-  } catch (error) {
+  }
+
+  catch (error) {
     next(error);
   }
 };
+
+export const getActiveTMCTarget = async (_, res, next) => {
+
+  try {
+    const activeTMCTarget = await TMCTarget.findOne({ isActive: true, isQueued: true })
+      .select("-__v")
+      .lean()
+
+    return res.status(200).json({
+      status: true,
+      data: activeTMCTarget,
+      message: "Active TMCTarget fetched successfully"
+    });
+  }
+
+  catch (error) {
+    next(error)
+  }
+}
 
 export const startNextGame = async (_, res, next) => {
   try {
@@ -105,7 +174,9 @@ export const updateRemoveFromQueue = async (req, res, next) => {
   try {
     const { revealTime } = await TMCTarget.findById(id).select("revealTime");
     await updateRemoveFromQueueService(id, TMCTarget, revealTime, res, next);
-  } catch (error) {
+  }
+
+  catch (error) {
     next(error);
   }
 };
@@ -119,15 +190,19 @@ export const updateBufferTime = async (req, res, next) => {
 
     if (new Date(revealTime).getTime() > new Date(bufferTime).getTime()) {
       return res.status(400).json({
+        status: false,
         message: "Buffer time should be in the future or equal to reveal time",
       });
     }
 
-    await TMCTarget.findByIdAndUpdate(id, { bufferTime }, { new: true });
+    await TMCTarget.findByIdAndUpdate(id, { bufferTime }, { new: true })
     return res.status(200).json({
-      message: "Buffer time updated successfully",
+      status: true,
+      message: "Buffer time updated successfully"
     });
-  } catch (error) {
+  }
+
+  catch (error) {
     next(error);
   }
 };

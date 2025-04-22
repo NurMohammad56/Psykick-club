@@ -316,6 +316,34 @@ const getSubCategoryImages = async (req, res, next) => {
   }
 };
 
+const getAllImages = async (req, res, next) => {
+
+  try {
+    const categories = await CategoryImage.find();
+
+    // Extracting all image URLs from nested structure
+    const allImages = [];
+
+    categories.forEach(category => {
+      category.subCategories.forEach(sub => {
+        sub.images.forEach(img => {
+          allImages.push(img.imageUrl);
+        });
+      });
+    });
+
+    return res.status(200).json({
+      status: true,
+      data: allImages,
+      message: "All category images fetched successfully"
+    });
+  }
+
+  catch (error) {
+    next(error)
+  }
+}
+
 export {
   createCategory,
   categoryWiseImageUpload,
@@ -324,4 +352,5 @@ export {
   getAllCategories,
   updateCategoryById,
   deleteCategoryById,
+  getAllImages
 };
