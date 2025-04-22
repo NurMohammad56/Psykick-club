@@ -98,6 +98,15 @@ const loginUser = async (req, res) => {
     });
   }
 
+  await User.findByIdAndUpdate(user._id, {
+    $push: {
+      sessions: {
+        sessionStartTime: new Date()
+      }
+    },
+    lastActive: new Date()
+  });
+
   // implement access and refresh token
   const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
     user._id
@@ -128,6 +137,24 @@ const logoutUser = async (req, res) => {
         .status(400)
         .json({ status: false, message: "User not found." });
     }
+
+       // End current session
+       await User.updateOne(
+        { 
+          _id: user._id,
+          'sessions.sessionEndTime': { $exists: false }
+        },
+        {
+          $set: {
+            'sessions.$[elem].sessionEndTime': new Date(),
+            'sessions.$[elem].duration': 
+              new Date() - user.sessions.find(s => !s.sessionEndTime).sessionStartTime
+          }
+        },
+        {
+          arrayFilters: [{ 'elem.sessionEndTime': { $exists: false } }]
+        }
+      );
 
     // Remove refreshToken from the database
     await User.findByIdAndUpdate(user._id, { refreshToken: null });

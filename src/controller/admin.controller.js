@@ -339,6 +339,7 @@ const getUserSessionDurations = async (req, res, next) => {
 
     return res.status(200).json({
       status: true,
+      message: "User avg time retrieved successfully",
       data: sessionDurations,
     });
   } catch (error) {
@@ -392,6 +393,7 @@ const getAverageSessionDuration = async (_, res, next) => {
 
     return res.status(200).json({
       status: true,
+      message: "Average session duration retrieved successfully",
       data: result[0],
     });
   } catch (error) {
@@ -421,14 +423,26 @@ const getAllUsers = async (_, res, next) => {
 const getActiveUsersCount = async (_, res, next) => {
   const activeThreshold = 5 * 60 * 1000;
   try {
-    const currentTime = Date.now();
-
-    const activeUsers = await User.find({
-      $or: [
-        { lastActive: { $gte: new Date(currentTime - activeThreshold) } },
-        { "sessions.sessionEndTime": { $exists: false } },
-      ],
-    });
+    const activeUsers = await User.aggregate([
+      {
+        $match: {
+          $or: [
+            { lastActive: { $gte: new Date(Date.now() - activeThreshold) } },
+            {
+              $and: [
+                { 'sessions.sessionStartTime': { $gte: new Date(Date.now() - activeThreshold) } },
+                { 'sessions.sessionEndTime': { $exists: false } }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        $project: {
+          _id: 1
+        }
+      }
+    ]);
 
     return res.status(200).json({
       status: true,

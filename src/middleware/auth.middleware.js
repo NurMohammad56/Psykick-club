@@ -20,7 +20,6 @@ const verifyJWT = async (req, res, next) => {
 
     // Find the user by decoded token and exclude password
     const user = await User.findById(decodedToken?._id).select("-password");
-
     // If user doesn't exist, return an error
     if (!user) {
       return res.status(400).json({

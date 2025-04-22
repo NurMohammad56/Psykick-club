@@ -311,68 +311,28 @@ export const submitARVGame = async (req, res, next) => {
 // Get completed targets for a user for admin dashboard
 export const getCompletedTargets = async (req, res, next) => {
     try {
-        // 1. Fetch all user submissions with populated target data
-        const allSubmissions = await UserSubmission.find({})
-            .populate('participatedTMCTargets.TMCId')
-            .populate('participatedARVTargets.ARVId');
+        // Fetch all user submissions
+        const allSubmissions = await UserSubmission.find({});
 
-        // 2. Aggregate data
-        const totalStats = {
-            users: allSubmissions.length,
-            completedTMC: 0,
-            completedARV: 0,
-            totalPoints: 0,
-            tierDistribution: {},
-            recentSubmissions: []
-        };
+        // Initialize counters
+        let totalTMCCompleted = 0;
+        let totalARVCompleted = 0;
 
-        // 3. Process each user's submissions
+        // Count completed TMC and ARV targets
         allSubmissions.forEach(submission => {
-            // TMC Targets
-            submission.participatedTMCTargets.forEach(tmc => {
-                totalStats.completedTMC++;
-                totalStats.totalPoints += tmc.points || 0;
-                totalStats.recentSubmissions.push({
-                    type: 'TMC',
-                    userId: submission.userId,
-                    targetId: tmc.TMCId?._id,
-                    points: tmc.points,
-                    timestamp: submission.lastChallengeDate
-                });
-            });
-
-            // ARV Targets
-            submission.participatedARVTargets.forEach(arv => {
-                totalStats.completedARV++;
-                totalStats.recentSubmissions.push({
-                    type: 'ARV',
-                    userId: submission.userId,
-                    targetId: arv.ARVId?._id,
-                    points: arv.points || 0,
-                    timestamp: arv.submittedAt
-                });
-            });
-
-            // Tier distribution
-            totalStats.tierDistribution[submission.tierRank] =
-                (totalStats.tierDistribution[submission.tierRank] || 0) + 1;
+            totalTMCCompleted += submission.participatedTMCTargets.length;
+            totalARVCompleted += submission.participatedARVTargets.length;
         });
 
-        // 4. Calculate averages
-        totalStats.avgTMCPerUser = totalStats.users > 0
-            ? (totalStats.completedTMC / totalStats.users).toFixed(2)
-            : 0;
-        totalStats.avgARVPerUser = totalStats.users > 0
-            ? (totalStats.completedARV / totalStats.users).toFixed(2)
-            : 0;
-
-        // 5. Sort recent submissions (newest first)
-        totalStats.recentSubmissions.sort((a, b) => b.timestamp - a.timestamp);
+        // Calculate total completed targets
+        const totalCompletedTargets = totalTMCCompleted + totalARVCompleted;
 
         return res.status(200).json({
             status: true,
-            message: "All targets data retrieved successfully",
-            data: totalStats
+            message: "Completed targets count retrieved successfully",
+            data: 
+                totalCompletedTargets
+
         });
 
     } catch (error) {
@@ -481,7 +441,6 @@ export const getTMCTargetResult = async (req, res, next) => {
         next(error);
     }
 };
-
 // Get ARV target result
 export const getARVTargetResult = async (req, res, next) => {
 

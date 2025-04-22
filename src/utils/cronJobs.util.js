@@ -1,30 +1,48 @@
 import { User } from "../model/user.model.js";
 
+import cron from 'node-cron';
+
 const checkInactiveUsers = async () => {
-  const inactiveThreshold = 10 * 60 * 1000;
+  const inactiveThreshold = 10 * 60 * 1000; // 10 minutes
   try {
     const inactiveUsers = await User.find({
       lastActive: { $lt: new Date(Date.now() - inactiveThreshold) },
-      "sessions.sessionEndTime": { $exists: false },
+      'sessions.sessionEndTime': { $exists: false }
     });
 
-    inactiveUsers.forEach(async (user) => {
-      await User.findByIdAndUpdate(user._id, {
-        $set: {
-          "sessions.$[elem].sessionEndTime": Date.now(),
+    const bulkOps = inactiveUsers.map(user => ({
+      updateOne: {
+        filter: { 
+          _id: user._id,
+          'sessions.sessionEndTime': { $exists: false }
         },
-      }, {
-        arrayFilters: [{ "elem.sessionEndTime": { $exists: false } }],
-      });
-    });
+        update: {
+          $set: {
+            'sessions.$[elem].sessionEndTime': new Date(),
+            'sessions.$[elem].duration': 
+              new Date() - user.sessions.find(s => !s.sessionEndTime).sessionStartTime
+          }
+        },
+        arrayFilters: [{ 'elem.sessionEndTime': { $exists: false } }]
+      }
+    }));
+
+    if (bulkOps.length > 0) {
+      await User.bulkWrite(bulkOps);
+    }
   } catch (error) {
     console.error("Error checking inactive users:", error);
   }
 };
 
-const startCronJob = () => {
-  setInterval(checkInactiveUsers, 5 * 60 * 1000); 
-  console.log("Cron job started successfully.");
+
+// In your server startup file:
+const initCronJobs = () => {
+  // Runs every 5 minutes
+  cron.schedule('*/5 * * * *', () => {
+    console.log('Running inactive users check...');
+    checkInactiveUsers();
+  });
 };
 
-export { checkInactiveUsers, startCronJob };
+export { initCronJobs };
