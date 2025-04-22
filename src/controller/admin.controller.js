@@ -6,6 +6,8 @@ import { generateOTP } from "../utils/otp.util.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.util.js";
 import { deleteFromCloudinary } from "../utils/cloudinaryDestroy.util.js";
 import { ContactUs } from "../model/contactUs.model.js";
+import { UserSubmission } from "../model/userSubmission.model.js";
+import moment from "moment";
 
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<AUTHENTICATION>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // Admin login controller
@@ -456,6 +458,61 @@ const getContactUs = async (req, res, next) => {
     });
   } catch (error) {
     next(error);
+  }
+};
+
+export const getGameParticipationStats = async (req, res) => {
+  try {
+    const now = moment();
+    const months = [];
+
+    for (let i = 0; i < 12; i++) {
+      const monthStart = moment(now).month(i).startOf('month');
+      const monthEnd = moment(now).month(i).endOf('month');
+
+      // Count TMC participations by month
+      const tmcParticipations = await UserSubmission.aggregate([
+        { $unwind: "$participatedTMCTargets" },
+        {
+          $match: {
+            "participatedTMCTargets.submissionTime": {
+              $gte: monthStart.toDate(),
+              $lte: monthEnd.toDate(),
+            },
+          },
+        },
+        {
+          $count: "totalParticipations"
+        }
+      ]);
+
+      // Count ARV participations by month
+      const arvParticipations = await UserSubmission.aggregate([
+        { $unwind: "$participatedARVTargets" },
+        {
+          $match: {
+            "participatedARVTargets.submissionTime": {
+              $gte: monthStart.toDate(),
+              $lte: monthEnd.toDate(),
+            },
+          },
+        },
+        {
+          $count: "totalParticipations"
+        }
+      ]);
+
+      months.push({
+        name: monthStart.format("MMM"),
+        tmc: tmcParticipations[0]?.totalParticipations || 0,
+        arv: arvParticipations[0]?.totalParticipations || 0,
+      });
+    }
+
+    res.status(200).json(months);
+  } catch (err) {
+    console.error("Error in game participation stats:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
