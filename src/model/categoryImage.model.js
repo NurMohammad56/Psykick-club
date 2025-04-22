@@ -13,7 +13,7 @@ const categoryImageSchema = new Schema({
       },
       images: [
         {
-          imageUrl: String,
+          imageUrl: String
         },
       ],
     },
