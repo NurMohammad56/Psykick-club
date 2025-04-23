@@ -197,8 +197,7 @@ const updateAdminProfile = async (req, res, next) => {
 
   try {
     const adminId = req.user._id;
-    const { fullName, phoneNumber, country, city, streetAddress, about } =
-      req.body;
+    const { fullName, screenName, phoneNumber, country, city } = req.body;
 
     // Find admin and ensure they are authorized
     const admin = await User.findOne({ _id: adminId, role: "admin" }).session(
@@ -215,29 +214,13 @@ const updateAdminProfile = async (req, res, next) => {
     // Update fields dynamically
     const fieldsToUpdate = {
       fullName,
+      screenName,
       phoneNumber,
       country,
       city,
-      streetAddress,
-      about,
     };
     for (const [key, value] of Object.entries(fieldsToUpdate)) {
       if (value) admin[key] = value;
-    }
-
-    // Update avatar if a new image is uploaded
-    if (req.file) {
-      const cloudinaryUpload = await uploadOnCloudinary(req.file.buffer, {
-        resource_type: "auto",
-      });
-
-      // Delete old Cloudinary image if exists
-      if (admin.avatar) {
-        const publicId = admin.avatar.split("/").pop().split(".")[0];
-        await deleteFromCloudinary(publicId);
-      }
-
-      admin.avatar = cloudinaryUpload.secure_url;
     }
 
     // Save updated admin profile
