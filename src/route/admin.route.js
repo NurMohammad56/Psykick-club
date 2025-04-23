@@ -34,7 +34,7 @@ router.get("/active-users-count", verifyJWT, isAdmin, getActiveUsersCount);
 router.get("/game-graph", verifyJWT, isAdmin, getGameParticipationStats);
 
 // Get completed targets for a user
-router.get('/completedTargets/:userId', getCompletedTargets);
+router.get('/completedTargets', getCompletedTargets);
 
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<CONTACT US>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 router.get("/all-contact-us", verifyJWT, isAdmin, getContactUs);

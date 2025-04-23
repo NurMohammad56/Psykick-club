@@ -380,19 +380,19 @@ const getAverageSessionDuration = async (_, res, next) => {
       {
         $project: {
           _id: 0,
-          averageDuration: { $divide: ["$totalDuration", "$totalSessions"] },
           averageDurationInMinutes: {
-            $divide: [{ $divide: ["$totalDuration", 1000] }, 60],
+            $floor: { $divide: [{ $divide: ["$totalDuration", 1000] }, 60] },
           },
         },
       },
     ]);
 
     if (result.length === 0) {
-      return {
-        averageDuration: 0,
-        averageDurationInMinutes: 0,
-      };
+      return res.status(200).json({
+        status: true,
+        message: "Average session duration retrieved successfully",
+        data: { averageDurationInMinutes: 0 },
+      });
     }
 
     return res.status(200).json({
