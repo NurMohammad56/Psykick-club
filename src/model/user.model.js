@@ -29,6 +29,10 @@ const userSchema = new Schema(
     password: {
       type: String,
     },
+    city: {
+      type: String,
+      default: "",
+    },
     tierRank: {
       type: String,
       default: "NOVICE SEEKER",
