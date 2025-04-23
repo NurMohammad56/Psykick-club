@@ -24,6 +24,8 @@ router.post('/update-tier/:userId', verifyJWT, updateUserTier);
 router.get("/user-graph-data/:userId", verifyJWT, getARVTMCGraphData);
 router.get("/total-graph-data", verifyJWT, getTotalARVTMCGraphData);
 
-
+// //check if a user participated in the tmc or arv or not
+// router.get("/user-graph-data/:userId", verifyJWT, getARVTMCGraphData);
+// router.get("/total-graph-data", verifyJWT, getTotalARVTMCGraphData);
 
 export default router;
