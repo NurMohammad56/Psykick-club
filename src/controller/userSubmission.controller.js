@@ -318,7 +318,7 @@ export const getCompletedTargets = async (req, res, next) => {
         return res.status(200).json({
             status: true,
             message: "Completed targets count retrieved successfully",
-            data: 
+            data:
                 totalCompletedTargets
 
         });
@@ -434,7 +434,6 @@ export const getARVTargetResult = async (req, res, next) => {
 
     const { ARVTargetId } = req.params
     const userId = req.user._id
-    console.log(userId, ARVTargetId);
 
     try {
         const result = await UserSubmission.findOne({
@@ -741,7 +740,7 @@ export const getTotalARVTMCGraphData = async (req, res, next) => {
             data: graphData
         });
     }
-    
+
     catch (error) {
         next(error)
     }
