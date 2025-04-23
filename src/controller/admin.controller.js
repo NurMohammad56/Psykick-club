@@ -249,6 +249,27 @@ const updateAdminProfile = async (req, res, next) => {
   }
 };
 
+// Profile completeness
+export const getProfileCompleteness = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const profile = await User.findById(userId).select('screenName fullName phoneNumber country city');
+
+    if (!profile) {
+      return res.status(404).json({ message: 'User profile not found' });
+    }
+
+    const fieldsToCheck = ['screenName', 'fullName', 'phoneNumber', 'country', 'city'];
+    const completedFields = fieldsToCheck.filter(field => !!profile[field]).length;
+    const completeness = Math.round((completedFields / fieldsToCheck.length) * 100);
+
+    return res.status(200).json({ completeness }); 
+  } catch (error) {
+    console.error('Error:', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+
 // Change password for admin
 const changePasswordAdmin = async (req, res) => {
   try {
