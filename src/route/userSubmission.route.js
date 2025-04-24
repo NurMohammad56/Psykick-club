@@ -1,8 +1,7 @@
 import express from "express";
 import { verifyJWT } from "../middleware/auth.middleware.js";
-import { submitARVGame, submitTMCGame, getTMCTargetResult, getARVTargetResult, updateARVTargetPoints, updateARVAnalytics, updateTMCAnalytics, getPreviousTMCResults, getPreviousARVResults, getARVTMCGraphData, getTotalARVTMCGraphData } from "../controller/userSubmission.controller.js";
+import { submitARVGame, submitTMCGame, getTMCTargetResult, getARVTargetResult, updateARVTargetPoints, updateARVAnalytics, updateTMCAnalytics, getPreviousTMCResults, getPreviousARVResults, getARVTMCGraphData, getTotalARVTMCGraphData, getUserParticipationTMC, getUserParticipationARV } from "../controller/userSubmission.controller.js";
 import { updateUserTier } from "../controller/tier.controller.js"
-import { isAdmin } from "../middleware/role.middleware.js";
 
 const router = express.Router();
 
@@ -24,8 +23,8 @@ router.post('/update-tier/:userId', verifyJWT, updateUserTier);
 router.get("/user-graph-data/:userId", verifyJWT, getARVTMCGraphData);
 router.get("/total-graph-data", verifyJWT, getTotalARVTMCGraphData);
 
-// //check if a user participated in the tmc or arv or not
-// router.get("/user-graph-data/:userId", verifyJWT, getARVTMCGraphData);
-// router.get("/total-graph-data", verifyJWT, getTotalARVTMCGraphData);
+//check if a user participated in the tmc or arv or not
+router.get("/get-user-participation-TMC/:userId/:TMCTargetId", verifyJWT, getUserParticipationTMC)
+router.get("/get-user-participation-ARV/:userId/:TMCTargetId", verifyJWT, getUserParticipationARV)
 
 export default router;
