@@ -317,17 +317,19 @@ const getSubCategoryImages = async (req, res, next) => {
 };
 
 const getAllImages = async (req, res, next) => {
-
   try {
     const categories = await CategoryImage.find();
 
-    // Extracting all image URLs from nested structure
     const allImages = [];
 
     categories.forEach(category => {
       category.subCategories.forEach(sub => {
         sub.images.forEach(img => {
-          allImages.push(img.imageUrl);
+          allImages.push({
+            category: category.categoryName, // assuming categoryName field
+            subCategory: sub.subCategoryName, // assuming subCategoryName field
+            imageUrl: img.imageUrl
+          });
         });
       });
     });
@@ -337,12 +339,11 @@ const getAllImages = async (req, res, next) => {
       data: allImages,
       message: "All category images fetched successfully"
     });
-  }
-
-  catch (error) {
-    next(error)
+  } catch (error) {
+    next(error);
   }
 }
+
 
 export {
   createCategory,

@@ -26,8 +26,7 @@ export const getTMCLeaderboard = async (_, res, next) => {
                     tierRank: 1,
                     user: {
                         screenName: "$user.screenName",
-                        fullName: "$user.fullName",
-                        avatar: "$user.avatar"
+                        fullName: "$user.fullName"
                     }
                 }
             }
@@ -69,8 +68,7 @@ export const getARVLeaderboard = async (_, res, next) => {
                     tierRank: 1,
                     user: {
                         screenName: "$user.screenName",
-                        fullName: "$user.fullName",
-                        avatar: "$user.avatar"
+                        fullName: "$user.fullName"
                     }
                 }
             }
@@ -120,8 +118,7 @@ export const getTotalLeaderboard = async (_, res, next) => {
                     tierRank: 1,
                     user: {
                         screenName: "$user.screenName",
-                        fullName: "$user.fullName",
-                        avatar: "$user.avatar"
+                        fullName: "$user.fullName"
                     }
                 }
             }
@@ -132,8 +129,8 @@ export const getTotalLeaderboard = async (_, res, next) => {
             message: "Total Leaderboard fetched successfully",
             data: leaderboard
         });
-    } 
-    
+    }
+
     catch (error) {
         next(error);
     }
