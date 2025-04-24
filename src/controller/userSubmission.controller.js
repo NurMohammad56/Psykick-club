@@ -745,3 +745,66 @@ export const getTotalARVTMCGraphData = async (req, res, next) => {
         next(error)
     }
 }
+
+//check if a user participated in the tmc or arv or not
+export const getUserParticipationTMC = async (req, res, next) => {
+
+    const { userId, TMCTargetId } = req.params;
+
+    try {
+        const result = await UserSubmission.findOne(
+            { userId, "participatedTMCTargets.TMCId": TMCTargetId },
+            { "participatedTMCTargets.$": 1 }
+        ).populate("participatedTMCTargets.TMCId")
+
+        if (!result) {
+            return res.status(404).json({
+                status: false,
+                message: "User has not participated in this TMC."
+            });
+        }
+
+        const participatedTMCTarget = result.participatedTMCTargets?.[0];
+
+        return res.status(200).json({
+            status: true,
+            data: participatedTMCTarget,
+            message: "User has participated in this TMC."
+        });
+    }
+
+    catch (error) {
+        next(error);
+    }
+}
+
+export const getUserParticipationARV = async (req, res, next) => {
+
+    const { userId, ARVTargetId } = req.params;
+
+    try {
+        const result = await UserSubmission.findOne(
+            { userId, "participatedARVTargets.ARVId": ARVTargetId },
+            { "participatedARVTargets.$": 1 }
+        ).populate("participatedARVTargets.ARVId")
+
+        if (!result) {
+            return res.status(404).json({
+                status: false,
+                message: "User has not participated in this ARV."
+            });
+        }
+
+        const participatedARVTarget = result.participatedARVTargets?.[0];
+
+        return res.status(200).json({
+            status: true,
+            data: participatedARVTarget,
+            message: "User has participated in this ARV."
+        });
+    }
+
+    catch (error) {
+        next(error)
+    }
+}
