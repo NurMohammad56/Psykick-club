@@ -12,8 +12,6 @@ const userSchema = new Schema(
     },
     screenName: {
       type: String,
-      required: true,
-      unique: true,
       trim: true,
     },
     fullName: {

@@ -296,7 +296,7 @@ export const submitARVGame = async (req, res, next) => {
 };
 
 
-// Get completed targets for a user for admin dashboard
+// Get completed targets for  user for admin dashboard
 export const getCompletedTargets = async (req, res, next) => {
     try {
         // Fetch all user submissions
@@ -327,6 +327,31 @@ export const getCompletedTargets = async (req, res, next) => {
         next(error);
     }
 };
+
+// Get completed targets count for a specific user with success rate 
+export const getCompletedTargetsCount = async (req, res) => {
+    const userId = req.user._id;
+    try {
+        const userSubmission = await UserSubmission.findOne({ userId });
+        if (!userSubmission) {
+            return res.status(404).json({ message: "No submissions found" });
+        }
+        const totalCompletedTargets = userSubmission.participatedTMCTargets.length + userSubmission.participatedARVTargets.length;
+        const successRate = (totalCompletedTargets / (userSubmission.completedChallenges)) * 100;
+        return res.status(200).json({
+            status: true,
+            message: "Completed targets count retrieved successfully",
+            data: {
+                totalCompletedTargets,
+                successRate: successRate.toFixed(2)
+            }
+        })
+    }
+    catch (error) {
+        next(error);
+    }
+};
+
 
 // Get previous TMC results for a user
 export const getPreviousTMCResults = async (req, res) => {

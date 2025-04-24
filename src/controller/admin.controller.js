@@ -15,7 +15,7 @@ const adminLogin = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const user = await User.findOne({ email, role: "admin" });
+    const user = await User.findOne({ email, role: "admin" }).select("-tierRank -point -totalPoints -TMCSuccessRate -TMCpValue -ARVSuccessRate -ARVpValue -sessions -challengeHistory -totalPoints -tmcScore -arvScore -combinedScore -leaderboardPosition -completedTargets -successRate -emailVerified -role -refreshToken -otpExpiration -createdAt -updatedAt -__v");
     if (!user) {
       return res
         .status(404)
@@ -38,6 +38,7 @@ const adminLogin = async (req, res) => {
     return res.status(200).json({
       status: true,
       message: "Admin login successful",
+      data: user,
       accessToken,
     });
   } catch (error) {
@@ -199,41 +200,29 @@ const updateAdminProfile = async (req, res, next) => {
     const adminId = req.user._id;
     const { fullName, screenName, phoneNumber, country, city } = req.body;
 
-    // Find admin and ensure they are authorized
-    const admin = await User.findOne({ _id: adminId, role: "admin" }).session(
-      session
-    );
+    const admin = await User.findOne({ _id: adminId, role: "admin" }).session(session);
     if (!admin) {
       await session.abortTransaction();
       session.endSession();
-      return res
-        .status(403)
-        .json({ status: false, message: "Unauthorized access" });
+      return res.status(403).json({
+        status: false,
+        message: "Unauthorized access",
+      });
     }
 
-    // Update fields dynamically
-    const fieldsToUpdate = {
-      fullName,
-      screenName,
-      phoneNumber,
-      country,
-      city,
-    };
-    for (const [key, value] of Object.entries(fieldsToUpdate)) {
-      if (value) admin[key] = value;
-    }
+    // Update only provided fields
+    if (fullName !== undefined) admin.fullName = fullName;
+    if (screenName !== undefined) admin.screenName = screenName;
+    if (phoneNumber !== undefined) admin.phoneNumber = phoneNumber;
+    if (country !== undefined) admin.country = country;
+    if (city !== undefined) admin.city = city;
 
-    // Save updated admin profile
     const updatedProfile = await admin.save({ session });
 
-    // Commit transaction when all changes made
     await session.commitTransaction();
     session.endSession();
 
-    // Remove extra fields before returning
-    const profile = await User.findById(updatedProfile._id).select(
-      "-dob -password -tierRank -point -tmcScore -arvScore -combinedScore -leaderboardPosition -completedTargets -successRate -emailVerified -role -refreshToken"
-    );
+    const profile = await User.findById(updatedProfile._id);
 
     return res.status(200).json({
       status: true,
@@ -248,6 +237,7 @@ const updateAdminProfile = async (req, res, next) => {
     next(error);
   }
 };
+
 
 // Profile completeness
 export const getProfileCompleteness = async (req, res) => {
@@ -380,19 +370,19 @@ const getAverageSessionDuration = async (_, res, next) => {
       {
         $project: {
           _id: 0,
-          averageDuration: { $divide: ["$totalDuration", "$totalSessions"] },
           averageDurationInMinutes: {
-            $divide: [{ $divide: ["$totalDuration", 1000] }, 60],
+            $floor: { $divide: [{ $divide: ["$totalDuration", 1000] }, 60] },
           },
         },
       },
     ]);
 
     if (result.length === 0) {
-      return {
-        averageDuration: 0,
-        averageDurationInMinutes: 0,
-      };
+      return res.status(200).json({
+        status: true,
+        message: "Average session duration retrieved successfully",
+        data: { averageDurationInMinutes: 0 },
+      });
     }
 
     return res.status(200).json({
