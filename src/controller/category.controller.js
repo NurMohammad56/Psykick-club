@@ -126,6 +126,32 @@ const getAllCategories = async (_, res) => {
   }
 };
 
+//  Get just category and subcategory names
+const getCategoryAndSubCategoryNames = async (req, res) => {
+  try {
+    const categories = await CategoryImage.find({}, { _id: 0, __v: 0 });  
+    if (!categories.length) {
+      return res
+        .status(404)
+        .json({ status: false, message: "No categories found" });
+    }
+    const categoryNames = categories.map((category) => ({
+      categoryName: category.categoryName,
+      subCategoryNames: category.subCategories.map(
+        (subCategory) => subCategory.name
+      ),
+    }));
+    return res.status(200).json({
+      status: true,
+      message: "All categories fetched successfully",
+      data: categoryNames,
+    });
+  } catch (error) {
+    console.log("Error getting categories image:", error);
+    return res.status(500).json({ status: false, message: error.message });
+  }
+};
+
 // update a category form admin
 const updateCategoryById = async (req, res, next) => {
   try {
@@ -326,8 +352,9 @@ const getAllImages = async (req, res, next) => {
       category.subCategories.forEach(sub => {
         sub.images.forEach(img => {
           allImages.push({
-            category: category.categoryName, // assuming categoryName field
-            subCategory: sub.subCategoryName, // assuming subCategoryName field
+            category: category.categoryName, 
+            subCategory: category.subCategories,
+            categoryId: category._id,
             imageUrl: img.imageUrl
           });
         });
@@ -353,5 +380,6 @@ export {
   getAllCategories,
   updateCategoryById,
   deleteCategoryById,
-  getAllImages
+  getAllImages,
+  getCategoryAndSubCategoryNames
 };
