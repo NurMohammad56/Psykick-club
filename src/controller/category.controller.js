@@ -353,6 +353,7 @@ const getAllImages = async (req, res, next) => {
         sub.images.forEach(img => {
           allImages.push({
             _id: img._id,
+            categoryId: category._id,
             categoryName: category.categoryName,
             subcategoryName: sub.name,
             image: img.imageUrl
