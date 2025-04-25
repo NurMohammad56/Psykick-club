@@ -27,20 +27,20 @@ export const getUserProfile = async (req, res) => {
 };
 
 export const updateUserProfile = async (req, res) => {
-  const { id } = req.params;
+  const userId = req.user._id;
   const { screenName, fullName, phoneNumber, country, dob, gender } = req.body;
 
   try {
-    const user = await User.findOne({ screenName });
+    const user = await User.findById(userId);
 
-    if (user && user._id.toString() !== id) {
-      return res
-        .status(400)
-        .json({ status: false, message: "Screen name already exists" });
-    }
+    // if (user && user._id.toString() !== userId) {
+    //   return res
+    //     .status(400)
+    //     .json({ status: false, message: "Screen name already exists" });
+    // }
 
     const updatedUser = await User.findByIdAndUpdate(
-      id,
+      userId,
       { screenName, fullName, phoneNumber, country, dob, gender },
       { new: true }
     ).select(
@@ -51,7 +51,7 @@ export const updateUserProfile = async (req, res) => {
     const fieldsToCheck = [
       'screenName',
       'fullName',
-      'phone',
+      'phoneNumber',
       'country',
       'dob',
       'gender',
@@ -105,7 +105,7 @@ export const getProfileCompleteness = async (req, res) => {
 
 export const updateUserPassword = async (req, res) => {
   const { newPassword } = req.body;
-  const { id } = req.params;
+  const id = req.user._id;
 
   try {
     const user = await User.findById(id);
