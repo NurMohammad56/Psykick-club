@@ -352,10 +352,10 @@ const getAllImages = async (req, res, next) => {
       category.subCategories.forEach(sub => {
         sub.images.forEach(img => {
           allImages.push({
-            category: category.categoryName, 
-            subCategory: category.subCategories,
-            categoryId: category._id,
-            imageUrl: img.imageUrl
+            _id: img._id,
+            categoryName: category.categoryName,
+            subcategoryName: sub.name,
+            image: img.imageUrl
           });
         });
       });
@@ -364,12 +364,14 @@ const getAllImages = async (req, res, next) => {
     return res.status(200).json({
       status: true,
       data: allImages,
-      message: "All category images fetched successfully"
+      message: "All images fetched successfully by category and subcategory"
     });
+
   } catch (error) {
     next(error);
   }
-}
+};
+
 
 
 export {

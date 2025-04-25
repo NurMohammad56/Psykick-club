@@ -31,7 +31,7 @@ export const updateUserProfile = async (req, res) => {
   const { screenName, fullName, phoneNumber, country, dob, gender } = req.body;
 
   try {
-    const user = await User.findById(userId);
+    // const user = await User.findById(userId);
 
     // if (user && user._id.toString() !== userId) {
     //   return res
