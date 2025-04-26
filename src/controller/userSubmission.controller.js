@@ -636,11 +636,11 @@ export const updateARVAnalytics = async (req, res, next) => {
 
 //get graph data for arv and tmc for a single user
 export const getARVTMCGraphData = async (req, res, next) => {
-
     const { userId } = req.params;
     const userObjectId = new mongoose.Types.ObjectId(userId);
 
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
     try {
         // TMC aggregation
@@ -654,14 +654,10 @@ export const getARVTMCGraphData = async (req, res, next) => {
             { $unwind: "$participatedTMCTargets" },
             {
                 $group: {
-                    _id: {
-                        year: { $year: "$participatedTMCTargets.submissionTime" },
-                        month: { $month: "$participatedTMCTargets.submissionTime" }
-                    },
+                    _id: { month: { $month: "$participatedTMCTargets.submissionTime" } },
                     count: { $sum: 1 }
                 }
-            },
-            { $sort: { "_id.year": 1, "_id.month": 1 } }
+            }
         ]);
 
         // ARV aggregation
@@ -669,44 +665,49 @@ export const getARVTMCGraphData = async (req, res, next) => {
             {
                 $match: {
                     userId: userObjectId,
-                    "participatedTMCTargets.submissionTime": { $ne: null }
+                    "participatedARVTargets.submissionTime": { $ne: null }
                 }
             },
             { $unwind: "$participatedARVTargets" },
             {
                 $group: {
-                    _id: {
-                        year: { $year: "$participatedARVTargets.submissionTime" },
-                        month: { $month: "$participatedARVTargets.submissionTime" }
-                    },
+                    _id: { month: { $month: "$participatedARVTargets.submissionTime" } },
                     count: { $sum: 1 }
                 }
-            },
-            { $sort: { "_id.year": 1, "_id.month": 1 } }
+            }
         ]);
 
-        // Format both results
-        const format = (data, label) =>
-            data.map(item => ({
-                date: `${monthNames[item._id.month - 1]} ${item._id.year}`,
-                type: label,
-                value: item.count
-            }));
+        // Initialize response array with months
+        const graphData = monthNames.map((month) => ({
+            name: month,
+            tmc: 0,
+            arv: 0
+        }));
 
-        const graphData = [...format(tmcData, "TMC"), ...format(arvData, "ARV")];
+        // Fill TMC counts
+        tmcData.forEach(item => {
+            const monthIndex = item._id.month - 1;
+            graphData[monthIndex].tmc = item.count;
+        });
+
+        // Fill ARV counts
+        arvData.forEach(item => {
+            const monthIndex = item._id.month - 1;
+            graphData[monthIndex].arv = item.count;
+        });
 
         return res.status(200).json({
             status: true,
             message: "Graph data fetched successfully",
             data: graphData
         });
-    }
-
+    } 
+    
     catch (error) {
-        next(error)
+        next(error);
     }
-
 }
+
 
 //check if a user participated in the tmc or arv or not
 export const getUserParticipationTMC = async (req, res, next) => {
