@@ -138,23 +138,23 @@ const logoutUser = async (req, res) => {
         .json({ status: false, message: "User not found." });
     }
 
-       // End current session
-       await User.updateOne(
-        { 
-          _id: user._id,
-          'sessions.sessionEndTime': { $exists: false }
-        },
-        {
-          $set: {
-            'sessions.$[elem].sessionEndTime': new Date(),
-            'sessions.$[elem].duration': 
-              new Date() - user.sessions.find(s => !s.sessionEndTime).sessionStartTime
-          }
-        },
-        {
-          arrayFilters: [{ 'elem.sessionEndTime': { $exists: false } }]
+    // End current session
+    await User.updateOne(
+      {
+        _id: user._id,
+        'sessions.sessionEndTime': { $exists: false }
+      },
+      {
+        $set: {
+          'sessions.$[elem].sessionEndTime': new Date(),
+          'sessions.$[elem].duration':
+            new Date() - user.sessions.find(s => !s.sessionEndTime).sessionStartTime
         }
-      );
+      },
+      {
+        arrayFilters: [{ 'elem.sessionEndTime': { $exists: false } }]
+      }
+    );
 
     // Remove refreshToken from the database
     await User.findByIdAndUpdate(user._id, { refreshToken: null });
@@ -329,23 +329,15 @@ const resendOTP = async (req, res) => {
 // Reset pass
 const resetPassword = async (req, res) => {
   try {
-    const { newPassword, confirmPassword } = req.body;
+    const { newPassword } = req.body;
 
-    const userId = req.user._id;
-    const user = await User.findById(userId);
+    const { email } = req.body
+    const user = await User.findOne({email});
 
     if (!user) {
       return res.status(404).json({
         status: false,
         message: "User not found",
-      });
-    }
-
-    // check if new password and confirm new password match
-    if (newPassword !== confirmPassword) {
-      return res.status(400).json({
-        status: false,
-        message: "New password and confirm new password does not match",
       });
     }
 
