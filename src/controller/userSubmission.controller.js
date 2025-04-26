@@ -321,8 +321,8 @@ export const getCompletedTargets = async (req, res, next) => {
             data:
                 totalCompletedTargets
         });
-    } 
-    
+    }
+
     catch (error) {
         next(error);
     }
@@ -337,10 +337,10 @@ export const getCompletedTargetsCount = async (req, res) => {
         if (!userSubmission) {
             return res.status(404).json({
                 status: true,
-                message: "No submissions found" 
+                message: "No submissions found"
             });
         }
-        
+
         const totalCompletedTargets = userSubmission.participatedTMCTargets.length + userSubmission.participatedARVTargets.length;
         const successRate = (totalCompletedTargets / (userSubmission.completedChallenges)) * 100;
         return res.status(200).json({
@@ -706,74 +706,6 @@ export const getARVTMCGraphData = async (req, res, next) => {
         next(error)
     }
 
-}
-
-//get total graph data for arv and tmc 
-export const getTotalARVTMCGraphData = async (req, res, next) => {
-
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-    try {
-        // TMC aggregation
-        const tmcData = await UserSubmission.aggregate([
-            {
-                $match: {
-                    "participatedTMCTargets.submissionTime": { $ne: null }
-                }
-            },
-            { $unwind: "$participatedTMCTargets" },
-            {
-                $group: {
-                    _id: {
-                        year: { $year: "$participatedTMCTargets.submissionTime" },
-                        month: { $month: "$participatedTMCTargets.submissionTime" }
-                    },
-                    count: { $sum: 1 }
-                }
-            },
-            { $sort: { "_id.year": 1, "_id.month": 1 } }
-        ]);
-
-        // ARV aggregation
-        const arvData = await UserSubmission.aggregate([
-            {
-                $match: {
-                    "participatedTMCTargets.submissionTime": { $ne: null }
-                }
-            },
-            { $unwind: "$participatedARVTargets" },
-            {
-                $group: {
-                    _id: {
-                        year: { $year: "$participatedARVTargets.submissionTime" },
-                        month: { $month: "$participatedARVTargets.submissionTime" }
-                    },
-                    count: { $sum: 1 }
-                }
-            },
-            { $sort: { "_id.year": 1, "_id.month": 1 } }
-        ]);
-
-        // Format both results
-        const format = (data, label) =>
-            data.map(item => ({
-                date: `${monthNames[item._id.month - 1]} ${item._id.year}`,
-                type: label,
-                value: item.count
-            }));
-
-        const graphData = [...format(tmcData, "TMC"), ...format(arvData, "ARV")];
-
-        return res.status(200).json({
-            status: true,
-            message: "Graph data fetched successfully",
-            data: graphData
-        });
-    }
-
-    catch (error) {
-        next(error)
-    }
 }
 
 //check if a user participated in the tmc or arv or not
