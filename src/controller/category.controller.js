@@ -395,8 +395,6 @@ const getAllImages = async (req, res, next) => {
   try {
     const categories = await CategoryImage.find();
 
-    console.log(categories)
-
     const allImages = [];
 
     categories.forEach(category => {
