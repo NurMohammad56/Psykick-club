@@ -40,7 +40,7 @@ router.patch(
 );
 
 // Delete Category By Id from admin
-router.delete("/delete-category/:id", verifyJWT, isAdmin, deleteCategoryById);
+router.delete("/delete-category/:id/:imageId/:subCategoryName", verifyJWT, isAdmin, deleteCategoryById);
 
 // Get Category Images Route for frontend
 router.get("/get-category-images/:categoryName", verifyJWT, getCategoryImages);

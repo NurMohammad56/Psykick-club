@@ -320,10 +320,10 @@ export const getCompletedTargets = async (req, res, next) => {
             message: "Completed targets count retrieved successfully",
             data:
                 totalCompletedTargets
-
         });
-
-    } catch (error) {
+    } 
+    
+    catch (error) {
         next(error);
     }
 };
@@ -333,9 +333,14 @@ export const getCompletedTargetsCount = async (req, res) => {
     const userId = req.user._id;
     try {
         const userSubmission = await UserSubmission.findOne({ userId });
+
         if (!userSubmission) {
-            return res.status(404).json({ message: "No submissions found" });
+            return res.status(404).json({
+                status: true,
+                message: "No submissions found" 
+            });
         }
+        
         const totalCompletedTargets = userSubmission.participatedTMCTargets.length + userSubmission.participatedARVTargets.length;
         const successRate = (totalCompletedTargets / (userSubmission.completedChallenges)) * 100;
         return res.status(200).json({
