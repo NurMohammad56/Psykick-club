@@ -296,7 +296,7 @@ export const submitARVGame = async (req, res, next) => {
 };
 
 
-// Get completed targets for  user for admin dashboard
+// Get completed targets for user for admin dashboard
 export const getCompletedTargets = async (req, res, next) => {
     try {
         // Fetch all user submissions
@@ -806,8 +806,6 @@ export const getUserParticipationTMC = async (req, res, next) => {
 export const getUserParticipationARV = async (req, res, next) => {
 
     const { userId, ARVTargetId } = req.params;
-
-    console.log(userId, ARVTargetId)
 
     try {
         const result = await UserSubmission.findOne(

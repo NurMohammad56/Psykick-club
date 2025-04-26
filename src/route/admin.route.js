@@ -1,6 +1,7 @@
 import express from 'express';
 import { adminLogin, forgotPassword, verifyOtp, resendOTP, resetPassword, updateAdminProfile, changePasswordAdmin, getGameParticipationStats, getAverageSessionDuration, getProfileCompleteness, getUserSessionDurations, getAllUsers, getActiveUsersCount, getContactUs } from "../controller/admin.controller.js"
 import { getCompletedTargets } from "../controller/userSubmission.controller.js"
+import { getAllCompletedTargets, getAllCompletedTargetsCount } from "../controller/completedTargets.controller.js"
 import { isAdmin } from "../middleware/role.middleware.js"
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import upload from "../middleware/multer.middleware.js"
@@ -34,7 +35,13 @@ router.get("/active-users-count", verifyJWT, isAdmin, getActiveUsersCount);
 router.get("/game-graph", verifyJWT, isAdmin, getGameParticipationStats);
 
 // Get completed targets for a user
-router.get('/completedTargets', getCompletedTargets);
+router.get('/completedTargets', verifyJWT, getCompletedTargets);
+
+//get all completed targets
+router.get('/get-all-completed-targets', verifyJWT, isAdmin, getAllCompletedTargets);
+
+//get count of total completed targets
+router.get('/get-all-completed-targets-count', verifyJWT, isAdmin, getAllCompletedTargetsCount);
 
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<CONTACT US>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 router.get("/all-contact-us", verifyJWT, isAdmin, getContactUs);
