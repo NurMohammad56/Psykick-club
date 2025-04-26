@@ -157,23 +157,14 @@ const resendOTP = async (req, res) => {
 // Reset pass from admin
 const resetPassword = async (req, res) => {
   try {
-    const { newPassword, confirmPassword } = req.body;
+    const { email, newPassword } = req.body;
 
-    const userId = req.user._id;
-    const user = await User.findById(userId);
+    const user = await User.findOne({ email });
 
     if (!user) {
       return res.status(404).json({
         status: false,
         message: "User not found",
-      });
-    }
-
-    // check if new password and confirm new password match
-    if (newPassword !== confirmPassword) {
-      return res.status(400).json({
-        status: false,
-        message: "New password and confirm new password does not match",
       });
     }
 
@@ -253,7 +244,7 @@ export const getProfileCompleteness = async (req, res) => {
     const completedFields = fieldsToCheck.filter(field => !!profile[field]).length;
     const completeness = Math.round((completedFields / fieldsToCheck.length) * 100);
 
-    return res.status(200).json({ completeness }); 
+    return res.status(200).json({ completeness });
   } catch (error) {
     console.error('Error:', error);
     return res.status(500).json({ message: 'Server error' });
