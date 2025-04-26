@@ -8,7 +8,9 @@ import {
   updateCategoryById,
   deleteCategoryById,
   getAllImages,
-  getCategoryAndSubCategoryNames
+  getCategoryAndSubCategoryNames,
+  updateImageIsUsedStatus,
+  getAllUsedImages
 } from "../controller/category.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { isAdmin } from "../middleware/role.middleware.js";
@@ -62,5 +64,11 @@ router.get(
 
 // Get Category and Sub-Category Names
 router.get("/get-category-and-subcategory-names", verifyJWT, getCategoryAndSubCategoryNames);
+
+// get all used images
+router.get("/get-all-used-images", verifyJWT, isAdmin, getAllUsedImages);
+
+// update the image isUsed status
+router.patch("/update-image-status/:imageId", verifyJWT, isAdmin, updateImageIsUsedStatus);
 
 export default router;

@@ -422,7 +422,81 @@ const getAllImages = async (req, res, next) => {
   }
 };
 
+const getAllUsedImages = async (req, res, next) => {
+  try {
+    const categories = await CategoryImage.find({});
 
+    const allUsedImages = [];
+
+    categories.forEach(category => {
+      category.subCategories.forEach(sub => {
+        sub.images.forEach(img => {
+          if (img.isUsed) {
+            allUsedImages.push({
+              imageId: img._id,
+              categoryId: category._id,
+              categoryName: category.categoryName,
+              subcategoryName: sub.name,
+              image: img.imageUrl
+            });
+          }
+        });
+      });
+    });
+
+    return res.status(200).json({
+      status: true,
+      data: allUsedImages,
+      message: "All used images fetched successfully by category and subcategory"
+    });
+  }
+
+  catch (error) {
+    next(error);
+  }
+}
+
+const updateImageIsUsedStatus = async (req, res, next) => {
+  const { imageId } = req.params;
+
+  try {
+    const categoryImage = await CategoryImage.findOne({ "subCategories.images._id": imageId });
+
+    if (!categoryImage) {
+      return res.status(404).json({ status: false, message: "Image not found" });
+    }
+
+    let imageFound = false;
+
+    for (const subCategory of categoryImage.subCategories) {
+      const image = subCategory.images.id(imageId);
+      if (image) {
+        image.isUsed = true;
+        imageFound = true;
+        break;
+      }
+    }
+
+    if (!imageFound) {
+      return res.status(404).json({
+        status: false,
+        message: "Image not found in subcategories"
+      });
+    }
+
+    await categoryImage.save();
+
+    return res.status(200).json({
+      status: true,
+      message: "Image isUsed status updated successfully",
+      data: categoryImage,
+    });
+  }
+
+  catch (error) {
+    next(error);
+  }
+};
 
 export {
   createCategory,
@@ -433,5 +507,7 @@ export {
   updateCategoryById,
   deleteCategoryById,
   getAllImages,
-  getCategoryAndSubCategoryNames
+  getCategoryAndSubCategoryNames,
+  updateImageIsUsedStatus,
+  getAllUsedImages
 };
