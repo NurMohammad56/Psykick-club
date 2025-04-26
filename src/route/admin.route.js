@@ -1,5 +1,5 @@
 import express from 'express';
-import { adminLogin, forgotPassword, verifyOtp, resendOTP, resetPassword, updateAdminProfile, changePasswordAdmin, getGameParticipationStats, getAverageSessionDuration, getProfileCompleteness, getUserSessionDurations, getAllUsers, getActiveUsersCount, getContactUs } from "../controller/admin.controller.js"
+import { adminLogin, forgotPassword, verifyOtp, resendOTP, resetPassword, updateAdminProfile, changePasswordAdmin, getGameParticipationStats, getAdminProfile, getAverageSessionDuration, getProfileCompleteness, getUserSessionDurations, getAllUsers, getActiveUsersCount, getContactUs } from "../controller/admin.controller.js"
 import { getCompletedTargets } from "../controller/userSubmission.controller.js"
 import { getAllCompletedTargets, getAllCompletedTargetsCount } from "../controller/completedTargets.controller.js"
 import { isAdmin } from "../middleware/role.middleware.js"
@@ -16,6 +16,7 @@ router.post("/reset-password", verifyJWT, resetPassword);
 
 // Admin Profile Route
 router.patch("/profile", verifyJWT, isAdmin, upload.single("avatar"), updateAdminProfile);
+router.get("/get-profile", verifyJWT, isAdmin, getAdminProfile);
 router.get("/profile-completeness", verifyJWT, isAdmin, getProfileCompleteness);
 
 
