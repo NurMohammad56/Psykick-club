@@ -395,13 +395,15 @@ const getAllImages = async (req, res, next) => {
   try {
     const categories = await CategoryImage.find();
 
+    console.log(categories)
+
     const allImages = [];
 
     categories.forEach(category => {
       category.subCategories.forEach(sub => {
         sub.images.forEach(img => {
           allImages.push({
-            _id: img._id,
+            imageId: img._id,
             categoryId: category._id,
             categoryName: category.categoryName,
             subcategoryName: sub.name,
