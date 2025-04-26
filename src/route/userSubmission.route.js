@@ -25,6 +25,6 @@ router.get("/total-graph-data", verifyJWT, getTotalARVTMCGraphData);
 
 //check if a user participated in the tmc or arv or not
 router.get("/get-user-participation-TMC/:userId/:TMCTargetId", verifyJWT, getUserParticipationTMC)
-router.get("/get-user-participation-ARV/:userId/:TMCTargetId", verifyJWT, getUserParticipationARV)
+router.get("/get-user-participation-ARV/:userId/:ARVTargetId", verifyJWT, getUserParticipationARV)
 
 export default router;

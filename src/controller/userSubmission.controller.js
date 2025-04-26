@@ -807,6 +807,8 @@ export const getUserParticipationARV = async (req, res, next) => {
 
     const { userId, ARVTargetId } = req.params;
 
+    console.log(userId, ARVTargetId)
+
     try {
         const result = await UserSubmission.findOne(
             { userId, "participatedARVTargets.ARVId": ARVTargetId },
