@@ -9,10 +9,10 @@ const router = express.Router();
 
 // Admin Login Route
 router.post("/login", adminLogin);
-router.post("/forget-password", verifyJWT, forgotPassword);
-router.post("/verifyOTP", verifyJWT, verifyOtp);
-router.post("/resendOTP", verifyJWT, resendOTP);
-router.post("/reset-password", verifyJWT, resetPassword);
+router.post("/forget-password", forgotPassword);
+router.post("/verifyOTP", verifyOtp);
+router.post("/resendOTP", resendOTP);
+router.post("/reset-password", resetPassword);
 
 // Admin Profile Route
 router.patch("/profile", verifyJWT, isAdmin, upload.single("avatar"), updateAdminProfile);
