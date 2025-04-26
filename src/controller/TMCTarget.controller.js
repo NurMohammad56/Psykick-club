@@ -223,7 +223,9 @@ export const updateMakeInactive = async (req, res, next) => {
 
   try {
     await updateMakeInActiveService(id, TMCTarget, res, next);
-  } catch (error) {
+  } 
+  
+  catch (error) {
     next(error);
   }
 };

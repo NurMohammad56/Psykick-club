@@ -124,6 +124,15 @@ export const updateGameTimeService = async (id, gameTime, model, res, next) => {
 export const updateMakeInActiveService = async (id, model, res, next) => {
 
     try {
+        const { gameTime } = await model.findById(id).select("gameTime")
+
+        if (new Date(gameTime).getTime() > new Date().getTime()) {
+            return res.status(403).json({
+                status: false,
+                message: "You cannot make a game inactive unless the game time is over"
+            });
+        }
+
         await model.findByIdAndUpdate(id, { isActive: false }, { new: true })
         return res.status(200).json({
             status: true,
