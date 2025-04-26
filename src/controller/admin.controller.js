@@ -238,6 +238,28 @@ const updateAdminProfile = async (req, res, next) => {
   }
 };
 
+// Get admin profile
+const getAdminProfile = async (req, res) => {
+  try {
+    const adminId = req.user._id;
+    const admin = await User.findById(adminId).select("-password");
+    if (!admin) {
+      return res.status(404).json({
+        status: false,
+        message: "Admin not found",
+      });
+    }
+    return res.status(200).json({
+      status: true,
+      message: "Admin profile retrieved successfully",
+      data: admin,
+    });
+  } catch (error) {
+    console.error("Error getting admin profile:", error);
+    return res.status(500).json({ status: false, message: error.message });
+
+  }
+};
 
 // Profile completeness
 export const getProfileCompleteness = async (req, res) => {
@@ -253,7 +275,7 @@ export const getProfileCompleteness = async (req, res) => {
     const completedFields = fieldsToCheck.filter(field => !!profile[field]).length;
     const completeness = Math.round((completedFields / fieldsToCheck.length) * 100);
 
-    return res.status(200).json({ completeness }); 
+    return res.status(200).json({ completeness });
   } catch (error) {
     console.error('Error:', error);
     return res.status(500).json({ message: 'Server error' });
@@ -537,4 +559,5 @@ export {
   getAllUsers,
   getActiveUsersCount,
   getContactUs,
+  getAdminProfile
 };
