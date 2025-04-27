@@ -1,6 +1,6 @@
 import express from 'express';
 import { isAdmin } from '../middleware/role.middleware.js';
-import { createARVTarget, getAllARVTargets, getAllQueuedARVTargets, getActiveARVTarget, updateBufferTime, updateGameTime, updateResultImage, updateAddToQueue, updateRemoveFromQueue, startNextGame, updateMakeInactive, updateMakeComplete } from '../controller/ARVTarget.controller.js';
+import { createARVTarget, getAllARVTargets, getAllQueuedARVTargets, getAllUnQueuedARVTargets, getActiveARVTarget, updateBufferTime, updateGameTime, updateResultImage, updateAddToQueue, updateRemoveFromQueue, startNextGame, updateMakeInactive, updateMakeComplete } from '../controller/ARVTarget.controller.js';
 import { verifyJWT } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
@@ -9,6 +9,7 @@ const router = express.Router();
 router.post("/create-ARVTarget", verifyJWT, isAdmin, createARVTarget);
 router.get("/get-allARVTargets", verifyJWT, isAdmin, getAllARVTargets)
 router.get("/get-allQueuedARVTargets", verifyJWT, isAdmin, getAllQueuedARVTargets)
+router.get("/get-allUnQueuedARVTargets", verifyJWT, isAdmin, getAllUnQueuedARVTargets)
 router.patch("/update-ARVTarget-resultImage/:id", verifyJWT, isAdmin, updateResultImage)
 router.patch("/update-ARVTarget-addToQueue/:id", verifyJWT, isAdmin, updateAddToQueue)
 router.patch("/update-ARVTarget-removeFromQueue/:id", verifyJWT, isAdmin, updateRemoveFromQueue)

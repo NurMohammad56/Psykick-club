@@ -128,6 +128,42 @@ export const getAllQueuedARVTargets = async (req, res, next) => {
     }
 }
 
+export const getAllUnQueuedARVTargets = async (req, res, next) => {
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    try {
+
+        const [totalItems, ARVTargets] = await Promise.all([
+            ARVTarget.countDocuments({ isQueued: false }),
+            ARVTarget.find({ isQueued: false })
+                .select("-__v")
+                .skip(skip)
+                .limit(limit)
+        ]);
+
+        const totalPages = Math.ceil(totalItems / limit);
+
+        return res.status(200).json({
+            status: true,
+            data: ARVTargets,
+            pagination: {
+                currentPage: page,
+                totalPages,
+                totalItems,
+                itemsPerPage: limit
+            },
+            message: "All unqueued ARVTargets fetched successfully"
+        });
+    }
+
+    catch (error) {
+        next(error);
+    }
+}
+
 export const getActiveARVTarget = async (_, res, next) => {
 
     try {
