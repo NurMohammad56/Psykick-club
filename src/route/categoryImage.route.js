@@ -63,6 +63,6 @@ router.get("/get-category-and-subcategory-names", getCategoryAndSubCategoryNames
 router.get("/get-all-used-images", verifyJWT, isAdmin, getAllUsedImages);
 
 // update the image isUsed status
-router.patch("/update-image-status/:imageId", verifyJWT, isAdmin, updateImageIsUsedStatus);
+router.patch("/update-image-status/:categoryId/:imageId", verifyJWT, isAdmin, updateImageIsUsedStatus);
 
 export default router;
