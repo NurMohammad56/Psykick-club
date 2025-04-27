@@ -422,7 +422,7 @@ const getAllImages = async (req, res, next) => {
   }
 };
 
-const getAllUsedImages = async (req, res, next) => {
+const getAllUsedImages = async (_, res, next) => {
   try {
     const categories = await CategoryImage.find({});
 
@@ -457,13 +457,12 @@ const getAllUsedImages = async (req, res, next) => {
 }
 
 const updateImageIsUsedStatus = async (req, res, next) => {
-  const { imageId, categoryId } = req.params;
-
+  const { imageId, categoryId: id } = req.params;
   try {
-    const categoryImage = await CategoryImage.findOne({ "subCategories.images._id": imageId });
+    const categoryImage = await CategoryImage.findById(id);
 
     if (!categoryImage) {
-      return res.status(404).json({ status: false, message: "Image not found" });
+      return res.status(404).json({ status: false, message: "Category not found" });
     }
 
     let imageFound = false;
@@ -488,8 +487,7 @@ const updateImageIsUsedStatus = async (req, res, next) => {
 
     return res.status(200).json({
       status: true,
-      message: "Image isUsed status updated successfully",
-      data: categoryImage,
+      message: "Image isUsed status updated successfully"
     });
   }
 

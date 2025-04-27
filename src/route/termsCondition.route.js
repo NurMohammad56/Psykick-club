@@ -13,15 +13,21 @@ const router = express.Router();
 // CRUD Terms & Condition Route from admin
 router.post(
   "/create-terms-and-condition",
+  verifyJWT,
+  isAdmin,
   createTermsCondition
 );
 router.get("/get-terms-and-condition", getTermsCondition);
 router.patch(
   "/update-terms-and-condition/:id",
+  verifyJWT,
+  isAdmin,
   updateTermsCondition
 );
 router.delete(
   "/delete-terms-and-condition/:id",
+  verifyJWT,
+  isAdmin,
   deleteTermsCondition
 );
 
