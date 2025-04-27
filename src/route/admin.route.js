@@ -1,5 +1,5 @@
 import express from 'express';
-import { adminLogin, forgotPassword, verifyOtp, resendOTP, resetPassword, updateAdminProfile, changePasswordAdmin, getGameParticipationStats, getAverageSessionDuration, getProfileCompleteness, getUserSessionDurations, getAllUsers, getActiveUsersCount, getContactUs } from "../controller/admin.controller.js"
+import { adminLogin, forgotPassword, verifyOtp, resendOTP, resetPassword, updateAdminProfile, changePasswordAdmin, getGameParticipationStats, getAverageSessionDuration, getProfileCompleteness, getUserSessionDurations, getAllUsers, getActiveUsersCount, getContactUs, getAllContactUs } from "../controller/admin.controller.js"
 import { getCompletedTargets } from "../controller/userSubmission.controller.js"
 import { getAllCompletedTargets, getAllCompletedTargetsCount } from "../controller/completedTargets.controller.js"
 import { isAdmin } from "../middleware/role.middleware.js"
@@ -44,7 +44,8 @@ router.get('/get-all-completed-targets', verifyJWT, isAdmin, getAllCompletedTarg
 router.get('/get-all-completed-targets-count', verifyJWT, isAdmin, getAllCompletedTargetsCount);
 
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<CONTACT US>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-router.get("/all-contact-us", verifyJWT, isAdmin, getContactUs);
+router.get("/all-contact-us", verifyJWT, isAdmin, getAllContactUs);
+router.get("/contact-us/:id", verifyJWT, isAdmin, getContactUs);
 
 
 
