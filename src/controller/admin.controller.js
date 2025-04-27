@@ -177,7 +177,7 @@ const resetPassword = async (req, res) => {
       message: "Password changed successfully",
     });
   } catch (error) {
-    console.log("Error while reseting password: ", error);
+    console.log("Error while resetting password: ", error);
     return res.status(500).json({ status: false, message: error.message });
   }
 };
