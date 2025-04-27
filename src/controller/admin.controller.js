@@ -530,10 +530,10 @@ export const getGameParticipationStats = async (req, res) => {
       });
     }
 
-    res.status(200).json(months);
+    return res.status(200).json(months);
   } catch (err) {
     console.error("Error in game participation stats:", err);
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
