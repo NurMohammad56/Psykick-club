@@ -131,6 +131,42 @@ export const getAllQueuedTMCTargets = async (req, res, next) => {
   }
 };
 
+export const getAllUnQueuedTMCTargets = async (req, res, next) => {
+
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  try {
+
+    const [totalItems, TMCTargets] = await Promise.all([
+      TMCTarget.countDocuments({ isQueued: false }),
+      TMCTarget.find({ isQueued: false })
+        .select("-__v")
+        .skip(skip)
+        .limit(limit)
+    ]);
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return res.status(200).json({
+      status: true,
+      data: TMCTargets,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalItems,
+        itemsPerPage: limit
+      },
+      message: "All unqueued TMCTargets fetched successfully"
+    });
+  }
+
+  catch (error) {
+    next(error);
+  }
+};
+
 export const getActiveTMCTarget = async (_, res, next) => {
 
   try {
@@ -223,8 +259,8 @@ export const updateMakeInactive = async (req, res, next) => {
 
   try {
     await updateMakeInActiveService(id, TMCTarget, res, next);
-  } 
-  
+  }
+
   catch (error) {
     next(error);
   }
