@@ -464,7 +464,7 @@ const getActiveUsersCount = async (_, res, next) => {
 
 // <<<<<<<<<<<<<<<<<<<<<<<CONTACT US>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // get all contact us for admin
-const getContactUs = async (req, res, next) => {
+const getAllContactUs = async (_, res, next) => {
   try {
     const getAllContactUs = await ContactUs.find();
     if (!getAllContactUs) {
@@ -478,6 +478,30 @@ const getContactUs = async (req, res, next) => {
       data: getAllContactUs,
     });
   } catch (error) {
+    next(error);
+  }
+};
+
+const getContactUs = async (req, res, next) => {
+  const { id } = req.params;
+
+  try {
+    const contactUs = await ContactUs.findById(id);
+
+    if (!contactUs) {
+      return res
+        .status(404)
+        .json({ status: false, message: "Contact us not found" });
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "Fetched contact us",
+      data: contactUs
+    });
+  }
+
+  catch (error) {
     next(error);
   }
 };
@@ -550,5 +574,6 @@ export {
   getAllUsers,
   getActiveUsersCount,
   getContactUs,
-  getAdminProfile
+  getAdminProfile,
+  getAllContactUs
 };
