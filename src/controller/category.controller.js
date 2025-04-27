@@ -457,7 +457,7 @@ const getAllUsedImages = async (req, res, next) => {
 }
 
 const updateImageIsUsedStatus = async (req, res, next) => {
-  const { imageId } = req.params;
+  const { imageId, categoryId } = req.params;
 
   try {
     const categoryImage = await CategoryImage.findOne({ "subCategories.images._id": imageId });

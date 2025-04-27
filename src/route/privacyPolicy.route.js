@@ -11,18 +11,14 @@ import { isAdmin } from "../middleware/role.middleware.js";
 const router = express.Router();
 
 // CRUD Privacy Policy Route from admin
-router.post("/create-privacy-policy", verifyJWT, isAdmin, createPrivacyPolicy);
+router.post("/create-privacy-policy", createPrivacyPolicy);
 router.get("/get-privacy-policies", getPrivacyPolicies);
 router.patch(
   "/update-privacy-policy/:id",
-  verifyJWT,
-  isAdmin,
   updatePrivacyPolicy
 );
 router.delete(
   "/delete-privacy-policy/:id",
-  verifyJWT,
-  isAdmin,
   deletePrivacyPolicy
 );
 

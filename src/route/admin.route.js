@@ -26,26 +26,26 @@ router.patch("/change-password", verifyJWT, isAdmin, changePasswordAdmin);
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<DASHBOARD>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // Get session duration
 router.get("/session-durations/:userId", verifyJWT, isAdmin, getUserSessionDurations);
-router.get("/average-session-duration", verifyJWT, isAdmin, getAverageSessionDuration);
+router.get("/average-session-duration", getAverageSessionDuration);
 // Get all users
-router.get("/all-users", verifyJWT, isAdmin, getAllUsers);
+router.get("/all-users", getAllUsers);
 // Get active users count
-router.get("/active-users-count", verifyJWT, isAdmin, getActiveUsersCount);
+router.get("/active-users-count", getActiveUsersCount);
 
 // Get game participation stats
-router.get("/game-graph", verifyJWT, isAdmin, getGameParticipationStats);
+router.get("/game-graph", getGameParticipationStats)
 
 // Get completed targets for a user
-router.get('/completedTargets', verifyJWT, getCompletedTargets);
+router.get('/completedTargets', getCompletedTargets);
 
 //get all completed targets
-router.get('/get-all-completed-targets', verifyJWT, isAdmin, getAllCompletedTargets);
+router.get('/get-all-completed-targets', getAllCompletedTargets);
 
 //get count of total completed targets
-router.get('/get-all-completed-targets-count', verifyJWT, isAdmin, getAllCompletedTargetsCount);
+router.get('/get-all-completed-targets-count', getAllCompletedTargetsCount);
 
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<CONTACT US>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-router.get("/all-contact-us", verifyJWT, isAdmin, getContactUs);
+router.get("/all-contact-us", getContactUs);
 
 
 

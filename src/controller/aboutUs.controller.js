@@ -14,7 +14,7 @@ const createAboutUs = async (req, res, next) => {
 };
 
 // Get About Us content from admin
-const getAboutUs = async (req, res, next) => {
+const getAboutUs = async (_, res, next) => {
   try {
     const aboutUs = await AboutUs.find({});
     if (!aboutUs)
@@ -47,7 +47,9 @@ const updateAboutUs = async (req, res, next) => {
     return res
       .status(200)
       .json({ status: true, message: "About Us updated", data: aboutUs });
-  } catch (error) {
+  } 
+  
+  catch (error) {
     next(error);
   }
 };
