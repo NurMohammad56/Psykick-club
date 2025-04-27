@@ -15,6 +15,7 @@ router.patch("/update-ARVTarget-removeFromQueue/:id", updateRemoveFromQueue)
 router.patch("/update-ARVTarget-gameTime/:id", updateGameTime)
 router.patch("/update-ARVTarget-bufferTime/:id", updateBufferTime)
 router.patch("/update-startNextGame", startNextGame)
+//might need to fetch getTMCTargetById for this api
 router.patch("/update-ARVTarget-makeInactive/:id", updateMakeInactive)
 router.patch("/update-ARVTarget-makeComplete/:id", updateMakeComplete)
 
