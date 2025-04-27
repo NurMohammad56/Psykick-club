@@ -506,6 +506,29 @@ const getContactUs = async (req, res, next) => {
   }
 };
 
+const deleteContactUs = async (req, res, next) => {
+  const { id } = req.params;
+
+  try {
+    const contactUs = await ContactUs.findByIdAndDelete(id);
+
+    if (!contactUs) {
+      return res
+        .status(404)
+        .json({ status: false, message: "Contact us not found" });
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "Contact us deleted successfully"
+    });
+  }
+
+  catch (error) {
+    next(error);
+  }
+};
+
 export const getGameParticipationStats = async (req, res) => {
   try {
     const now = moment();
@@ -575,5 +598,6 @@ export {
   getActiveUsersCount,
   getContactUs,
   getAdminProfile,
-  getAllContactUs
+  getAllContactUs,
+  deleteContactUs
 };
