@@ -4,12 +4,15 @@ import { PrivacyPolicy } from "../model/privacyPolicy.model.js";
 
 const createPrivacyPolicy = async (req, res, next) => {
   const { content } = req.body;
+  const { previousId } = req.params;
   try {
     if (!content) {
       return res
         .status(400)
         .json({ status: false, message: "Content is required" });
     }
+
+    await PrivacyPolicy.findByIdAndDelete(previousId);
     const newPrivacyPolicy = new PrivacyPolicy({ content });
 
     await newPrivacyPolicy.save();

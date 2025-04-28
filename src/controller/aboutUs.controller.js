@@ -2,13 +2,18 @@ import { AboutUs } from "../model/aboutUs.model.js";
 
 // Create About Us content from admin
 const createAboutUs = async (req, res, next) => {
+  const { previousId } = req.params;
   try {
+
+    await AboutUs.findByIdAndDelete(previousId);
     const aboutUs = new AboutUs(req.body);
     await aboutUs.save();
-    res
+    return res
       .status(201)
       .json({ status: true, message: "About Us created", data: aboutUs });
-  } catch (error) {
+  }
+
+  catch (error) {
     next(error);
   }
 };
@@ -47,8 +52,8 @@ const updateAboutUs = async (req, res, next) => {
     return res
       .status(200)
       .json({ status: true, message: "About Us updated", data: aboutUs });
-  } 
-  
+  }
+
   catch (error) {
     next(error);
   }
