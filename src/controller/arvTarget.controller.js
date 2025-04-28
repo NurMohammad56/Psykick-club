@@ -167,7 +167,12 @@ export const getAllUnQueuedARVTargets = async (req, res, next) => {
 export const getActiveARVTarget = async (_, res, next) => {
 
     try {
-        const activeARVTarget = await ARVTarget.findOne({ isActive: true, isQueued: true })
+        const activeARVTarget = await ARVTarget.findOne({
+            $or: [
+                { isActive: true },
+                { isPartiallyActive: true }
+            ]
+        })
             .select("-__v")
             .lean()
 
