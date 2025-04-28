@@ -198,8 +198,11 @@ export const updateAddToQueue = async (req, res, next) => {
   const { id } = req.params;
 
   try {
-    await updateAddToQueueService(id, TMCTarget, res, next);
-  } catch (error) {
+    const { gameTime } = await TMCTarget.findById(id).select("gameTime")
+    await updateAddToQueueService(id, TMCTarget, res, next, gameTime)
+  } 
+  
+  catch (error) {
     next(error);
   }
 };

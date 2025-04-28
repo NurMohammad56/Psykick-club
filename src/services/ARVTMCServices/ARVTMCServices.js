@@ -58,7 +58,14 @@ export const startNextGameService = async (model, res, next) => {
     }
 }
 
-export const updateAddToQueueService = async (id, model, res, next) => {
+export const updateAddToQueueService = async (id, model, res, next, gameTime) => {
+
+    if (new Date(gameTime).getTime() < new Date().getTime()) {
+        return res.status(403).json({
+            status: false,
+            message: "Current time exceeds game time"
+        });
+    }
 
     try {
         await model.findByIdAndUpdate(id, { isQueued: true }, { new: true }).lean()
