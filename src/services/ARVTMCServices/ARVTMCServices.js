@@ -94,8 +94,6 @@ export const updateAddToQueueService = async (id, model, res, next, gameTime) =>
 export const updateRemoveFromQueueService = async (id, model, res, next) => {
 
     try {
-        await checkIsGameActive(model, id, "Active game cannot be removed from queue", res, next)
-
         await model.findByIdAndUpdate(id, { isQueued: false }, { new: true }).lean()
         return res.status(200).json({
             status: true,
@@ -156,7 +154,7 @@ export const updateMakeInActiveService = async (id, model, res, next) => {
     }
 }
 
-export const updateFullyMakeInActiveService = async (id, model, res, next) => {
+export const updateMakeCompleteService = async (id, model, targetName, res, next) => {
 
     try {
         const { bufferTime } = await model.findById(id).select("bufferTime")
@@ -164,25 +162,10 @@ export const updateFullyMakeInActiveService = async (id, model, res, next) => {
         if (new Date(bufferTime).getTime() > new Date().getTime()) {
             return res.status(403).json({
                 status: false,
-                message: "You cannot fully finish a game unless the buffer time is over"
+                message: "You cannot make a game complete unless the buffer time is over"
             });
         }
 
-        await model.findByIdAndUpdate(id, { isPartiallyActive: false }, { new: true })
-        return res.status(200).json({
-            status: true,
-            message: "Game fully inactivated successfully"
-        });
-    }
-
-    catch (error) {
-        next(error);
-    }
-}
-
-export const updateMakeCompleteService = async (id, model, targetName, res, next) => {
-
-    try {
         await model.findByIdAndUpdate(id, { isCompleted: true, isPartiallyActive: false });
 
         await CompletedTargets.findByIdAndUpdate(process.env.COMPLETED_TARGETS_DOCUMENT_ID, { $push: { [targetName]: id } })
