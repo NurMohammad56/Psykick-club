@@ -38,6 +38,10 @@ const ARVTargetSchema = new Schema(
       type: Boolean,
       default: false
     },
+    isPartiallyActive: {
+      type: Boolean,
+      default: false
+    },
     isQueued: {
       type: Boolean,
       default: false

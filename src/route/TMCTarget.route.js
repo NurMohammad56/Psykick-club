@@ -1,5 +1,5 @@
 import express from "express";
-import { createTMCTarget, getAllQueuedTMCTargets, getAllTMCTargets, getAllUnQueuedTMCTargets, updateAddToQueue, updateBufferTime, updateGameTime, updateRemoveFromQueue, updateMakeInactive, updateMakeComplete, startNextGame, getActiveTMCTarget } from "../controller/TMCTarget.controller.js";
+import { createTMCTarget, getAllQueuedTMCTargets, getAllTMCTargets, getAllUnQueuedTMCTargets, updateAddToQueue, updateBufferTime, updateGameTime, updateRemoveFromQueue, updateMakeInactive, updateMakeComplete, startNextGame, getActiveTMCTarget, updateFullyMakeInactive } from "../controller/TMCTarget.controller.js";
 
 const router = express.Router();
 
@@ -15,6 +15,7 @@ router.patch("/update-TMCTarget-bufferTime/:id", updateBufferTime)
 router.patch("/update-TMCTarget-gameTime/:id", updateGameTime)
 router.patch("/update-startNextGame", startNextGame)
 router.patch("/update-TMCTarget-makeInactive/:id", updateMakeInactive)
+router.patch("/update-TMCTarget-makeFullyInactive/:id", updateFullyMakeInactive)
 router.patch("/update-TMCTarget-makeComplete/:id", updateMakeComplete)
 
 export default router;

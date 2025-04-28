@@ -6,11 +6,22 @@ const checkIsGameActive = async (model, id, message, res, next) => {
         let isGameActive
 
         if (id) {
-            isGameActive = await model.findOne({ _id: id, isActive: true })
+            isGameActive = await model.findOne({
+                _id: id,
+                $or: [
+                    { isActive: true },
+                    { isPartiallyActive: true }
+                ]
+            })
         }
 
         else {
-            isGameActive = await model.findOne({ isActive: true })
+            isGameActive = await model.findOne({
+                $or: [
+                    { isActive: true },
+                    { isPartiallyActive: true }
+                ]
+            })
         }
 
 
@@ -33,7 +44,7 @@ export const startNextGameService = async (model, res, next) => {
         await checkIsGameActive(model, null, "Currently a game is running", res, next)
 
         const nextGame = await model
-            .findOneAndUpdate({ isCompleted: false, isQueued: true }, { isActive: true }, { new: true })
+            .findOneAndUpdate({ isCompleted: false, isQueued: true }, { isActive: true, isPartiallyActive: true }, { new: true })
             .select("-createdAt -updatedAt -__v")
             .lean()
 
@@ -80,17 +91,10 @@ export const updateAddToQueueService = async (id, model, res, next, gameTime) =>
     }
 }
 
-export const updateRemoveFromQueueService = async (id, model, revealOrOutcomeTime, res, next) => {
+export const updateRemoveFromQueueService = async (id, model, res, next) => {
 
     try {
         await checkIsGameActive(model, id, "Active game cannot be removed from queue", res, next)
-
-        if (new Date(revealOrOutcomeTime).getTime() > new Date().getTime()) {
-            return res.status(403).json({
-                status: false,
-                message: "Cannot remove from queue unless the game result is published"
-            });
-        }
 
         await model.findByIdAndUpdate(id, { isQueued: false }, { new: true }).lean()
         return res.status(200).json({
@@ -152,12 +156,36 @@ export const updateMakeInActiveService = async (id, model, res, next) => {
     }
 }
 
+export const updateFullyMakeInActiveService = async (id, model, res, next) => {
+
+    try {
+        const { bufferTime } = await model.findById(id).select("bufferTime")
+
+        if (new Date(bufferTime).getTime() > new Date().getTime()) {
+            return res.status(403).json({
+                status: false,
+                message: "You cannot fully finish a game unless the buffer time is over"
+            });
+        }
+
+        await model.findByIdAndUpdate(id, { isPartiallyActive: false }, { new: true })
+        return res.status(200).json({
+            status: true,
+            message: "Game fully inactivated successfully"
+        });
+    }
+
+    catch (error) {
+        next(error);
+    }
+}
+
 export const updateMakeCompleteService = async (id, model, targetName, res, next) => {
 
     try {
         await checkIsGameActive(model, id, "Active game cannot be marked as completed", res, next)
 
-        await model.findByIdAndUpdate(id, { isCompleted: true, isQueued: false, isActive: false });
+        await model.findByIdAndUpdate(id, { isCompleted: true, isQueued: false });
 
         await CompletedTargets.findByIdAndUpdate(process.env.COMPLETED_TARGETS_DOCUMENT_ID, { $push: { [targetName]: id } })
 
