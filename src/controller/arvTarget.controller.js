@@ -217,7 +217,8 @@ export const updateAddToQueue = async (req, res, next) => {
     const { id } = req.params;
 
     try {
-        await updateAddToQueueService(id, ARVTarget, res, next);
+        const { gameTime } = await ARVTarget.findById(id).select("gameTime")
+        await updateAddToQueueService(id, ARVTarget, res, next, gameTime);
     }
 
     catch (error) {
