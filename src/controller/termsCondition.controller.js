@@ -1,15 +1,17 @@
 import { TermsCondition } from "../model/termsCondition.model.js";
 
 // Create Terms & Condition from admin
-
 const createTermsCondition = async (req, res, next) => {
   const { content } = req.body;
+  const { previousId } = req.params;
   try {
     if (!content) {
       return res
         .status(400)
         .json({ status: false, message: "Content is required" });
     }
+
+    await TermsCondition.findByIdAndDelete(previousId);
     const newTermsCondition = new TermsCondition({ content });
 
     await newTermsCondition.save();
@@ -19,7 +21,9 @@ const createTermsCondition = async (req, res, next) => {
       message: "Terms & Condition is created successfully",
       data: newTermsCondition,
     });
-  } catch (error) {
+  }
+
+  catch (error) {
     next(error);
   }
 };
