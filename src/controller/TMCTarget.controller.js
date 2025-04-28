@@ -6,8 +6,7 @@ import {
   updateGameTimeService,
   updateMakeCompleteService,
   updateMakeInActiveService,
-  updateRemoveFromQueueService,
-  updateFullyMakeInActiveService
+  updateRemoveFromQueueService
 } from "../services/ARVTMCServices/ARVTMCServices.js";
 import { generateCode } from "../utils/generateCode.js";
 
@@ -270,18 +269,6 @@ export const updateMakeInactive = async (req, res, next) => {
 
   try {
     await updateMakeInActiveService(id, TMCTarget, res, next);
-  }
-
-  catch (error) {
-    next(error);
-  }
-};
-
-export const updateFullyMakeInactive = async (req, res, next) => {
-  const { id } = req.params;
-
-  try {
-    await updateFullyMakeInActiveService(id, TMCTarget, res, next);
   }
 
   catch (error) {

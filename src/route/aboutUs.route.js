@@ -7,7 +7,7 @@ const router = express.Router();
 
 // CRUD About us for admin
 router.post("/create-aboutUs/:previousId", verifyJWT, isAdmin, createAboutUs);
-router.get("/get-aboutUs", verifyJWT, isAdmin, getAboutUs);
+router.get("/get-aboutUs", verifyJWT, getAboutUs);
 router.patch("/update-aboutUs/:id", verifyJWT, isAdmin, updateAboutUs);
 router.delete("/delete-aboutUs/:id", verifyJWT, isAdmin, deleteAboutUs);
 

@@ -1,5 +1,5 @@
 import express from 'express';
-import { createARVTarget, getAllARVTargets, getAllQueuedARVTargets, getAllUnQueuedARVTargets, getActiveARVTarget, updateBufferTime, updateGameTime, updateResultImage, updateAddToQueue, updateRemoveFromQueue, startNextGame, updateMakeInactive, updateMakeComplete, updateFullyMakeInactive } from '../controller/ARVTarget.controller.js';
+import { createARVTarget, getAllARVTargets, getAllQueuedARVTargets, getAllUnQueuedARVTargets, getActiveARVTarget, updateBufferTime, updateGameTime, updateResultImage, updateAddToQueue, updateRemoveFromQueue, startNextGame, updateMakeInactive, updateMakeComplete } from '../controller/ARVTarget.controller.js';
 
 const router = express.Router();
 
@@ -16,7 +16,6 @@ router.patch("/update-ARVTarget-gameTime/:id", updateGameTime)
 router.patch("/update-ARVTarget-bufferTime/:id", updateBufferTime)
 router.patch("/update-startNextGame", startNextGame)
 router.patch("/update-ARVTarget-makeInactive/:id", updateMakeInactive)
-router.patch("/update-ARVTarget-makeFullyInactive/:id", updateFullyMakeInactive)
 router.patch("/update-ARVTarget-makeComplete/:id", updateMakeComplete)
 
 export default router;
