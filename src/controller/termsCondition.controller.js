@@ -2,7 +2,8 @@ import { TermsCondition } from "../model/termsCondition.model.js";
 
 // Create Terms & Condition from admin
 const createTermsCondition = async (req, res, next) => {
-  const { content, previousId } = req.body;
+  const { content } = req.body;
+  const { previousId } = req.params;
   try {
     if (!content) {
       return res
@@ -20,8 +21,8 @@ const createTermsCondition = async (req, res, next) => {
       message: "Terms & Condition is created successfully",
       data: newTermsCondition,
     });
-  } 
-  
+  }
+
   catch (error) {
     next(error);
   }
