@@ -7,6 +7,7 @@ import {
   updateMakeCompleteService,
   updateMakeInActiveService,
   updateRemoveFromQueueService,
+  updateFullyMakeInActiveService
 } from "../services/ARVTMCServices/ARVTMCServices.js";
 import { generateCode } from "../utils/generateCode.js";
 
@@ -189,7 +190,9 @@ export const getActiveTMCTarget = async (_, res, next) => {
 export const startNextGame = async (_, res, next) => {
   try {
     await startNextGameService(TMCTarget, res, next);
-  } catch (error) {
+  }
+
+  catch (error) {
     next(error);
   }
 };
@@ -200,8 +203,8 @@ export const updateAddToQueue = async (req, res, next) => {
   try {
     const { gameTime } = await TMCTarget.findById(id).select("gameTime")
     await updateAddToQueueService(id, TMCTarget, res, next, gameTime)
-  } 
-  
+  }
+
   catch (error) {
     next(error);
   }
@@ -211,8 +214,7 @@ export const updateRemoveFromQueue = async (req, res, next) => {
   const { id } = req.params;
 
   try {
-    const { revealTime } = await TMCTarget.findById(id).select("revealTime");
-    await updateRemoveFromQueueService(id, TMCTarget, revealTime, res, next);
+    await updateRemoveFromQueueService(id, TMCTarget, res, next);
   }
 
   catch (error) {
@@ -257,6 +259,7 @@ export const updateGameTime = async (req, res, next) => {
   }
 };
 
+// once game time is over then only isActive gets false
 export const updateMakeInactive = async (req, res, next) => {
   const { id } = req.params;
 
@@ -269,12 +272,26 @@ export const updateMakeInactive = async (req, res, next) => {
   }
 };
 
+export const updateFullyMakeInactive = async (req, res, next) => {
+  const { id } = req.params;
+
+  try {
+    await updateFullyMakeInActiveService(id, TMCTarget, res, next);
+  }
+
+  catch (error) {
+    next(error);
+  }
+};
+
 export const updateMakeComplete = async (req, res, next) => {
   const { id } = req.params;
 
   try {
     await updateMakeCompleteService(id, TMCTarget, "TMCTargets", res, next);
-  } catch (error) {
+  }
+
+  catch (error) {
     next(error);
   }
 };
