@@ -171,7 +171,12 @@ export const getAllUnQueuedTMCTargets = async (req, res, next) => {
 export const getActiveTMCTarget = async (_, res, next) => {
 
   try {
-    const activeTMCTarget = await TMCTarget.findOne({ isActive: true, isQueued: true })
+    const activeTMCTarget = await TMCTarget.findOne({
+      $or: [
+        { isActive: true },
+        { isPartiallyActive: true }
+      ]
+    })
       .select("-__v")
       .lean()
 

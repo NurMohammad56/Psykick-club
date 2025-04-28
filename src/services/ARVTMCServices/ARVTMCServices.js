@@ -44,7 +44,7 @@ export const startNextGameService = async (model, res, next) => {
         await checkIsGameActive(model, null, "Currently a game is running", res, next)
 
         const nextGame = await model
-            .findOneAndUpdate({ isCompleted: false, isQueued: true }, { isActive: true, isPartiallyActive: true }, { new: true })
+            .findOneAndUpdate({ isCompleted: false, isQueued: true }, { isQueued: false, isActive: true, isPartiallyActive: true }, { new: true })
             .select("-createdAt -updatedAt -__v")
             .lean()
 
@@ -183,9 +183,7 @@ export const updateFullyMakeInActiveService = async (id, model, res, next) => {
 export const updateMakeCompleteService = async (id, model, targetName, res, next) => {
 
     try {
-        await checkIsGameActive(model, id, "Active game cannot be marked as completed", res, next)
-
-        await model.findByIdAndUpdate(id, { isCompleted: true, isQueued: false });
+        await model.findByIdAndUpdate(id, { isCompleted: true, isPartiallyActive: false });
 
         await CompletedTargets.findByIdAndUpdate(process.env.COMPLETED_TARGETS_DOCUMENT_ID, { $push: { [targetName]: id } })
 
