@@ -651,28 +651,23 @@ export const getARVTMCGraphData = async (req, res, next) => {
             }
         ]);
 
-        // Format both results
-        const format = (data, label) =>
-            data.map(item => ({
-                date: `${monthNames[item._id.month - 1]} ${item._id.year}`,
-                type: label,
-                value: item.count
-            }));
+        // Convert data to map for easy lookup
+        const tmcMap = Object.fromEntries(tmcData.map(item => [item._id.month, item.count]));
+        const arvMap = Object.fromEntries(arvData.map(item => [item._id.month, item.count]));
 
-        const graphData = [...format(tmcData, "TMC"), ...format(arvData, "ARV")];
+        // Build final data for all 12 months
+        const result = monthNames.map((name, index) => ({
+            name,
+            tmc: tmcMap[index + 1] || 0,
+            arv: arvMap[index + 1] || 0,
+        }));
 
-        return res.status(200).json({
-            status: true,
-            message: "Graph data fetched successfully",
-            data: graphData
-        });
+        return res.status(200).json(result);
+    } catch (error) {
+        next(error);
     }
+};
 
-    catch (error) {
-        next(error)
-    }
-
-}
 
 //get total graph data for arv and tmc 
 export const getTotalARVTMCGraphData = async (req, res, next) => {
