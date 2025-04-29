@@ -5,7 +5,6 @@ import { UserSubmission } from "../model/userSubmission.model.js";
 import { User } from "../model/user.model.js";
 import { updateUserTier } from "./tier.controller.js";
 
-
 // P value
 const erf = (x) => {
     const a1 = 0.254829592;
@@ -132,19 +131,6 @@ export const submitTMCGame = async (req, res, next) => {
         // Calculate points based on choices
         if (TMC.targetImage === firstChoiceImage) {
             points = 25;
-        }
-
-        else if (TMC.targetImage === secondChoiceImage) {
-            points = 10;
-        }
-
-        else {
-            points = -10;
-        }
-
-        // Calculate points based on choices
-        if (TMC.targetImage === firstChoiceImage) {
-            points = 25;
         } else if (TMC.targetImage === secondChoiceImage) {
             points = 10;
         } else {
@@ -182,18 +168,14 @@ export const submitTMCGame = async (req, res, next) => {
 
         await userSubmission.save();
 
-        // Update user profile
-        const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            {
-                totalPoints: userSubmission.totalPoints,
-                $inc: { targetsLeft: -1 }
-            },
-            { new: true }
-        );
+        // Update user profile using save() to ensure pre('save') runs
+        const updatedUser = await User.findById(userId);
+        updatedUser.totalPoints = userSubmission.totalPoints;
+        updatedUser.targetsLeft -= 1;
+        await updatedUser.save();
 
         // Check for tier update
-        const tierUpdate = await checkTierUpdate(userId, userSubmission);
+        const tierUpdate = await checkTierUpdate(userId);
 
         return res.status(200).json({
             status: true,
@@ -202,12 +184,11 @@ export const submitTMCGame = async (req, res, next) => {
             currentTier: updatedUser.tierRank,
             totalPoints: updatedUser.totalPoints,
             targetsLeft: updatedUser.targetsLeft,
+            nextTierPoint: updatedUser.nextTierPoint,
             gamesCompleted: userSubmission.completedChallenges,
             tierUpdate
         });
-    }
-
-    catch (error) {
+    } catch (error) {
         next(error);
     }
 };
@@ -244,7 +225,6 @@ export const submitARVGame = async (req, res, next) => {
         }
 
         // Check if user has targets left
-
         if (currentUser.targetsLeft <= 0) {
             return res.status(403).json({
                 status: false,
@@ -259,20 +239,16 @@ export const submitARVGame = async (req, res, next) => {
             submittedImage,
             points: 0,
             submissionTime: currentTime
-        })
+        });
 
-        userSubmission.completedChallenges += 1
-        await userSubmission.save()
+        userSubmission.completedChallenges += 1;
+        await userSubmission.save();
 
-        const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            {
-                totalPoints: userSubmission.totalPoints,
-                $inc: { targetsLeft: -1 }
-            },
-            { new: true }
-        );
-
+        // Update user profile using save() to ensure pre('save') runs
+        const updatedUser = await User.findById(userId);
+        updatedUser.totalPoints = userSubmission.totalPoints;
+        updatedUser.targetsLeft -= 1;
+        await updatedUser.save();
 
         return res.status(200).json({
             success: true,
@@ -287,16 +263,14 @@ export const submitARVGame = async (req, res, next) => {
                 }
             },
             targetsLeft: updatedUser.targetsLeft,
+            nextTierPoint: updatedUser.nextTierPoint
         });
-    }
-
-    catch (error) {
+    } catch (error) {
         next(error);
     }
 };
 
-
-// Get completed targets for  user for admin dashboard
+// Get completed targets for user for admin dashboard
 export const getCompletedTargets = async (req, res, next) => {
     try {
         // Fetch all user submissions
@@ -318,11 +292,8 @@ export const getCompletedTargets = async (req, res, next) => {
         return res.status(200).json({
             status: true,
             message: "Completed targets count retrieved successfully",
-            data:
-                totalCompletedTargets
-
+            data: totalCompletedTargets
         });
-
     } catch (error) {
         next(error);
     }
@@ -351,15 +322,13 @@ export const getCompletedTargetsCount = async (req, res, next) => {
     }
 };
 
-
 // Get previous TMC results for a user
 export const getPreviousTMCResults = async (req, res) => {
-
-    const userId = req.user._id
-    const { currentTMCTargetId } = req.params
+    const userId = req.user._id;
+    const { currentTMCTargetId } = req.params;
 
     try {
-        const userSubmission = await UserSubmission.findOne({ userId })
+        const userSubmission = await UserSubmission.findOne({ userId });
 
         if (!userSubmission) {
             return res.status(404).json({ message: "No submissions found" });
@@ -374,21 +343,18 @@ export const getPreviousTMCResults = async (req, res) => {
             message: "Previous TMC Results fetched successfully",
             data: previousTMCResults
         });
-    }
-
-    catch (error) {
+    } catch (error) {
         next(error);
     }
-}
+};
 
 // Get previous ARV results for a user
 export const getPreviousARVResults = async (req, res) => {
-
-    const userId = req.user._id
-    const { currentARVTargetId } = req.params
+    const userId = req.user._id;
+    const { currentARVTargetId } = req.params;
 
     try {
-        const userSubmission = await UserSubmission.findOne({ userId })
+        const userSubmission = await UserSubmission.findOne({ userId });
 
         if (!userSubmission) {
             return res.status(404).json({ message: "No submissions found" });
@@ -403,12 +369,10 @@ export const getPreviousARVResults = async (req, res) => {
             message: "Previous ARV Results fetched successfully",
             data: previousARVResults
         });
-    }
-
-    catch (error) {
+    } catch (error) {
         next(error);
     }
-}
+};
 
 // Get TMC target result
 export const getTMCTargetResult = async (req, res, next) => {
@@ -421,7 +385,6 @@ export const getTMCTargetResult = async (req, res, next) => {
             { userId, "participatedTMCTargets.TMCId": TMCTargetId },
             { "participatedTMCTargets": 1, _id: 0 }
         );
-
 
         // If no result found, return a proper error message
         if (!result) {
@@ -453,19 +416,18 @@ export const getTMCTargetResult = async (req, res, next) => {
         next(error);
     }
 };
+
 // Get ARV target result
 export const getARVTargetResult = async (req, res, next) => {
-
-    const { ARVTargetId } = req.params
-    const userId = req.user._id
+    const { ARVTargetId } = req.params;
+    const userId = req.user._id;
 
     try {
         const result = await UserSubmission.findOne({
             userId, "participatedARVTargets.ARVId": ARVTargetId
-        }
-            ,
-            { "participatedARVTargets": 1, _id: 0 }
-        )
+        },
+        { "participatedARVTargets": 1, _id: 0 }
+        );
 
         const matchedARV = result.participatedARVTargets?.find(
             (arv) => arv.ARVId && arv.ARVId.toString() === ARVTargetId.toString()
@@ -478,18 +440,15 @@ export const getARVTargetResult = async (req, res, next) => {
             });
         }
 
-
         return res.status(200).json({
             status: true,
             message: "ARV Result fetched successfully",
             data: result
         });
+    } catch (error) {
+        next(error);
     }
-
-    catch (error) {
-        next(error)
-    }
-}
+};
 
 // Update ARV target points
 export const updateARVTargetPoints = async (req, res, next) => {
@@ -518,15 +477,13 @@ export const updateARVTargetPoints = async (req, res, next) => {
             return res.status(404).json({ status: false, message: "User submission not found" });
         }
 
-        // Update User totalPoints
-        const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            { $inc: { totalPoints: points } },
-            { new: true }
-        );
+        // Update User totalPoints using save() to ensure pre('save') runs
+        const updatedUser = await User.findById(userId);
+        updatedUser.totalPoints += points;
+        await updatedUser.save();
 
-        // Update User totalPoints
-        const tierUpdate = await checkTierUpdate(userId, userSubmission);
+        // Check for tier update
+        const tierUpdate = await checkTierUpdate(userId);
 
         return res.status(200).json({
             status: true,
@@ -578,13 +535,12 @@ export const updateTMCAnalytics = async (req, res, next) => {
             message: "TMC analytics updated successfully",
             data: { successRate, pValue }
         });
-
     } catch (error) {
         next(error);
     }
 };
 
-// Calculate cumulative standard normal probability using the Z-score
+// Update ARV analytics
 export const updateARVAnalytics = async (req, res, next) => {
     const userId = req.user._id;
 
@@ -622,15 +578,13 @@ export const updateARVAnalytics = async (req, res, next) => {
             message: "ARV analytics updated successfully",
             data: { successRate, pValue }
         });
-
     } catch (error) {
         next(error);
     }
 };
 
-//get graph data for arv and tmc for a single user
+// Get graph data for ARV and TMC for a single user
 export const getARVTMCGraphData = async (req, res, next) => {
-
     const { userId } = req.params;
     const userObjectId = new mongoose.Types.ObjectId(userId);
 
@@ -663,7 +617,7 @@ export const getARVTMCGraphData = async (req, res, next) => {
             {
                 $match: {
                     userId: userObjectId,
-                    "participatedTMCTargets.submissionTime": { $ne: null }
+                    "participatedARVTargets.submissionTime": { $ne: null }
                 }
             },
             { $unwind: "$participatedARVTargets" },
@@ -694,17 +648,13 @@ export const getARVTMCGraphData = async (req, res, next) => {
             message: "Graph data fetched successfully",
             data: graphData
         });
+    } catch (error) {
+        next(error);
     }
+};
 
-    catch (error) {
-        next(error)
-    }
-
-}
-
-//get total graph data for arv and tmc 
+// Get total graph data for ARV and TMC 
 export const getTotalARVTMCGraphData = async (req, res, next) => {
-
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
     try {
@@ -732,7 +682,7 @@ export const getTotalARVTMCGraphData = async (req, res, next) => {
         const arvData = await UserSubmission.aggregate([
             {
                 $match: {
-                    "participatedTMCTargets.submissionTime": { $ne: null }
+                    "participatedARVTargets.submissionTime": { $ne: null }
                 }
             },
             { $unwind: "$participatedARVTargets" },
@@ -763,23 +713,20 @@ export const getTotalARVTMCGraphData = async (req, res, next) => {
             message: "Graph data fetched successfully",
             data: graphData
         });
+    } catch (error) {
+        next(error);
     }
+};
 
-    catch (error) {
-        next(error)
-    }
-}
-
-//check if a user participated in the tmc or arv or not
+// Check if a user participated in the TMC or ARV or not
 export const getUserParticipationTMC = async (req, res, next) => {
-
     const { userId, TMCTargetId } = req.params;
 
     try {
         const result = await UserSubmission.findOne(
             { userId, "participatedTMCTargets.TMCId": TMCTargetId },
             { "participatedTMCTargets.$": 1 }
-        ).populate("participatedTMCTargets.TMCId")
+        ).populate("participatedTMCTargets.TMCId");
 
         if (!result) {
             return res.status(404).json({
@@ -795,22 +742,19 @@ export const getUserParticipationTMC = async (req, res, next) => {
             data: participatedTMCTarget,
             message: "User has participated in this TMC."
         });
-    }
-
-    catch (error) {
+    } catch (error) {
         next(error);
     }
-}
+};
 
 export const getUserParticipationARV = async (req, res, next) => {
-
     const { userId, ARVTargetId } = req.params;
 
     try {
         const result = await UserSubmission.findOne(
             { userId, "participatedARVTargets.ARVId": ARVTargetId },
             { "participatedARVTargets.$": 1 }
-        ).populate("participatedARVTargets.ARVId")
+        ).populate("participatedARVTargets.ARVId");
 
         if (!result) {
             return res.status(404).json({
@@ -826,9 +770,7 @@ export const getUserParticipationARV = async (req, res, next) => {
             data: participatedARVTarget,
             message: "User has participated in this ARV."
         });
+    } catch (error) {
+        next(error);
     }
-
-    catch (error) {
-        next(error)
-    }
-}
+};

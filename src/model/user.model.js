@@ -93,7 +93,8 @@ const userSchema = new Schema(
     },
     gender: {
       type: String,
-      enum: ["male", "female"],
+      enum: ["male", "female", "Male", "Female"], // Allow both cases
+      default: null, // Optional field
     },
     emailVerified: {
       type: Boolean,
@@ -139,43 +140,76 @@ const userSchema = new Schema(
       },
     ],
     lastActive: { type: Date },
+    nextTierPoint: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,
   }
 );
 
-// Middleware to update tier based on points
+// Normalize gender to lowercase before validation
+userSchema.pre('validate', function (next) {
+  if (this.gender) {
+    this.gender = this.gender.toLowerCase();
+  }
+  next();
+});
+
+// Middleware to calculate nextTierPoint based on points
 userSchema.pre('save', function (next) {
   const points = this.totalPoints;
   const tierTable = [
-    { name: 'NOVICE SEEKER', up: 1, retain: [0], down: null },
-    { name: 'INITIATE', up: 1, retain: [-29, 0], down: -30 },
-    { name: 'APPRENTICE', up: 31, retain: [1, 30], down: 0 },
-    { name: 'EXPLORER', up: 61, retain: [1, 60], down: 0 },
-    { name: 'VISIONARY', up: 81, retain: [31, 80], down: 30 },
-    { name: 'ADEPT', up: 101, retain: [31, 100], down: 30 },
-    { name: 'SEER', up: 121, retain: [61, 120], down: 60 },
-    { name: 'ORACLE', up: 141, retain: [61, 140], down: 60 },
-    { name: 'MASTER REMOTE VIEWER', up: 161, retain: [101, 160], down: 100 },
-    { name: 'ASCENDING MASTER', up: null, retain: [121], down: 120 },
+    { name: 'NOVICE SEEKER', pointsRequired: 1 },
+    { name: 'INITIATE', pointsRequired: 31 },
+    { name: 'APPRENTICE', pointsRequired: 61 },
+    { name: 'EXPLORER', pointsRequired: 81 },
+    { name: 'VISIONARY', pointsRequired: 101 },
+    { name: 'ADEPT', pointsRequired: 121 },
+    { name: 'SEER', pointsRequired: 141 },
+    { name: 'ORACLE', pointsRequired: 161 },
+    { name: 'MASTER REMOTE VIEWER', pointsRequired: 181 },
+    { name: 'ASCENDING MASTER', pointsRequired: null },
   ];
 
+  // Find current tier index
   let currentTierIndex = tierTable.findIndex(
     (tier) => tier.name === this.tierRank
   );
   if (currentTierIndex === -1) {
+    console.warn(`Invalid tierRank: ${this.tierRank}, defaulting to NOVICE SEEKER`);
     currentTierIndex = 0;
   }
 
-  let nextTier = tierTable[currentTierIndex + 1] || tierTable[currentTierIndex];
-  let prevTier = tierTable[currentTierIndex - 1] || tierTable[currentTierIndex];
+  // Get the next tier
+  const nextTierIndex = currentTierIndex + 1 < tierTable.length ? currentTierIndex + 1 : currentTierIndex;
+  const nextTier = tierTable[nextTierIndex];
 
-  if (points >= nextTier.up) {
-    this.tierRank = nextTier.name;
-  } else if (prevTier.down !== null && points <= prevTier.down) {
-    this.tierRank = prevTier.name;
+  // Calculate nextTierPoint
+  let nextTierPoint;
+  if (nextTier.pointsRequired === null) {
+    nextTierPoint = 0; // No next tier (ASCENDING MASTER)
+  } else if (typeof nextTier.pointsRequired !== 'number' || typeof points !== 'number') {
+    console.error(`Invalid points data: pointsRequired=${nextTier.pointsRequired}, points=${points}`);
+    nextTierPoint = 0; // Fallback to 0 on error
+  } else {
+    nextTierPoint = Math.max(nextTier.pointsRequired - points, 0);
   }
+
+  this.nextTierPoint = nextTierPoint;
+
+  // Log for debugging
+  console.log({
+    tierRank: this.tierRank,
+    totalPoints: points,
+    currentTierIndex,
+    nextTier: nextTier.name,
+    nextTierPointsRequired: nextTier.pointsRequired,
+    nextTierPoint,
+    gender: this.gender
+  });
 
   next();
 });
@@ -183,7 +217,6 @@ userSchema.pre('save', function (next) {
 // Hashing password
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
-  // const salt = await this.getSalt(10);
   this.password = await bcrypt.hash(this.password, 10);
   next();
 });
@@ -223,16 +256,14 @@ userSchema.methods.generateRefreshToken = function () {
   );
 };
 
-// Add this method to userSchema methods
+// Update session
 userSchema.methods.updateSession = async function () {
   const now = new Date();
   this.lastActive = now;
 
-  // Check if there's an active session (no sessionEndTime)
   const activeSession = this.sessions.find(s => !s.sessionEndTime);
 
   if (!activeSession) {
-    // No active session, create a new one
     this.sessions.push({
       sessionStartTime: now
     });

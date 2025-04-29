@@ -5,7 +5,7 @@ export const getUserProfile = async (req, res) => {
 
   try {
     const user = await User.findById(id).select(
-      "-fullName -phone -title -country -dob -password -point -tmcScore -arvScore -combinedScore -leaderboardPosition -emailVerified -role -gender -refreshToken -otpExpiration -createdAt -updatedAt -__v"
+      "-fullName -phone -sessions -title -country -dob -password -point -tmcScore -arvScore -combinedScore -leaderboardPosition -emailVerified -role -gender -refreshToken -otpExpiration -createdAt -updatedAt -__v"
     );
 
     if (!user) {
