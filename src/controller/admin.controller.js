@@ -572,8 +572,8 @@ export const getGameParticipationStats = async (req, res) => {
 
       months.push({
         month: monthStart.format("MMM"),
-        tmc: tmcParticipations[0]?.totalParticipations || 0,
-        arv: arvParticipations[0]?.totalParticipations || 0,
+        TMC: tmcParticipations[0]?.totalParticipations || 0,
+        ARV: arvParticipations[0]?.totalParticipations || 0,
       });
     }
 
