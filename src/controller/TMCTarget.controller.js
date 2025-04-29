@@ -193,7 +193,7 @@ export const getActiveTMCTarget = async (_, res, next) => {
 
 export const startNextGame = async (_, res, next) => {
   try {
-    await startNextGameService(TMCTarget, res, next);
+    await startNextGameService(TMCTarget, res, next, "TMC");
   }
 
   catch (error) {

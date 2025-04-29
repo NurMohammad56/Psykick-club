@@ -48,7 +48,4 @@ router.get("/all-contact-us", verifyJWT, isAdmin, getAllContactUs);
 router.get("/contact-us/:id", verifyJWT, isAdmin, getContactUs);
 router.delete("/contact-us/:id", verifyJWT, isAdmin, deleteContactUs);
 
-
-
-
 export default router;

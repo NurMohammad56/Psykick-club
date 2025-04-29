@@ -47,9 +47,11 @@ import termsCondition from "./src/route/termsCondition.route.js";
 import aboutUsRoute from "./src/route/aboutUs.route.js";
 import OAuthRoute from "./src/route/OAuth.route.js"
 import contactUsRoute from "./src/route/contactUs.route.js"
+import notificationRoute from "./src/route/notification.route.js"
 
 // set 
 app.use('/api/v1/user', userRoute);
+app.use('/api/v1/notifications', notificationRoute);
 app.use('/api/v1/profile', profileRoute);
 app.use('/api/v1/admin', adminRoute);
 app.use('/api/v1/category', categoryImageRoute);

@@ -1,4 +1,5 @@
 import { CompletedTargets } from "../../model/completedTargets.model.js";
+import { Notification } from "../../model/notification.model.js";
 
 const checkIsGameActive = async (model, id, message, res, next) => {
 
@@ -38,7 +39,7 @@ const checkIsGameActive = async (model, id, message, res, next) => {
     }
 }
 
-export const startNextGameService = async (model, res, next) => {
+export const startNextGameService = async (model, res, next, gameName) => {
 
     try {
         await checkIsGameActive(model, null, "Currently a game is running", res, next)
@@ -49,6 +50,12 @@ export const startNextGameService = async (model, res, next) => {
             .lean()
 
         if (nextGame) {
+            const notification = new Notification({
+                message: `New ${gameName} game has started`
+            })
+
+            await notification.save()
+
             return res.status(200).json({
                 status: true,
                 message: "Next game started successfully",
