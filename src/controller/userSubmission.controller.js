@@ -4,6 +4,7 @@ import { ARVTarget } from "../model/ARVTarget.model.js";
 import { UserSubmission } from "../model/userSubmission.model.js";
 import { User } from "../model/user.model.js";
 import { updateUserTier } from "./tier.controller.js";
+import { Notification } from "../model/notification.model.js";
 
 
 // P value
@@ -46,7 +47,7 @@ const cumulativeStdNormalProbability = (z) => {
     return 0.5 * (1 + erf(z / Math.sqrt(2)));
 };
 
-// Check if user's tier should be updated
+// Check if user's tier should be updated and also renew the cycle
 export const checkTierUpdate = async (userId) => {
     try {
         const userSubmission = await UserSubmission.findOne({ userId });
@@ -73,6 +74,13 @@ export const checkTierUpdate = async (userId) => {
 
         // If cycle should end, update tier and reset everything
         const updateResult = await updateUserTier(userId);
+
+        const notification = new Notification({
+            userId,
+            message: `Your cycle has been completed. Your previous total points ${updateResult.previousPoints}, your previous tier is ${updateResult.previousTier} and your new tier is ${updateResult.newTier}.`,
+        })
+
+        await notification.save()
 
         return {
             status: true,
@@ -430,8 +438,8 @@ export const getTMCTargetResult = async (req, res, next) => {
             message: "TMC Result fetched successfully",
             data: result.participatedTMCTargets[0]
         });
-    } 
-    
+    }
+
     catch (error) {
         next(error);
     }
