@@ -3,7 +3,6 @@ import { ContactUs } from "../model/contactUs.model.js";
 const createContactUs = async (req, res, next) => {
   try {
     const {name, email, subject, message} = req.body;
-    const userId = req.user._id;
 
     if (!req.body) {
       return res
@@ -12,7 +11,6 @@ const createContactUs = async (req, res, next) => {
     }
 
     const createContact = await ContactUs({
-      userId: userId,
       name,
       email,
       subject,
