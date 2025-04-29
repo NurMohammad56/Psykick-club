@@ -4,6 +4,7 @@ import { ARVTarget } from "../model/ARVTarget.model.js";
 import { UserSubmission } from "../model/userSubmission.model.js";
 import { User } from "../model/user.model.js";
 import { updateUserTier } from "./tier.controller.js";
+import { Notification } from "../model/notification.model.js";
 
 
 // P value
@@ -100,22 +101,6 @@ export const submitTMCGame = async (req, res, next) => {
     const userId = req.user._id;
 
     try {
-        // Get current user to check targetsLeft
-        const currentUser = await User.findById(userId);
-        if (!currentUser) {
-            return res.status(404).json({ status: false, message: "User not found" });
-        }
-
-        // Check if user has targets left
-        if (currentUser.targetsLeft <= 0) {
-            return res.status(403).json({
-                status: false,
-                message: "No targets left in current cycle",
-                cycleComplete: true,
-                nextCycleStarts: "Immediately after tier update"
-            });
-        }
-
         let points = 0;
 
         // Find or create user submission
@@ -150,19 +135,6 @@ export const submitTMCGame = async (req, res, next) => {
                     currentTime: currentTime
                 }
             });
-        }
-
-        // Calculate points based on choices
-        if (TMC.targetImage === firstChoiceImage) {
-            points = 25;
-        }
-
-        else if (TMC.targetImage === secondChoiceImage) {
-            points = 10;
-        }
-
-        else {
-            points = -10;
         }
 
         // Calculate points based on choices
@@ -232,25 +204,9 @@ export const submitTMCGame = async (req, res, next) => {
 
 // Submit ARV game
 export const submitARVGame = async (req, res, next) => {
-    const { submittedImage, ARVTargetId } = req.body;
-    const userId = req.user._id;
-
     try {
-        // Get current user to check targetsLeft
-        const currentUser = await User.findById(userId);
-        if (!currentUser) {
-            return res.status(404).json({ status: false, message: "User not found" });
-        }
-
-        // Check if user has targets left
-        if (currentUser.targetsLeft <= 0) {
-            return res.status(403).json({
-                status: false,
-                message: "No targets left in current cycle",
-                cycleComplete: true,
-                nextCycleStarts: "Immediately after tier update"
-            });
-        }
+        const { submittedImage, ARVTargetId } = req.body;
+        const userId = req.user._id;
 
         const ARV = await ARVTarget.findById(ARVTargetId);
         if (!ARV) {
@@ -278,7 +234,6 @@ export const submitARVGame = async (req, res, next) => {
         }
 
         // Check if user has targets left
-
         if (currentUser.targetsLeft <= 0) {
             return res.status(403).json({
                 status: false,
@@ -295,18 +250,14 @@ export const submitARVGame = async (req, res, next) => {
             submissionTime: currentTime
         });
 
-        userSubmission.completedChallenges += 1
-        await userSubmission.save()
+        userSubmission.completedChallenges += 1;
+        await userSubmission.save();
 
-        const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            {
-                totalPoints: userSubmission.totalPoints,
-                $inc: { targetsLeft: -1 }
-            },
-            { new: true }
-        );
-
+        // Update user profile using save() to ensure pre('save') runs
+        const updatedUser = await User.findById(userId);
+        updatedUser.totalPoints = userSubmission.totalPoints;
+        updatedUser.targetsLeft -= 1;
+        await updatedUser.save();
 
         return res.status(200).json({
             success: true,
@@ -327,7 +278,6 @@ export const submitARVGame = async (req, res, next) => {
         next(error);
     }
 };
-
 
 // Get completed targets for  user for admin dashboard
 export const getCompletedTargets = async (req, res, next) => {
