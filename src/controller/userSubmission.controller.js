@@ -77,7 +77,7 @@ export const checkTierUpdate = async (userId) => {
 
         const notification = new Notification({
             userId,
-            message: `Your cycle has been completed. Your previous total points ${updateResult.previousPoints}, your previous tier is ${updateResult.previousTier} and your new tier is ${updateResult.newTier}.`,
+            message: `Your cycle has been renewed. Your previous total points ${updateResult.previousPoints}, your previous tier is ${updateResult.previousTier} and your new tier is ${updateResult.newTier}. `,
         })
 
         await notification.save()
@@ -443,6 +443,7 @@ export const getTMCTargetResult = async (req, res, next) => {
         next(error);
     }
 };
+
 // Get ARV target result
 export const getARVTargetResult = async (req, res, next) => {
 
@@ -454,25 +455,21 @@ export const getARVTargetResult = async (req, res, next) => {
             userId, "participatedARVTargets.ARVId": ARVTargetId
         }
             ,
-            { "participatedARVTargets": 1, _id: 0 }
+            { "participatedARVTargets.$": 1, _id: 0 }
         )
 
-        const matchedARV = result.participatedARVTargets?.find(
-            (arv) => arv.ARVId && arv.ARVId.toString() === ARVTargetId.toString()
-        );
-
-        if (!matchedARV) {
+        // If no result found, return a proper error message
+        if (!result) {
             return res.status(404).json({
                 status: false,
-                message: "No result found for the provided ARV Target ID.",
+                message: "No submission found for this ARV Target.",
             });
         }
-
 
         return res.status(200).json({
             status: true,
             message: "ARV Result fetched successfully",
-            data: result
+            data: result.participatedARVTargets[0]
         });
     }
 
@@ -484,7 +481,6 @@ export const getARVTargetResult = async (req, res, next) => {
 // Update ARV target points
 export const updateARVTargetPoints = async (req, res, next) => {
     const { ARVTargetId } = req.params;
-    const { submittedImage } = req.body;
     const userId = req.user._id;
 
     try {
@@ -493,6 +489,15 @@ export const updateARVTargetPoints = async (req, res, next) => {
         if (!ARV) {
             return res.status(404).json({ status: false, message: "ARV target not found" });
         }
+
+        const result = await UserSubmission.findOne({
+            userId, "participatedARVTargets.ARVId": ARVTargetId
+        }
+            ,
+            { "participatedARVTargets.$": 1, _id: 0 }
+        )
+
+        const { submittedImage } = result.participatedARVTargets[0];
 
         // Calculate points
         points = ARV.resultImage === submittedImage ? 25 : -10;
@@ -525,7 +530,9 @@ export const updateARVTargetPoints = async (req, res, next) => {
             totalPoints: updatedUser.totalPoints,
             tierUpdate: tierUpdate || { changed: false }
         });
-    } catch (error) {
+    } 
+    
+    catch (error) {
         next(error);
     }
 };
