@@ -422,28 +422,40 @@ export const getTMCTargetResult = async (req, res, next) => {
         const result = await UserSubmission.findOne(
             { userId, "participatedTMCTargets.TMCId": TMCTargetId },
             { "participatedTMCTargets.$": 1, _id: 0 }
-        );
+        ).populate({
+            path: 'participatedTMCTargets.TMCId',
+            model: 'TMCTarget'
+        });
 
         // If no result found, return a proper error message
-        if (!result) {
+        if (!result || !result.participatedTMCTargets.length) {
             return res.status(404).json({
                 status: false,
                 message: "No submission found for this TMC Target.",
             });
         }
 
+        // Extract the specific participated TMC target
+        const targetResult = result.participatedTMCTargets[0];
+
+        // If TMCId is still null after population, the referenced document might not exist
+        if (!targetResult.TMCId) {
+            return res.status(404).json({
+                status: false,
+                message: "The referenced TMC Target no longer exists.",
+            });
+        }
+
         return res.status(200).json({
             status: true,
             message: "TMC Result fetched successfully",
-            data: result.participatedTMCTargets[0]
+            data: targetResult
         });
     }
-
     catch (error) {
         next(error);
     }
 };
-
 // Get ARV target result
 export const getARVTargetResult = async (req, res, next) => {
 
@@ -530,8 +542,8 @@ export const updateARVTargetPoints = async (req, res, next) => {
             totalPoints: updatedUser.totalPoints,
             tierUpdate: tierUpdate || { changed: false }
         });
-    } 
-    
+    }
+
     catch (error) {
         next(error);
     }
