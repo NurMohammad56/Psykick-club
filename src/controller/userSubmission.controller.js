@@ -326,7 +326,7 @@ export const getCompletedTargets = async (req, res, next) => {
 };
 
 // Get completed targets count for a specific user with success rate 
-export const getCompletedTargetsCount = async (req, res) => {
+export const getCompletedTargetsCount = async (req, res, next) => {
     const userId = req.user._id;
     try {
         const userSubmission = await UserSubmission.findOne({ userId });
@@ -339,7 +339,7 @@ export const getCompletedTargetsCount = async (req, res) => {
         }
 
         const totalCompletedTargets = userSubmission.participatedTMCTargets.length + userSubmission.participatedARVTargets.length;
-        const successRate = (totalCompletedTargets / (userSubmission.completedChallenges)) * 100;
+        const successRate = Math.min((totalCompletedTargets / userSubmission.completedChallenges) * 100, 100);
         return res.status(200).json({
             status: true,
             message: "Completed targets count retrieved successfully",
@@ -347,9 +347,8 @@ export const getCompletedTargetsCount = async (req, res) => {
                 totalCompletedTargets,
                 successRate: successRate.toFixed(2)
             }
-        })
-    }
-    catch (error) {
+        });
+    } catch (error) {
         next(error);
     }
 };
