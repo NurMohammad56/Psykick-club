@@ -157,23 +157,14 @@ const resendOTP = async (req, res) => {
 // Reset pass from admin
 const resetPassword = async (req, res) => {
   try {
-    const { newPassword, confirmPassword } = req.body;
+    const { email, newPassword } = req.body;
 
-    const userId = req.user._id;
-    const user = await User.findById(userId);
+    const user = await User.findOne({ email });
 
     if (!user) {
       return res.status(404).json({
         status: false,
         message: "User not found",
-      });
-    }
-
-    // check if new password and confirm new password match
-    if (newPassword !== confirmPassword) {
-      return res.status(400).json({
-        status: false,
-        message: "New password and confirm new password does not match",
       });
     }
 
@@ -186,7 +177,7 @@ const resetPassword = async (req, res) => {
       message: "Password changed successfully",
     });
   } catch (error) {
-    console.log("Error while reseting password: ", error);
+    console.log("Error while resetting password: ", error);
     return res.status(500).json({ status: false, message: error.message });
   }
 };
@@ -473,7 +464,7 @@ const getActiveUsersCount = async (_, res, next) => {
 
 // <<<<<<<<<<<<<<<<<<<<<<<CONTACT US>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // get all contact us for admin
-const getContactUs = async (req, res, next) => {
+const getAllContactUs = async (_, res, next) => {
   try {
     const getAllContactUs = await ContactUs.find();
     if (!getAllContactUs) {
@@ -487,6 +478,53 @@ const getContactUs = async (req, res, next) => {
       data: getAllContactUs,
     });
   } catch (error) {
+    next(error);
+  }
+};
+
+const getContactUs = async (req, res, next) => {
+  const { id } = req.params;
+
+  try {
+    const contactUs = await ContactUs.findById(id);
+
+    if (!contactUs) {
+      return res
+        .status(404)
+        .json({ status: false, message: "Contact us not found" });
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "Fetched contact us",
+      data: contactUs
+    });
+  }
+
+  catch (error) {
+    next(error);
+  }
+};
+
+const deleteContactUs = async (req, res, next) => {
+  const { id } = req.params;
+
+  try {
+    const contactUs = await ContactUs.findByIdAndDelete(id);
+
+    if (!contactUs) {
+      return res
+        .status(404)
+        .json({ status: false, message: "Contact us not found" });
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "Contact us deleted successfully"
+    });
+  }
+
+  catch (error) {
     next(error);
   }
 };
@@ -539,10 +577,10 @@ export const getGameParticipationStats = async (req, res) => {
       });
     }
 
-    res.status(200).json(months);
+    return res.status(200).json(months);
   } catch (err) {
     console.error("Error in game participation stats:", err);
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -559,5 +597,7 @@ export {
   getAllUsers,
   getActiveUsersCount,
   getContactUs,
-  getAdminProfile
+  getAdminProfile,
+  getAllContactUs,
+  deleteContactUs
 };

@@ -12,7 +12,7 @@ const router = express.Router();
 
 // CRUD Terms & Condition Route from admin
 router.post(
-  "/create-terms-and-condition",
+  "/create-terms-and-condition/:previousId",
   verifyJWT,
   isAdmin,
   createTermsCondition

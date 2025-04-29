@@ -6,7 +6,7 @@ import {
   updateGameTimeService,
   updateMakeCompleteService,
   updateMakeInActiveService,
-  updateRemoveFromQueueService,
+  updateRemoveFromQueueService
 } from "../services/ARVTMCServices/ARVTMCServices.js";
 import { generateCode } from "../utils/generateCode.js";
 
@@ -131,10 +131,51 @@ export const getAllQueuedTMCTargets = async (req, res, next) => {
   }
 };
 
+export const getAllUnQueuedTMCTargets = async (req, res, next) => {
+
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  try {
+
+    const [totalItems, TMCTargets] = await Promise.all([
+      TMCTarget.countDocuments({ isQueued: false }),
+      TMCTarget.find({ isQueued: false })
+        .select("-__v")
+        .skip(skip)
+        .limit(limit)
+    ]);
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return res.status(200).json({
+      status: true,
+      data: TMCTargets,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalItems,
+        itemsPerPage: limit
+      },
+      message: "All unqueued TMCTargets fetched successfully"
+    });
+  }
+
+  catch (error) {
+    next(error);
+  }
+};
+
 export const getActiveTMCTarget = async (_, res, next) => {
 
   try {
-    const activeTMCTarget = await TMCTarget.findOne({ isActive: true, isQueued: true })
+    const activeTMCTarget = await TMCTarget.findOne({
+      $or: [
+        { isActive: true },
+        { isPartiallyActive: true }
+      ]
+    })
       .select("-__v")
       .lean()
 
@@ -152,8 +193,10 @@ export const getActiveTMCTarget = async (_, res, next) => {
 
 export const startNextGame = async (_, res, next) => {
   try {
-    await startNextGameService(TMCTarget, res, next);
-  } catch (error) {
+    await startNextGameService(TMCTarget, res, next, "TMC");
+  }
+
+  catch (error) {
     next(error);
   }
 };
@@ -162,8 +205,11 @@ export const updateAddToQueue = async (req, res, next) => {
   const { id } = req.params;
 
   try {
-    await updateAddToQueueService(id, TMCTarget, res, next);
-  } catch (error) {
+    const { gameTime } = await TMCTarget.findById(id).select("gameTime")
+    await updateAddToQueueService(id, TMCTarget, res, next, gameTime)
+  }
+
+  catch (error) {
     next(error);
   }
 };
@@ -172,8 +218,7 @@ export const updateRemoveFromQueue = async (req, res, next) => {
   const { id } = req.params;
 
   try {
-    const { revealTime } = await TMCTarget.findById(id).select("revealTime");
-    await updateRemoveFromQueueService(id, TMCTarget, revealTime, res, next);
+    await updateRemoveFromQueueService(id, TMCTarget, res, next);
   }
 
   catch (error) {
@@ -218,12 +263,15 @@ export const updateGameTime = async (req, res, next) => {
   }
 };
 
+// once game time is over then only isActive gets false
 export const updateMakeInactive = async (req, res, next) => {
   const { id } = req.params;
 
   try {
     await updateMakeInActiveService(id, TMCTarget, res, next);
-  } catch (error) {
+  }
+
+  catch (error) {
     next(error);
   }
 };
@@ -233,7 +281,9 @@ export const updateMakeComplete = async (req, res, next) => {
 
   try {
     await updateMakeCompleteService(id, TMCTarget, "TMCTargets", res, next);
-  } catch (error) {
+  }
+
+  catch (error) {
     next(error);
   }
 };

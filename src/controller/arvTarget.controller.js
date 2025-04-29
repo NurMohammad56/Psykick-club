@@ -128,10 +128,51 @@ export const getAllQueuedARVTargets = async (req, res, next) => {
     }
 }
 
+export const getAllUnQueuedARVTargets = async (req, res, next) => {
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    try {
+
+        const [totalItems, ARVTargets] = await Promise.all([
+            ARVTarget.countDocuments({ isQueued: false }),
+            ARVTarget.find({ isQueued: false })
+                .select("-__v")
+                .skip(skip)
+                .limit(limit)
+        ]);
+
+        const totalPages = Math.ceil(totalItems / limit);
+
+        return res.status(200).json({
+            status: true,
+            data: ARVTargets,
+            pagination: {
+                currentPage: page,
+                totalPages,
+                totalItems,
+                itemsPerPage: limit
+            },
+            message: "All unqueued ARVTargets fetched successfully"
+        });
+    }
+
+    catch (error) {
+        next(error);
+    }
+}
+
 export const getActiveARVTarget = async (_, res, next) => {
 
     try {
-        const activeARVTarget = await ARVTarget.findOne({ isActive: true, isQueued: true })
+        const activeARVTarget = await ARVTarget.findOne({
+            $or: [
+                { isActive: true },
+                { isPartiallyActive: true }
+            ]
+        })
             .select("-__v")
             .lean()
 
@@ -150,7 +191,7 @@ export const getActiveARVTarget = async (_, res, next) => {
 export const startNextGame = async (_, res, next) => {
 
     try {
-        await startNextGameService(ARVTarget, res, next)
+        await startNextGameService(ARVTarget, res, next, "ARV")
     }
 
     catch (error) {
@@ -181,7 +222,8 @@ export const updateAddToQueue = async (req, res, next) => {
     const { id } = req.params;
 
     try {
-        await updateAddToQueueService(id, ARVTarget, res, next);
+        const { gameTime } = await ARVTarget.findById(id).select("gameTime")
+        await updateAddToQueueService(id, ARVTarget, res, next, gameTime);
     }
 
     catch (error) {
@@ -194,8 +236,7 @@ export const updateRemoveFromQueue = async (req, res, next) => {
     const { id } = req.params;
 
     try {
-        const { outcomeTime } = await ARVTarget.findById(id).select("outcomeTime")
-        await updateRemoveFromQueueService(id, ARVTarget, outcomeTime, res, next)
+        await updateRemoveFromQueueService(id, ARVTarget, res, next)
     }
 
     catch (error) {
@@ -245,6 +286,7 @@ export const updateGameTime = async (req, res, next) => {
     }
 }
 
+// once game time is over then only isActive gets false
 export const updateMakeInactive = async (req, res, next) => {
 
     const { id } = req.params;

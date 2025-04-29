@@ -5,6 +5,7 @@ import { UserSubmission } from "../model/userSubmission.model.js";
 import { User } from "../model/user.model.js";
 import { updateUserTier } from "./tier.controller.js";
 
+
 // P value
 const erf = (x) => {
     const a1 = 0.254829592;
@@ -45,7 +46,7 @@ const cumulativeStdNormalProbability = (z) => {
     return 0.5 * (1 + erf(z / Math.sqrt(2)));
 };
 
-// Check if user's tier should be updated
+// Check if user's tier should be updated and also renew the cycle
 export const checkTierUpdate = async (userId) => {
     try {
         const userSubmission = await UserSubmission.findOne({ userId });
@@ -73,6 +74,13 @@ export const checkTierUpdate = async (userId) => {
         // If cycle should end, update tier and reset everything
         const updateResult = await updateUserTier(userId);
 
+        const notification = new Notification({
+            userId,
+            message: `Your cycle has been renewed. Your previous total points ${updateResult.previousPoints}, your previous tier is ${updateResult.previousTier} and your new tier is ${updateResult.newTier}. `,
+        })
+
+        await notification.save()
+
         return {
             status: true,
             message: "Cycle completed. Points reset and new cycle started.",
@@ -92,6 +100,22 @@ export const submitTMCGame = async (req, res, next) => {
     const userId = req.user._id;
 
     try {
+        // Get current user to check targetsLeft
+        const currentUser = await User.findById(userId);
+        if (!currentUser) {
+            return res.status(404).json({ status: false, message: "User not found" });
+        }
+
+        // Check if user has targets left
+        if (currentUser.targetsLeft <= 0) {
+            return res.status(403).json({
+                status: false,
+                message: "No targets left in current cycle",
+                cycleComplete: true,
+                nextCycleStarts: "Immediately after tier update"
+            });
+        }
+
         let points = 0;
 
         // Find or create user submission
@@ -126,6 +150,19 @@ export const submitTMCGame = async (req, res, next) => {
                     currentTime: currentTime
                 }
             });
+        }
+
+        // Calculate points based on choices
+        if (TMC.targetImage === firstChoiceImage) {
+            points = 25;
+        }
+
+        else if (TMC.targetImage === secondChoiceImage) {
+            points = 10;
+        }
+
+        else {
+            points = -10;
         }
 
         // Calculate points based on choices
@@ -195,9 +232,25 @@ export const submitTMCGame = async (req, res, next) => {
 
 // Submit ARV game
 export const submitARVGame = async (req, res, next) => {
+    const { submittedImage, ARVTargetId } = req.body;
+    const userId = req.user._id;
+
     try {
-        const { submittedImage, ARVTargetId } = req.body;
-        const userId = req.user._id;
+        // Get current user to check targetsLeft
+        const currentUser = await User.findById(userId);
+        if (!currentUser) {
+            return res.status(404).json({ status: false, message: "User not found" });
+        }
+
+        // Check if user has targets left
+        if (currentUser.targetsLeft <= 0) {
+            return res.status(403).json({
+                status: false,
+                message: "No targets left in current cycle",
+                cycleComplete: true,
+                nextCycleStarts: "Immediately after tier update"
+            });
+        }
 
         const ARV = await ARVTarget.findById(ARVTargetId);
         if (!ARV) {
@@ -225,6 +278,7 @@ export const submitARVGame = async (req, res, next) => {
         }
 
         // Check if user has targets left
+
         if (currentUser.targetsLeft <= 0) {
             return res.status(403).json({
                 status: false,
@@ -241,14 +295,18 @@ export const submitARVGame = async (req, res, next) => {
             submissionTime: currentTime
         });
 
-        userSubmission.completedChallenges += 1;
-        await userSubmission.save();
+        userSubmission.completedChallenges += 1
+        await userSubmission.save()
 
-        // Update user profile using save() to ensure pre('save') runs
-        const updatedUser = await User.findById(userId);
-        updatedUser.totalPoints = userSubmission.totalPoints;
-        updatedUser.targetsLeft -= 1;
-        await updatedUser.save();
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            {
+                totalPoints: userSubmission.totalPoints,
+                $inc: { targetsLeft: -1 }
+            },
+            { new: true }
+        );
+
 
         return res.status(200).json({
             success: true,
@@ -270,7 +328,8 @@ export const submitARVGame = async (req, res, next) => {
     }
 };
 
-// Get completed targets for user for admin dashboard
+
+// Get completed targets for  user for admin dashboard
 export const getCompletedTargets = async (req, res, next) => {
     try {
         // Fetch all user submissions
@@ -292,8 +351,11 @@ export const getCompletedTargets = async (req, res, next) => {
         return res.status(200).json({
             status: true,
             message: "Completed targets count retrieved successfully",
-            data: totalCompletedTargets
+            data:
+                totalCompletedTargets
+
         });
+
     } catch (error) {
         next(error);
     }
@@ -304,9 +366,14 @@ export const getCompletedTargetsCount = async (req, res, next) => {
     const userId = req.user._id;
     try {
         const userSubmission = await UserSubmission.findOne({ userId });
+
         if (!userSubmission) {
-            return res.status(404).json({ message: "No submissions found" });
+            return res.status(404).json({
+                status: true,
+                message: "No submissions found"
+            });
         }
+
         const totalCompletedTargets = userSubmission.participatedTMCTargets.length + userSubmission.participatedARVTargets.length;
         const successRate = Math.min((totalCompletedTargets / userSubmission.completedChallenges) * 100, 100);
         return res.status(200).json({
@@ -386,33 +453,33 @@ export const getTMCTargetResult = async (req, res, next) => {
             { "participatedTMCTargets": 1, _id: 0 }
         );
 
+
         // If no result found, return a proper error message
-        if (!result) {
+        if (!result || !result.participatedTMCTargets.length) {
             return res.status(404).json({
                 status: false,
                 message: "No submission found for this TMC Target.",
             });
         }
 
-        // Find the matching TMC submission
-        const matchedTMC = result.participatedTMCTargets?.find(
-            (tmc) => tmc.TMCId && tmc.TMCId.toString() === TMCTargetId.toString()
-        );
+        // Extract the specific participated TMC target
+        const targetResult = result.participatedTMCTargets[0];
 
-        // If no matching submission found, return a message
-        if (!matchedTMC) {
+        // If TMCId is still null after population, the referenced document might not exist
+        if (!targetResult.TMCId) {
             return res.status(404).json({
                 status: false,
-                message: "No result found for the provided TMC Target ID.",
+                message: "The referenced TMC Target no longer exists.",
             });
         }
 
         return res.status(200).json({
             status: true,
             message: "TMC Result fetched successfully",
-            data: matchedTMC,
+            data: targetResult
         });
-    } catch (error) {
+    }
+    catch (error) {
         next(error);
     }
 };
@@ -425,25 +492,23 @@ export const getARVTargetResult = async (req, res, next) => {
     try {
         const result = await UserSubmission.findOne({
             userId, "participatedARVTargets.ARVId": ARVTargetId
-        },
-        { "participatedARVTargets": 1, _id: 0 }
-        );
+        }
+            ,
+            { "participatedARVTargets": 1, _id: 0 }
+        )
 
-        const matchedARV = result.participatedARVTargets?.find(
-            (arv) => arv.ARVId && arv.ARVId.toString() === ARVTargetId.toString()
-        );
-
-        if (!matchedARV) {
+        // If no result found, return a proper error message
+        if (!result) {
             return res.status(404).json({
                 status: false,
-                message: "No result found for the provided ARV Target ID.",
+                message: "No submission found for this ARV Target.",
             });
         }
 
         return res.status(200).json({
             status: true,
             message: "ARV Result fetched successfully",
-            data: result
+            data: result.participatedARVTargets[0]
         });
     } catch (error) {
         next(error);
@@ -453,7 +518,6 @@ export const getARVTargetResult = async (req, res, next) => {
 // Update ARV target points
 export const updateARVTargetPoints = async (req, res, next) => {
     const { ARVTargetId } = req.params;
-    const { submittedImage } = req.body;
     const userId = req.user._id;
 
     try {
@@ -462,6 +526,15 @@ export const updateARVTargetPoints = async (req, res, next) => {
         if (!ARV) {
             return res.status(404).json({ status: false, message: "ARV target not found" });
         }
+
+        const result = await UserSubmission.findOne({
+            userId, "participatedARVTargets.ARVId": ARVTargetId
+        }
+            ,
+            { "participatedARVTargets.$": 1, _id: 0 }
+        )
+
+        const { submittedImage } = result.participatedARVTargets[0];
 
         // Calculate points
         points = ARV.resultImage === submittedImage ? 25 : -10;
@@ -492,7 +565,9 @@ export const updateARVTargetPoints = async (req, res, next) => {
             totalPoints: updatedUser.totalPoints,
             tierUpdate: tierUpdate || { changed: false }
         });
-    } catch (error) {
+    }
+
+    catch (error) {
         next(error);
     }
 };
@@ -588,7 +663,8 @@ export const getARVTMCGraphData = async (req, res, next) => {
     const { userId } = req.params;
     const userObjectId = new mongoose.Types.ObjectId(userId);
 
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
     try {
         // TMC aggregation
@@ -602,14 +678,10 @@ export const getARVTMCGraphData = async (req, res, next) => {
             { $unwind: "$participatedTMCTargets" },
             {
                 $group: {
-                    _id: {
-                        year: { $year: "$participatedTMCTargets.submissionTime" },
-                        month: { $month: "$participatedTMCTargets.submissionTime" }
-                    },
+                    _id: { month: { $month: "$participatedTMCTargets.submissionTime" } },
                     count: { $sum: 1 }
                 }
-            },
-            { $sort: { "_id.year": 1, "_id.month": 1 } }
+            }
         ]);
 
         // ARV aggregation
@@ -623,14 +695,10 @@ export const getARVTMCGraphData = async (req, res, next) => {
             { $unwind: "$participatedARVTargets" },
             {
                 $group: {
-                    _id: {
-                        year: { $year: "$participatedARVTargets.submissionTime" },
-                        month: { $month: "$participatedARVTargets.submissionTime" }
-                    },
+                    _id: { month: { $month: "$participatedARVTargets.submissionTime" } },
                     count: { $sum: 1 }
                 }
-            },
-            { $sort: { "_id.year": 1, "_id.month": 1 } }
+            }
         ]);
 
         // Format both results
@@ -648,13 +716,17 @@ export const getARVTMCGraphData = async (req, res, next) => {
             message: "Graph data fetched successfully",
             data: graphData
         });
-    } catch (error) {
-        next(error);
     }
-};
 
-// Get total graph data for ARV and TMC 
+    catch (error) {
+        next(error)
+    }
+
+}
+
+//get total graph data for arv and tmc 
 export const getTotalARVTMCGraphData = async (req, res, next) => {
+
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
     try {
@@ -682,7 +754,7 @@ export const getTotalARVTMCGraphData = async (req, res, next) => {
         const arvData = await UserSubmission.aggregate([
             {
                 $match: {
-                    "participatedARVTargets.submissionTime": { $ne: null }
+                    "participatedTMCTargets.submissionTime": { $ne: null }
                 }
             },
             { $unwind: "$participatedARVTargets" },
@@ -698,25 +770,23 @@ export const getTotalARVTMCGraphData = async (req, res, next) => {
             { $sort: { "_id.year": 1, "_id.month": 1 } }
         ]);
 
-        // Format both results
-        const format = (data, label) =>
-            data.map(item => ({
-                date: `${monthNames[item._id.month - 1]} ${item._id.year}`,
-                type: label,
-                value: item.count
-            }));
-
-        const graphData = [...format(tmcData, "TMC"), ...format(arvData, "ARV")];
+        // Fill ARV counts
+        arvData.forEach(item => {
+            const monthIndex = item._id.month - 1;
+            graphData[monthIndex].arv = item.count;
+        });
 
         return res.status(200).json({
             status: true,
             message: "Graph data fetched successfully",
             data: graphData
         });
-    } catch (error) {
-        next(error);
     }
-};
+
+    catch (error) {
+        next(error)
+    }
+}
 
 // Check if a user participated in the TMC or ARV or not
 export const getUserParticipationTMC = async (req, res, next) => {

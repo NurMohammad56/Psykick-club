@@ -13,7 +13,11 @@ const categoryImageSchema = new Schema({
       },
       images: [
         {
-          imageUrl: String
+          imageUrl: String,
+          isUsed: {
+            type: Boolean,
+            default: false
+          }
         },
       ],
     },

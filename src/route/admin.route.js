@@ -1,6 +1,7 @@
 import express from 'express';
-import { adminLogin, forgotPassword, verifyOtp, resendOTP, resetPassword, updateAdminProfile, changePasswordAdmin, getGameParticipationStats, getAdminProfile, getAverageSessionDuration, getProfileCompleteness, getUserSessionDurations, getAllUsers, getActiveUsersCount, getContactUs } from "../controller/admin.controller.js"
+import { adminLogin, forgotPassword, verifyOtp, resendOTP, resetPassword, updateAdminProfile, changePasswordAdmin, getGameParticipationStats, getAverageSessionDuration, getProfileCompleteness, getUserSessionDurations, getAllUsers, getActiveUsersCount, getContactUs, getAllContactUs, deleteContactUs } from "../controller/admin.controller.js"
 import { getCompletedTargets } from "../controller/userSubmission.controller.js"
+import { getAllCompletedTargets, getAllCompletedTargetsCount } from "../controller/completedTargets.controller.js"
 import { isAdmin } from "../middleware/role.middleware.js"
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import upload from "../middleware/multer.middleware.js"
@@ -8,14 +9,13 @@ const router = express.Router();
 
 // Admin Login Route
 router.post("/login", adminLogin);
-router.post("/forget-password", verifyJWT, forgotPassword);
-router.post("/verifyOTP", verifyJWT, verifyOtp);
-router.post("/resendOTP", verifyJWT, resendOTP);
-router.post("/reset-password", verifyJWT, resetPassword);
+router.post("/forget-password", forgotPassword);
+router.post("/verifyOTP", verifyOtp);
+router.post("/resendOTP", resendOTP);
+router.post("/reset-password", resetPassword);
 
 // Admin Profile Route
 router.patch("/profile", verifyJWT, isAdmin, upload.single("avatar"), updateAdminProfile);
-router.get("/get-profile", verifyJWT, isAdmin, getAdminProfile);
 router.get("/profile-completeness", verifyJWT, isAdmin, getProfileCompleteness);
 
 
@@ -35,12 +35,17 @@ router.get("/active-users-count", verifyJWT, isAdmin, getActiveUsersCount);
 router.get("/game-graph", verifyJWT, isAdmin, getGameParticipationStats);
 
 // Get completed targets for a user
-router.get('/completedTargets', getCompletedTargets);
+router.get('/completedTargets', verifyJWT, getCompletedTargets);
+
+//get all completed targets
+router.get('/get-all-completed-targets', verifyJWT, isAdmin, getAllCompletedTargets);
+
+//get count of total completed targets
+router.get('/get-all-completed-targets-count', verifyJWT, isAdmin, getAllCompletedTargetsCount);
 
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<CONTACT US>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-router.get("/all-contact-us", verifyJWT, isAdmin, getContactUs);
-
-
-
+router.get("/all-contact-us", verifyJWT, isAdmin, getAllContactUs);
+router.get("/contact-us/:id", verifyJWT, isAdmin, getContactUs);
+router.delete("/contact-us/:id", verifyJWT, isAdmin, deleteContactUs);
 
 export default router;

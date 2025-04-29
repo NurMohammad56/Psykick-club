@@ -129,7 +129,7 @@ const getAllCategories = async (_, res) => {
 //  Get just category and subcategory names
 const getCategoryAndSubCategoryNames = async (req, res) => {
   try {
-    const categories = await CategoryImage.find({}, { _id: 0, __v: 0 });  
+    const categories = await CategoryImage.find({}, { _id: 0, __v: 0 });
     if (!categories.length) {
       return res
         .status(404)
@@ -217,21 +217,70 @@ const updateCategoryById = async (req, res, next) => {
 
 // delete a category from admin
 const deleteCategoryById = async (req, res, next) => {
+  const { id, imageId, subCategoryName } = req.params;
+
   try {
-    const { id } = req.params;
-    const category = await CategoryImage.findByIdAndDelete(id);
+    const category = await CategoryImage.findById(id);
     if (!category) {
-      return res
-        .status(404)
-        .json({ status: false, message: "Category not found" });
+      return res.status(404).json({ status: false, message: "Category not found" });
     }
-    return res
-      .status(200)
-      .json({ status: true, message: "Category deleted successfully" });
-  } catch (error) {
+
+    // Find the subCategory
+    const subCategoryIndex = category.subCategories.findIndex(
+      (subCat) => subCat.name === subCategoryName
+    );
+
+    if (subCategoryIndex === -1) {
+      return res.status(404).json({ status: false, message: "Subcategory not found" });
+    }
+
+    const subCategory = category.subCategories[subCategoryIndex];
+
+    // Find the image
+    const imageIndex = subCategory.images.findIndex(
+      (img) => img._id.toString() === imageId
+    );
+
+    if (imageIndex === -1) {
+      return res.status(404).json({ status: false, message: "Image not found" });
+    }
+
+    // Delete from Cloudinary
+    const publicId = subCategory.images[imageIndex].imageUrl
+      .split("/")
+      .pop()
+      .split(".")[0];
+
+    await deleteFromCloudinary(publicId);
+
+    // Remove the image
+    subCategory.images.splice(imageIndex, 1);
+
+    // If no images left, remove the subCategory
+    if (subCategory.images.length === 0) {
+      category.subCategories.splice(subCategoryIndex, 1);
+    }
+
+    // If no subCategories left, delete the whole category
+    if (category.subCategories.length === 0) {
+      await CategoryImage.findByIdAndDelete(id);
+      return res.status(200).json({ status: true, message: "Image deleted successfully" });
+    }
+
+    // Otherwise, save the updated document
+    await category.save();
+
+    return res.status(200).json({
+      status: true,
+      message: "Image deleted successfully"
+    });
+  }
+
+  catch (error) {
     next(error);
   }
 };
+
 
 // get category image for frontend
 const getCategoryImages = async (req, res, next) => {
@@ -352,7 +401,7 @@ const getAllImages = async (req, res, next) => {
       category.subCategories.forEach(sub => {
         sub.images.forEach(img => {
           allImages.push({
-            _id: img._id,
+            imageId: img._id,
             categoryId: category._id,
             categoryName: category.categoryName,
             subcategoryName: sub.name,
@@ -373,7 +422,79 @@ const getAllImages = async (req, res, next) => {
   }
 };
 
+const getAllUsedImages = async (_, res, next) => {
+  try {
+    const categories = await CategoryImage.find({});
 
+    const allUsedImages = [];
+
+    categories.forEach(category => {
+      category.subCategories.forEach(sub => {
+        sub.images.forEach(img => {
+          if (img.isUsed) {
+            allUsedImages.push({
+              imageId: img._id,
+              categoryId: category._id,
+              categoryName: category.categoryName,
+              subcategoryName: sub.name,
+              image: img.imageUrl
+            });
+          }
+        });
+      });
+    });
+
+    return res.status(200).json({
+      status: true,
+      data: allUsedImages,
+      message: "All used images fetched successfully by category and subcategory"
+    });
+  }
+
+  catch (error) {
+    next(error);
+  }
+}
+
+const updateImageIsUsedStatus = async (req, res, next) => {
+  const { imageId, categoryId: id } = req.params;
+  try {
+    const categoryImage = await CategoryImage.findById(id);
+
+    if (!categoryImage) {
+      return res.status(404).json({ status: false, message: "Category not found" });
+    }
+
+    let imageFound = false;
+
+    for (const subCategory of categoryImage.subCategories) {
+      const image = subCategory.images.id(imageId);
+      if (image) {
+        image.isUsed = true;
+        imageFound = true;
+        break;
+      }
+    }
+
+    if (!imageFound) {
+      return res.status(404).json({
+        status: false,
+        message: "Image not found in subcategories"
+      });
+    }
+
+    await categoryImage.save();
+
+    return res.status(200).json({
+      status: true,
+      message: "Image isUsed status updated successfully"
+    });
+  }
+
+  catch (error) {
+    next(error);
+  }
+};
 
 export {
   createCategory,
@@ -384,5 +505,7 @@ export {
   updateCategoryById,
   deleteCategoryById,
   getAllImages,
-  getCategoryAndSubCategoryNames
+  getCategoryAndSubCategoryNames,
+  updateImageIsUsedStatus,
+  getAllUsedImages
 };
