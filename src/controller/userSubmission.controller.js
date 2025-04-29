@@ -205,9 +205,25 @@ export const submitTMCGame = async (req, res, next) => {
 
 // Submit ARV game
 export const submitARVGame = async (req, res, next) => {
+    const { submittedImage, ARVTargetId } = req.body;
+    const userId = req.user._id;
+
     try {
-        const { submittedImage, ARVTargetId } = req.body;
-        const userId = req.user._id;
+        // Get current user to check targetsLeft
+        const currentUser = await User.findById(userId);
+        if (!currentUser) {
+            return res.status(404).json({ status: false, message: "User not found" });
+        }
+
+        // Check if user has targets left
+        if (currentUser.targetsLeft <= 0) {
+            return res.status(403).json({
+                status: false,
+                message: "No targets left in current cycle",
+                cycleComplete: true,
+                nextCycleStarts: "Immediately after tier update"
+            });
+        }
 
         const ARV = await ARVTarget.findById(ARVTargetId);
         if (!ARV) {
@@ -228,23 +244,6 @@ export const submitARVGame = async (req, res, next) => {
         let userSubmission = await UserSubmission.findOne({ userId }) ||
             new UserSubmission({ userId, tierRank: "NOVICE SEEKER" });
 
-        // Get current user to check targetsLeft
-        const currentUser = await User.findById(userId);
-        if (!currentUser) {
-            return res.status(404).json({ status: false, message: "User not found" });
-        }
-
-        // Check if user has targets left
-
-        if (currentUser.targetsLeft <= 0) {
-            return res.status(403).json({
-                status: false,
-                message: "No targets left in current cycle",
-                cycleComplete: true,
-                nextCycleStarts: "Immediately after tier update"
-            });
-        }
-
         userSubmission.participatedARVTargets.push({
             ARVId: ARVTargetId,
             submittedImage,
@@ -263,7 +262,6 @@ export const submitARVGame = async (req, res, next) => {
             },
             { new: true }
         );
-
 
         return res.status(200).json({
             success: true,
@@ -416,9 +414,8 @@ export const getTMCTargetResult = async (req, res, next) => {
         // Find UserSubmission for the user
         const result = await UserSubmission.findOne(
             { userId, "participatedTMCTargets.TMCId": TMCTargetId },
-            { "participatedTMCTargets": 1, _id: 0 }
+            { "participatedTMCTargets.$": 1, _id: 0 }
         );
-
 
         // If no result found, return a proper error message
         if (!result) {
@@ -428,25 +425,14 @@ export const getTMCTargetResult = async (req, res, next) => {
             });
         }
 
-        // Find the matching TMC submission
-        const matchedTMC = result.participatedTMCTargets?.find(
-            (tmc) => tmc.TMCId && tmc.TMCId.toString() === TMCTargetId.toString()
-        );
-
-        // If no matching submission found, return a message
-        if (!matchedTMC) {
-            return res.status(404).json({
-                status: false,
-                message: "No result found for the provided TMC Target ID.",
-            });
-        }
-
         return res.status(200).json({
             status: true,
             message: "TMC Result fetched successfully",
-            data: matchedTMC,
+            data: result.participatedTMCTargets[0]
         });
-    } catch (error) {
+    } 
+    
+    catch (error) {
         next(error);
     }
 };
@@ -670,7 +656,7 @@ export const getARVTMCGraphData = async (req, res, next) => {
 
         // Initialize response array with months
         const graphData = monthNames.map((month) => ({
-            name: month,
+            month,
             tmc: 0,
             arv: 0
         }));
