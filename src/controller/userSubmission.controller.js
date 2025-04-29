@@ -658,8 +658,8 @@ export const getARVTMCGraphData = async (req, res, next) => {
         // Build final data for all 12 months
         const result = monthNames.map((name, index) => ({
             month: name,
-            tmc: tmcMap[index + 1] || 0,
-            arv: arvMap[index + 1] || 0,
+            TMC: tmcMap[index + 1] || 0,
+            ARV: arvMap[index + 1] || 0,
         }));
 
         return res.status(200).json(result);
