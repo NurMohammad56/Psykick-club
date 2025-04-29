@@ -46,20 +46,20 @@ export const updateUserTier = async (userId) => {
             await Promise.all([
                 User.updateOne(
                     { _id: userId },
-                    { 
-                        $set: { 
-                            tierRank: newTier, 
+                    {
+                        $set: {
+                            tierRank: newTier,
                             totalPoints: resetPoints, // Reset to 0
                             targetsLeft: 10 // Reset for new cycle
-                        } 
+                        }
                     },
                     { session }
                 ),
                 UserSubmission.updateOne(
                     { userId },
-                    { 
-                        $set: { 
-                            tierRank: newTier, 
+                    {
+                        $set: {
+                            tierRank: newTier,
                             totalPoints: resetPoints, // Reset to 0
                             completedChallenges: 0, // Reset counter
                             lastChallengeDate: new Date() // Reset cycle
@@ -75,7 +75,8 @@ export const updateUserTier = async (userId) => {
                 previousTier: user.tierRank,
                 newTier,
                 pointsReset: true,
-                resetValue: resetPoints
+                resetValue: resetPoints,
+                previousPoints: finalPoints
             };
         });
     } catch (error) {
