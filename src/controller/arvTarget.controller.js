@@ -191,7 +191,7 @@ export const getActiveARVTarget = async (_, res, next) => {
 export const startNextGame = async (_, res, next) => {
 
     try {
-        await startNextGameService(ARVTarget, res, next)
+        await startNextGameService(ARVTarget, res, next, "ARV")
     }
 
     catch (error) {
