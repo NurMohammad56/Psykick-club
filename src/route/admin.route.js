@@ -32,7 +32,7 @@ router.get("/all-users", verifyJWT, isAdmin, getAllUsers);
 router.get("/active-users-count", verifyJWT, isAdmin, getActiveUsersCount);
 
 // Get game participation stats
-router.get("/game-graph", verifyJWT, getGameParticipationStats);
+router.get("/game-graph", getGameParticipationStats);
 
 // Get completed targets for a user
 router.get('/completedTargets', verifyJWT, getCompletedTargets);
