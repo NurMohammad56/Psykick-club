@@ -440,25 +440,41 @@ export const getARVTargetResult = async (req, res, next) => {
     const userId = req.user._id;
 
     try {
-        const result = await UserSubmission.findOne({
-            userId, "participatedARVTargets.ARVId": ARVTargetId
-        }
-            ,
+        const userSubmission = await UserSubmission.findOne(
+            {
+                userId,
+                "participatedARVTargets.ARVId": ARVTargetId
+            },
             { "participatedARVTargets": 1, _id: 0 }
-        )
+        );
 
-        // If no result found, return a proper error message
-        if (!result) {
+        if (!userSubmission) {
             return res.status(404).json({
                 status: false,
                 message: "No submission found for this ARV Target.",
             });
         }
 
+        const arvTarget = await ARVTarget.findById(ARVTargetId, { resultImage: 1, _id: 0 });
+
+        if (!arvTarget) {
+            return res.status(404).json({
+                status: false,
+                message: "ARV Target not found.",
+            });
+        }
+
+        const participatedTarget = userSubmission.participatedARVTargets.find(
+            target => target.ARVId.toString() === ARVTargetId
+        );
+
         return res.status(200).json({
             status: true,
             message: "ARV Result fetched successfully",
-            data: result.participatedARVTargets[0]
+            data: {
+                ...participatedTarget.toObject(),
+                resultImage: arvTarget.resultImage
+            }
         });
     } catch (error) {
         next(error);
