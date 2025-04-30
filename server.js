@@ -21,6 +21,9 @@ const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(express.json());
+app.get('/', (req, res) => {
+  res.send('Welcome to the server');
+});
 
 app.use(
   cors({
@@ -29,9 +32,6 @@ app.use(
   })
 );
 
-app.get('/', (req, res) => {
-  res.send('Welcome to the server');
-});
 
 // Import routes
 import userRoute from './src/route/user.route.js';
