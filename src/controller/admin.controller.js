@@ -3,8 +3,6 @@ import { generateAccessAndRefreshTokens } from "../controller/user.controller.js
 import { User } from "../model/user.model.js";
 import { sendMail } from "../utils/email.util.js";
 import { generateOTP } from "../utils/otp.util.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.util.js";
-import { deleteFromCloudinary } from "../utils/cloudinaryDestroy.util.js";
 import { ContactUs } from "../model/contactUs.model.js";
 import { UserSubmission } from "../model/userSubmission.model.js";
 import moment from "moment";

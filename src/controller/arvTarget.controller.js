@@ -1,5 +1,5 @@
-import { ARVTarget } from "../model/ARVTarget.model.js";
-import { TMCTarget } from "../model/TMCTarget.model.js";
+import { ARVTarget } from "../model/arvTarget.model.js";
+import { TMCTarget } from "../model/tmcTarget.model.js";
 import { startNextGameService, updateAddToQueueService, updateGameTimeService, updateMakeCompleteService, updateMakeInActiveService, updateRemoveFromQueueService } from "../services/ARVTMCServices/ARVTMCServices.js";
 import { generateCode } from "../utils/generateCode.js";
 
