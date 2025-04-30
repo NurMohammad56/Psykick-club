@@ -67,8 +67,6 @@ app.use('/api/v1/about-us', aboutUsRoute);
 app.use('/api/v1', OAuthRoute);
 app.use('/api/v1', contactUsRoute);
 
-// not found route handler middleware
-app.use(notFoundHandler)
 
 //error handler middleware
 app.use(errorHandler);
@@ -83,3 +81,6 @@ app.listen(PORT, async () => {
     process.exit(1);
   }
 });
+
+// not found route handler middleware
+app.use(notFoundHandler)
