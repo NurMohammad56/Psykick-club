@@ -34,8 +34,8 @@ app.get('/', (req, res) => {
 });
 
 // Import routes
-import userRoute from './src/route/user.route.js';
 import profileRoute from './src/route/profile.route.js';
+import userRoute from './src/route/user.route.js';
 import adminRoute from './src/route/admin.route.js'
 import categoryImageRoute from "./src/route/categoryImage.route.js"
 import privacyPolicyRoute from './src/route/privacyPolicy.route.js';
