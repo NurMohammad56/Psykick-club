@@ -2,7 +2,6 @@ import express from 'express';
 import { dbconfig } from './src/db/index.js';
 import dotenv from 'dotenv';
 import errorHandler from './src/middleware/errorHandler.middleware.js'
-import { notFoundHandler } from './src/middleware/notFoundHandler.middleware.js';
 import passport from 'passport';
 import session from 'express-session';
 import cors from "cors";
@@ -67,8 +66,7 @@ app.use('/api/v1/about-us', aboutUsRoute);
 app.use('/api/v1', OAuthRoute);
 app.use('/api/v1', contactUsRoute);
 
-// not found route handler middleware
-app.use(notFoundHandler)
+
 
 //error handler middleware
 app.use(errorHandler);
