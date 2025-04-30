@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
-import { TMCTarget } from "../model/TMCTarget.model.js";
-import { ARVTarget } from "../model/ARVTarget.model.js";
+import { TMCTarget } from "../model/tmcTarget.model.js";
+import { ARVTarget } from "../model/arvTarget.model.js";
 import { UserSubmission } from "../model/userSubmission.model.js";
 import { User } from "../model/user.model.js";
 import { updateUserTier } from "./tier.controller.js";
