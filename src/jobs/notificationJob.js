@@ -1,8 +1,8 @@
 import cron from "node-cron";
 
-import { TMCTarget } from "../src/model/TMCTarget.model.js";
-import { Notification } from "../src/model/notification.model.js";
-import { ARVTarget } from "../src/model/ARVTarget.model.js";
+import { TMCTarget } from "../model/TMCTarget.model.js";
+import { Notification } from "../model/notification.model.js";
+import { ARVTarget } from "../model/ARVTarget.model.js";
 
 // Run every minute
 cron.schedule("* * * * *", async () => {
