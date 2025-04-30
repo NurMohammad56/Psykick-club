@@ -6,7 +6,7 @@ import { notFoundHandler } from './src/middleware/notFoundHandler.middleware.js'
 import passport from 'passport';
 import session from 'express-session';
 import cors from "cors";
-import "./jobs/notificationJob.js";
+import "./src/jobs/notificationJob.js";
 
 dotenv.config();
 
