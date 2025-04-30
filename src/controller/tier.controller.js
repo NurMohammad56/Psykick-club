@@ -3,7 +3,7 @@ import { User } from '../model/user.model.js';
 import { UserSubmission } from '../model/userSubmission.model.js';
 
 const tierTable = [
-    { name: 'NOVICE SEEKER', up: 1, down: null, retain: [0] },
+    { name: 'NOVICE SEEKER', up: 1, down: undefined, retain: [0] },
     { name: 'INITIATE', up: 1, down: -30, retain: [-29, 0] },
     { name: 'APPRENTICE', up: 31, down: 0, retain: [1, 30] },
     { name: 'EXPLORER', up: 61, down: 0, retain: [1, 60] },
@@ -12,8 +12,48 @@ const tierTable = [
     { name: 'SEER', up: 121, down: 60, retain: [61, 120] },
     { name: 'ORACLE', up: 141, down: 60, retain: [61, 140] },
     { name: 'MASTER REMOTE VIEWER', up: 161, down: 100, retain: [101, 160] },
-    { name: 'ASCENDING MASTER', up: null, down: 120, retain: [121] }
+    { name: 'ASCENDING MASTER', up: undefined, down: 120, retain: [121] }
 ];
+
+export const getNextUserTierInfo = async (req, res, next) => {
+    const { userId } = req.params;
+
+    try {
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({
+                status: false,
+                message: "User not found"
+            });
+        }
+
+        const currentRankIndex = tierTable.findIndex(t => t.name === user.tierRank);
+
+        const pointsToGoNextTier = tierTable[currentRankIndex].up - user.totalPoints
+
+        const pointsToGoDownTier = user.totalPoints - tierTable[currentRankIndex].down
+
+        return res.status(200).json({
+            status: true,
+            message: "User tier system fetched successfully",
+            data: {
+                currentTier: user.tierRank,
+                currentPoints: user.totalPoints,
+                nextTier: tierTable[currentRankIndex + 1]?.name,
+                previousTier: tierTable[currentRankIndex - 1]?.name,
+                secondNextTier: tierTable[currentRankIndex + 2]?.name,
+                pointsToGoNextTier: pointsToGoNextTier > 0 ? pointsToGoNextTier : 0,
+                pointsToGoDownTier: pointsToGoDownTier > 0 ? pointsToGoDownTier : 0,
+                pointsToStayInCurrentTier: tierTable[currentRankIndex].retain
+            }
+        });
+    }
+
+    catch (error) {
+        next(error);
+    }
+}
 
 export const updateUserTier = async (userId) => {
     const session = await mongoose.startSession();
