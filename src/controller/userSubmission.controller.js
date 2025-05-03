@@ -101,6 +101,22 @@ export const submitTMCGame = async (req, res, next) => {
     const userId = req.user._id;
 
     try {
+        // Get current user to check targetsLeft
+        const currentUser = await User.findById(userId);
+        if (!currentUser) {
+            return res.status(404).json({ status: false, message: "User not found" });
+        }
+    
+        // Check if user has targets left
+        if (currentUser.targetsLeft <= 0) {
+            return res.status(403).json({
+                status: false,
+                message: "No targets left in current cycle",
+                cycleComplete: true,
+                nextCycleStarts: "Immediately after tier update"
+            });
+        }
+
         let points = 0;
 
         // Find or create user submission
@@ -140,26 +156,14 @@ export const submitTMCGame = async (req, res, next) => {
         // Calculate points based on choices
         if (TMC.targetImage === firstChoiceImage) {
             points = 25;
-        } else if (TMC.targetImage === secondChoiceImage) {
+        } 
+        
+        else if (TMC.targetImage === secondChoiceImage) {
             points = 10;
-        } else {
+        } 
+        
+        else {
             points = -10;
-        }
-
-        // Get current user to check targetsLeft
-        const currentUser = await User.findById(userId);
-        if (!currentUser) {
-            return res.status(404).json({ status: false, message: "User not found" });
-        }
-
-        // Check if user has targets left
-        if (currentUser.targetsLeft <= 0) {
-            return res.status(403).json({
-                status: false,
-                message: "No targets left in current cycle",
-                cycleComplete: true,
-                nextCycleStarts: "Immediately after tier update"
-            });
         }
 
         // Update user submission
@@ -169,7 +173,7 @@ export const submitTMCGame = async (req, res, next) => {
             secondChoiceImage,
             points,
             submissionTime: currentTime
-        });
+        })
 
         userSubmission.completedChallenges += 1;
         userSubmission.totalPoints += points;
@@ -196,8 +200,10 @@ export const submitTMCGame = async (req, res, next) => {
             nextTierPoint: updatedUser.nextTierPoint,
             gamesCompleted: userSubmission.completedChallenges,
             tierUpdate
-        });
-    } catch (error) {
+        })
+    } 
+    
+    catch (error) {
         next(error);
     }
 };
