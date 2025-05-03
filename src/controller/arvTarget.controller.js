@@ -101,8 +101,8 @@ export const getAllQueuedARVTargets = async (req, res, next) => {
     try {
 
         const [totalItems, ARVTargets] = await Promise.all([
-            ARVTarget.countDocuments({ isQueued: true }),
-            ARVTarget.find({ isQueued: true })
+            ARVTarget.countDocuments({ isQueued: true, isActive: false, isPartiallyActive: false }),
+            ARVTarget.find({ isQueued: true, isActive: false, isPartiallyActive: false })
                 .select("-__v")
                 .skip(skip)
                 .limit(limit)
@@ -137,8 +137,8 @@ export const getAllUnQueuedARVTargets = async (req, res, next) => {
     try {
 
         const [totalItems, ARVTargets] = await Promise.all([
-            ARVTarget.countDocuments({ isQueued: false }),
-            ARVTarget.find({ isQueued: false })
+            ARVTarget.countDocuments({ isQueued: false, isActive: false, isPartiallyActive: false }),
+            ARVTarget.find({ isQueued: false, isActive: false, isPartiallyActive: false })
                 .select("-__v")
                 .skip(skip)
                 .limit(limit)
