@@ -664,6 +664,8 @@ export const getARVTMCGraphData = async (req, res, next) => {
             }
         ]);
 
+        console.log(tmcData)
+
         // ARV aggregation
         const arvData = await UserSubmission.aggregate([
             {
@@ -693,7 +695,9 @@ export const getARVTMCGraphData = async (req, res, next) => {
         }));
 
         return res.status(200).json(result);
-    } catch (error) {
+    }
+
+    catch (error) {
         next(error);
     }
 };
