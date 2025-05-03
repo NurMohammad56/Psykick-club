@@ -4,8 +4,8 @@ import { TMCTarget } from "../model/tmcTarget.model.js";
 export const getRunningEventsCount = async (_, res, next) => {
 
     try {
-        const runningTMC = await TMCTarget.countDocuments({ isActive: true, isQueued: true });
-        const runningARV = await ARVTarget.countDocuments({ isActive: true, isQueued: true });
+        const runningTMC = await TMCTarget.countDocuments({ isActive: true, isPartiallyActive: true });
+        const runningARV = await ARVTarget.countDocuments({ isActive: true, isPartiallyActive: true });
 
         return res.status(200).json({
             status: true,
