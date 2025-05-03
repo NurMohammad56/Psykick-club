@@ -106,7 +106,7 @@ export const submitTMCGame = async (req, res, next) => {
         if (!currentUser) {
             return res.status(404).json({ status: false, message: "User not found" });
         }
-    
+
         // Check if user has targets left
         if (currentUser.targetsLeft <= 0) {
             return res.status(403).json({
@@ -156,12 +156,12 @@ export const submitTMCGame = async (req, res, next) => {
         // Calculate points based on choices
         if (TMC.targetImage === firstChoiceImage) {
             points = 25;
-        } 
-        
+        }
+
         else if (TMC.targetImage === secondChoiceImage) {
             points = 10;
-        } 
-        
+        }
+
         else {
             points = -10;
         }
@@ -201,8 +201,8 @@ export const submitTMCGame = async (req, res, next) => {
             gamesCompleted: userSubmission.completedChallenges,
             tierUpdate
         })
-    } 
-    
+    }
+
     catch (error) {
         next(error);
     }
@@ -656,6 +656,8 @@ export const getARVTMCGraphData = async (req, res, next) => {
             }
         ]);
 
+        console.log(tmcData)
+
         // ARV aggregation
         const arvData = await UserSubmission.aggregate([
             {
@@ -685,7 +687,9 @@ export const getARVTMCGraphData = async (req, res, next) => {
         }));
 
         return res.status(200).json(result);
-    } catch (error) {
+    }
+
+    catch (error) {
         next(error);
     }
 };

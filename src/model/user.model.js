@@ -201,15 +201,15 @@ userSchema.pre('save', function (next) {
   this.nextTierPoint = nextTierPoint;
 
   // Log for debugging
-  console.log({
-    tierRank: this.tierRank,
-    totalPoints: points,
-    currentTierIndex,
-    nextTier: nextTier.name,
-    nextTierPointsRequired: nextTier.pointsRequired,
-    nextTierPoint,
-    gender: this.gender
-  });
+  // console.log({
+  //   tierRank: this.tierRank,
+  //   totalPoints: points,
+  //   currentTierIndex,
+  //   nextTier: nextTier.name,
+  //   nextTierPointsRequired: nextTier.pointsRequired,
+  //   nextTierPoint,
+  //   gender: this.gender
+  // });
 
   next();
 });
