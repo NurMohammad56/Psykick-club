@@ -72,13 +72,21 @@ export const checkTierUpdate = async (userId) => {
             };
         }
 
-        // If cycle should end, update tier and reset everything
         const updateResult = await updateUserTier(userId);
+
+        if (!updateResult || !updateResult.previousPoints) {
+            return {
+                status: false,
+                message: "Failed to update user tier. Missing data.",
+            };
+        }
 
         const notification = new Notification({
             userId,
-            message: `Your cycle has been renewed. Your previous total points ${updateResult.previousPoints}, your previous tier is ${updateResult.previousTier} and your new tier is ${updateResult.newTier}. `,
-        })
+            message: `Your cycle has been renewed. Your previous total points ${updateResult.previousPoints}, your previous tier is ${updateResult.previousTier} and your new tier is ${updateResult.newTier}.`,
+        });
+
+        await notification.save();
 
         await notification.save()
 
@@ -106,7 +114,7 @@ export const submitTMCGame = async (req, res, next) => {
         if (!currentUser) {
             return res.status(404).json({ status: false, message: "User not found" });
         }
-    
+
         // Check if user has targets left
         if (currentUser.targetsLeft <= 0) {
             return res.status(403).json({
@@ -156,12 +164,12 @@ export const submitTMCGame = async (req, res, next) => {
         // Calculate points based on choices
         if (TMC.targetImage === firstChoiceImage) {
             points = 25;
-        } 
-        
+        }
+
         else if (TMC.targetImage === secondChoiceImage) {
             points = 10;
-        } 
-        
+        }
+
         else {
             points = -10;
         }
@@ -201,8 +209,8 @@ export const submitTMCGame = async (req, res, next) => {
             gamesCompleted: userSubmission.completedChallenges,
             tierUpdate
         })
-    } 
-    
+    }
+
     catch (error) {
         next(error);
     }

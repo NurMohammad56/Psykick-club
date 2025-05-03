@@ -58,6 +58,7 @@ export const getNextUserTierInfo = async (req, res, next) => {
 export const updateUserTier = async (userId) => {
     const session = await mongoose.startSession();
     try {
+        let result = null; // Initialize result to null
         await session.withTransaction(async () => {
             const [user, userSubmission] = await Promise.all([
                 User.findById(userId).session(session),
@@ -80,8 +81,10 @@ export const updateUserTier = async (userId) => {
 
             const newTier = calculateNewTier(user.tierRank, finalPoints);
 
-            // Reset points to 0 for new cycle
+            // Reset points and challenges for the new cycle
             const resetPoints = 0;
+            const resetChallenges = 0;
+            const resetTargetsLeft = 10;
 
             await Promise.all([
                 User.updateOne(
@@ -89,8 +92,8 @@ export const updateUserTier = async (userId) => {
                     {
                         $set: {
                             tierRank: newTier,
-                            totalPoints: resetPoints, // Reset to 0
-                            targetsLeft: 10 // Reset for new cycle
+                            totalPoints: resetPoints,
+                            targetsLeft: resetTargetsLeft
                         }
                     },
                     { session }
@@ -100,16 +103,17 @@ export const updateUserTier = async (userId) => {
                     {
                         $set: {
                             tierRank: newTier,
-                            totalPoints: resetPoints, // Reset to 0
-                            completedChallenges: 0, // Reset counter
-                            lastChallengeDate: new Date() // Reset cycle
+                            totalPoints: resetPoints,
+                            completedChallenges: resetChallenges,
+                            lastChallengeDate: new Date()
                         }
                     },
                     { session }
                 )
             ]);
 
-            return {
+            // Assign the result to return after the transaction
+            result = {
                 status: true,
                 message: "Tier updated and points reset for new cycle",
                 previousTier: user.tierRank,
@@ -119,6 +123,13 @@ export const updateUserTier = async (userId) => {
                 previousPoints: finalPoints
             };
         });
+
+        // Ensure result is returned
+        if (!result) {
+            throw new Error("Transaction failed: No result generated");
+        }
+
+        return result; // Return the result after the transaction
     } catch (error) {
         console.error("Tier update failed:", error);
         throw error;
@@ -126,6 +137,8 @@ export const updateUserTier = async (userId) => {
         session.endSession();
     }
 };
+
+
 function calculateNewTier(currentTier, points) {
     const currentIndex = tierTable.findIndex(t => t.name === currentTier);
     if (currentIndex === -1) return 'NOVICE SEEKER';
