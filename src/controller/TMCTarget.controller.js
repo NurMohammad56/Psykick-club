@@ -104,8 +104,8 @@ export const getAllQueuedTMCTargets = async (req, res, next) => {
   try {
 
     const [totalItems, TMCTargets] = await Promise.all([
-      TMCTarget.countDocuments({ isQueued: true }),
-      TMCTarget.find({ isQueued: true })
+      TMCTarget.countDocuments({ isQueued: true, isActive: false, isPartiallyActive: false }),
+      TMCTarget.find({ isQueued: true, isActive: false, isPartiallyActive: false })
         .select("-__v")
         .skip(skip)
         .limit(limit)
@@ -140,8 +140,8 @@ export const getAllUnQueuedTMCTargets = async (req, res, next) => {
   try {
 
     const [totalItems, TMCTargets] = await Promise.all([
-      TMCTarget.countDocuments({ isQueued: false }),
-      TMCTarget.find({ isQueued: false })
+      TMCTarget.countDocuments({ isQueued: false, isActive: false, isPartiallyActive: false }),
+      TMCTarget.find({ isQueued: false, isActive: false, isPartiallyActive: false })
         .select("-__v")
         .skip(skip)
         .limit(limit)
