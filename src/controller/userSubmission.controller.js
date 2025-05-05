@@ -88,8 +88,6 @@ export const checkTierUpdate = async (userId) => {
 
         await notification.save();
 
-        await notification.save()
-
         return {
             status: true,
             message: "Cycle completed. Points reset and new cycle started.",
@@ -214,7 +212,7 @@ export const submitTMCGame = async (req, res, next) => {
     catch (error) {
         next(error);
     }
-};
+}
 
 // Submit ARV game
 export const submitARVGame = async (req, res, next) => {
@@ -338,17 +336,36 @@ export const getCompletedTargetsCount = async (req, res, next) => {
             });
         }
 
+        // Count successful TMC targets where points > 0
+        const successfulTMCTargets = userSubmission.participatedTMCTargets.filter(
+            (target) => target.points > 0
+        ).length;
+
+        // Count successful ARV targets where points > 0
+        const successfulARVTargets = userSubmission.participatedARVTargets.filter(
+            (target) => target.points > 0
+        ).length;
+
         const totalCompletedTargets = userSubmission.participatedTMCTargets.length + userSubmission.participatedARVTargets.length;
-        const successRate = Math.min((totalCompletedTargets / userSubmission.completedChallenges) * 100, 100);
+        const successfulCompletedTargets = successfulTMCTargets + successfulARVTargets;
+
+        // Avoid division by zero
+        const successRate = userSubmission.completedChallenges > 0
+            ? Math.min((successfulCompletedTargets / userSubmission.completedChallenges) * 100, 100)
+            : 0;
+
         return res.status(200).json({
             status: true,
-            message: "Completed targets count retrieved successfully",
+            message: "Completed targets count and success rate retrieved successfully",
             data: {
                 totalCompletedTargets,
+                successfulCompletedTargets,
                 successRate: successRate.toFixed(2)
             }
         });
-    } catch (error) {
+    }
+
+    catch (error) {
         next(error);
     }
 };
@@ -590,7 +607,9 @@ export const updateTMCAnalytics = async (req, res, next) => {
             message: "TMC analytics updated successfully",
             data: { successRate, pValue }
         });
-    } catch (error) {
+    }
+
+    catch (error) {
         next(error);
     }
 };
