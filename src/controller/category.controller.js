@@ -2,111 +2,193 @@ import { CategoryImage } from "../model/categoryImage.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.util.js";
 import { deleteFromCloudinary } from "../utils/cloudinaryDestroy.util.js";
 
-// helper
-const createCategoryAndSubCategory = async (categoryName, subCategoryName) => {
-  let category = await CategoryImage.findOne({ categoryName });
+// Helper: Create or update category and subcategory
+const createCategoryAndSubCategory = async (categoryName, subCategoryName = null) => {
+  // Normalize to lowercase for case-insensitive matching
+  const normalizedCategoryName = categoryName.toLowerCase();
+  let category = await CategoryImage.findOne({ categoryName: { $regex: `^${normalizedCategoryName}$`, $options: 'i' } });
 
   // If category doesn't exist, create a new one
   if (!category) {
     category = new CategoryImage({ categoryName, subCategories: [] });
   }
 
-  let subCategory = category.subCategories.find(
-    (sc) => sc.name === subCategoryName
-  );
+  // If subCategoryName is provided, add or update subcategory
+  if (subCategoryName) {
+    const normalizedSubCategoryName = subCategoryName.toLowerCase();
+    let subCategory = category.subCategories.find(
+      (sc) => sc.name.toLowerCase() === normalizedSubCategoryName
+    );
 
-  // If subcategory doesn't exist, create a new one
-  if (!subCategory) {
-    subCategory = { name: subCategoryName, images: [] };
-    category.subCategories.push(subCategory);
+    // If subcategory doesn't exist, create a new one
+    if (!subCategory) {
+      subCategory = { name: subCategoryName, images: [] };
+      category.subCategories.push(subCategory);
+    }
   }
 
-  // Save category with subcategory
+  // Save category
   await category.save();
   return category;
 };
 
-// create category from admin
+// Create category (with optional subcategory)
 const createCategory = async (req, res) => {
   const { categoryName, subCategoryName } = req.body;
 
   // Validate input
-  if (!categoryName || !subCategoryName) {
-    return res.status(400).json({ error: "Please fill category name" });
+  if (!categoryName) {
+    return res.status(400).json({ status: false, message: "Category name is required" });
   }
 
   try {
-    // Create or find category and subcategory
-    const category = await createCategoryAndSubCategory(
-      categoryName,
-      subCategoryName
-    );
+    // Create or find category and optionally add subcategory
+    const category = await createCategoryAndSubCategory(categoryName, subCategoryName);
 
     return res.json({
       status: true,
-      message: "Category is created successfully",
+      message: subCategoryName
+        ? "Category and subcategory created successfully"
+        : "Category created successfully",
       data: category,
     });
   } catch (error) {
-    console.log("Error creating category", error);
-    return res.status(500).json({ status: false, message: error.message });
+    console.log("Error creating category:", error);
+    return res.status(500).json({ status: false, message: "Internal server error" });
   }
 };
 
-// category wise image upload from admin
-const categoryWiseImageUpload = async (req, res) => {
-  try {
-    const { categoryName, subCategoryName } = req.body;
+// Add subcategory to existing category
+const addSubCategory = async (req, res) => {
+  const { categoryName, subCategoryName } = req.body;
 
-    if (!categoryName || !subCategoryName || !req.file) {
-      return res
-        .status(400)
-        .json({ status: false, message: "Please fill everything" });
+  // Validate input
+  if (!categoryName || !subCategoryName) {
+    return res.status(400).json({
+      status: false,
+      message: "Both category name and subcategory name are required",
+    });
+  }
+
+  try {
+    // Find category
+    const normalizedCategoryName = categoryName.toLowerCase();
+    let category = await CategoryImage.findOne({ categoryName: { $regex: `^${normalizedCategoryName}$`, $options: 'i' } });
+    if (!category) {
+      return res.status(404).json({
+        status: false,
+        message: "Category not found",
+      });
     }
 
-    // Cloudinary upload
-    const clodinaryUpload = await uploadOnCloudinary(req.file.buffer, {
-      resource_type: "auto",
-    });
+    // Check if subcategory already exists
+    const normalizedSubCategoryName = subCategoryName.toLowerCase();
+    if (category.subCategories.some((sc) => sc.name.toLowerCase() === normalizedSubCategoryName)) {
+      return res.status(400).json({
+        status: false,
+        message: "Subcategory already exists",
+      });
+    }
 
-    const imageUrl = clodinaryUpload?.secure_url;
-
-    // Find category
-    let category = await CategoryImage.findOne({ categoryName });
-
-    if (!category)
-      return res
-        .status(404)
-        .json({ status: false, message: "Did not find category" });
-
-    // Find subcategory
-    let subCategory = category.subCategories.find(
-      (sc) => sc.name === subCategoryName
-    );
-
-    if (!subCategory)
-      return res
-        .status(404)
-        .json({ status: false, message: "Did not find the sub category" });
-
-    // Add image URL
-    subCategory.images.push({ imageUrl });
-
-    // Save updated category
+    // Add new subcategory
+    category.subCategories.push({ name: subCategoryName, images: [] });
     await category.save();
 
     return res.json({
       status: true,
-      message: "Image upload completed successfully",
+      message: "Subcategory added successfully",
+      data: category,
+    });
+  } catch (error) {
+    console.log("Error adding subcategory:", error);
+    return res.status(500).json({ status: false, message: "Internal server error" });
+  }
+};
+
+// Category-wise image upload
+const categoryWiseImageUpload = async (req, res) => {
+  try {
+    const { categoryName, subCategoryName } = req.body;
+
+    // Validate input
+    if (!categoryName || !subCategoryName || !req.file) {
+      return res
+        .status(400)
+        .json({ status: false, message: "Category name, subcategory name, and image are required" });
+    }
+
+    // Find category
+    const normalizedCategoryName = categoryName.toLowerCase();
+    let category = await CategoryImage.findOne({ categoryName: { $regex: `^${normalizedCategoryName}$`, $options: 'i' } });
+    if (!category) {
+      return res
+        .status(404)
+        .json({ status: false, message: "Category not found" });
+    }
+
+    // Find subcategory and validate it belongs to the category
+    const normalizedSubCategoryName = subCategoryName.toLowerCase();
+    let subCategory = category.subCategories.find(
+      (sc) => sc.name.toLowerCase() === normalizedSubCategoryName
+    );
+    if (!subCategory) {
+      return res
+        .status(404)
+        .json({ status: false, message: "Subcategory not found or does not belong to the specified category" });
+    }
+
+    // Cloudinary upload
+    const cloudinaryUpload = await uploadOnCloudinary(req.file.buffer, {
+      resource_type: "auto",
+    });
+    const imageUrl = cloudinaryUpload?.secure_url;
+
+    // Add image URL to subcategory
+    subCategory.images.push({ imageUrl });
+    await category.save();
+
+    return res.json({
+      status: true,
+      message: "Image uploaded successfully",
       data: category,
     });
   } catch (error) {
     console.error("Error uploading image:", error);
-    return res.status(500).json({ status: false, message: error.message });
+    return res.status(500).json({ status: false, message: "Internal server error" });
   }
 };
 
-// get all categories from admin
+// Get subcategories for a specific category
+const getSubCategoriesByCategory = async (req, res) => {
+  try {
+    const { categoryName } = req.params;
+
+    const normalizedCategoryName = categoryName.toLowerCase();
+    const category = await CategoryImage.findOne(
+      { categoryName: { $regex: `^${normalizedCategoryName}$`, $options: 'i' } },
+      { subCategories: 1 }
+    );
+    if (!category) {
+      return res.status(404).json({
+        status: false,
+        message: "Category not found",
+      });
+    }
+
+    const subCategoryNames = category.subCategories.map((sc) => sc.name);
+
+    return res.status(200).json({
+      status: true,
+      message: "Subcategories fetched successfully",
+      data: subCategoryNames,
+    });
+  } catch (error) {
+    console.log("Error fetching subcategories:", error);
+    return res.status(500).json({ status: false, message: "Internal server error" });
+  }
+};
+
+// Get all categories
 const getAllCategories = async (_, res) => {
   try {
     const categories = await CategoryImage.find({});
@@ -121,12 +203,12 @@ const getAllCategories = async (_, res) => {
       data: categories,
     });
   } catch (error) {
-    console.log("Error getting categories image:", error);
-    return res.status(500).json({ status: false, message: error.message });
+    console.log("Error getting categories:", error);
+    return res.status(500).json({ status: false, message: "Internal server error" });
   }
 };
 
-//  Get just category and subcategory names
+// Get category and subcategory names
 const getCategoryAndSubCategoryNames = async (req, res) => {
   try {
     const categories = await CategoryImage.find({}, { _id: 0, __v: 0 });
@@ -147,12 +229,12 @@ const getCategoryAndSubCategoryNames = async (req, res) => {
       data: categoryNames,
     });
   } catch (error) {
-    console.log("Error getting categories image:", error);
-    return res.status(500).json({ status: false, message: error.message });
+    console.log("Error getting categories:", error);
+    return res.status(500).json({ status: false, message: "Internal server error" });
   }
 };
 
-// update a category form admin
+// Update category
 const updateCategoryById = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -215,7 +297,7 @@ const updateCategoryById = async (req, res, next) => {
   }
 };
 
-// delete a category from admin
+// Delete category
 const deleteCategoryById = async (req, res, next) => {
   const { id, imageId, subCategoryName } = req.params;
 
@@ -274,25 +356,23 @@ const deleteCategoryById = async (req, res, next) => {
       status: true,
       message: "Image deleted successfully"
     });
-  }
-
-  catch (error) {
+  } catch (error) {
     next(error);
   }
 };
 
-
-// get category image for frontend
+// Get category images for frontend
 const getCategoryImages = async (req, res, next) => {
   try {
     const { categoryName } = req.params;
     const { page = 1, limit = 10 } = req.query;
 
-    const category = await CategoryImage.findOne({ categoryName });
+    const normalizedCategoryName = categoryName.toLowerCase();
+    const category = await CategoryImage.findOne({ categoryName: { $regex: `^${normalizedCategoryName}$`, $options: 'i' } });
     if (!category) {
       return res.status(404).json({
         status: false,
-        message: "Did not find category",
+        message: "Category not found",
       });
     }
 
@@ -313,7 +393,7 @@ const getCategoryImages = async (req, res, next) => {
       return {
         name: subCategory.name,
         images: paginatedImages,
-        MetaPagination: {
+        pagination: {
           currentPage: validPage,
           totalPages,
           totalItems,
@@ -332,28 +412,30 @@ const getCategoryImages = async (req, res, next) => {
   }
 };
 
-// get sub category images for frontend
+// Get subcategory images for frontend
 const getSubCategoryImages = async (req, res, next) => {
   try {
     const { categoryName, subCategoryName } = req.params;
     const { page = 1, limit = 10 } = req.query;
 
-    const category = await CategoryImage.findOne({ categoryName });
+    const normalizedCategoryName = categoryName.toLowerCase();
+    const category = await CategoryImage.findOne({ categoryName: { $regex: `^${normalizedCategoryName}$`, $options: 'i' } });
     if (!category) {
       return res.status(404).json({
         status: false,
-        message: "Did not find category",
+        message: "Category not found",
       });
     }
 
+    const normalizedSubCategoryName = subCategoryName.toLowerCase();
     const subCategory = category.subCategories.find(
-      (subCat) => subCat.name === subCategoryName
+      (subCat) => subCat.name.toLowerCase() === normalizedSubCategoryName
     );
 
     if (!subCategory) {
       return res.status(404).json({
         status: false,
-        message: "Did not find sub category",
+        message: "Subcategory not found",
       });
     }
 
@@ -372,12 +454,12 @@ const getSubCategoryImages = async (req, res, next) => {
 
     return res.status(200).json({
       status: true,
-      message: "Sub category images fetched successfully",
+      message: "Subcategory images fetched successfully",
       data: [
         {
           name: subCategory.name,
           images: paginatedImages,
-          MetaPagination: {
+          pagination: {
             currentPage: validPage,
             totalPages,
             totalItems,
@@ -391,6 +473,7 @@ const getSubCategoryImages = async (req, res, next) => {
   }
 };
 
+// Get all images
 const getAllImages = async (req, res, next) => {
   try {
     const categories = await CategoryImage.find();
@@ -416,12 +499,12 @@ const getAllImages = async (req, res, next) => {
       data: allImages,
       message: "All images fetched successfully by category and subcategory"
     });
-
   } catch (error) {
     next(error);
   }
 };
 
+// Get all used images
 const getAllUsedImages = async (_, res, next) => {
   try {
     const categories = await CategoryImage.find({});
@@ -449,13 +532,12 @@ const getAllUsedImages = async (_, res, next) => {
       data: allUsedImages,
       message: "All used images fetched successfully by category and subcategory"
     });
-  }
-
-  catch (error) {
+  } catch (error) {
     next(error);
   }
-}
+};
 
+// Update image isUsed status
 const updateImageIsUsedStatus = async (req, res, next) => {
   const { imageId, categoryId: id } = req.params;
   try {
@@ -477,6 +559,7 @@ const updateImageIsUsedStatus = async (req, res, next) => {
     }
 
     if (!imageFound) {
+
       return res.status(404).json({
         status: false,
         message: "Image not found in subcategories"
@@ -489,15 +572,14 @@ const updateImageIsUsedStatus = async (req, res, next) => {
       status: true,
       message: "Image isUsed status updated successfully"
     });
-  }
-
-  catch (error) {
+  } catch (error) {
     next(error);
   }
 };
 
 export {
   createCategory,
+  addSubCategory,
   categoryWiseImageUpload,
   getCategoryImages,
   getSubCategoryImages,
@@ -507,5 +589,6 @@ export {
   getAllImages,
   getCategoryAndSubCategoryNames,
   updateImageIsUsedStatus,
-  getAllUsedImages
+  getAllUsedImages,
+  getSubCategoriesByCategory
 };
