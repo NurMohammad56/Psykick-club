@@ -65,7 +65,6 @@ export const getAllTMCTargets = async (req, res, next) => {
   const skip = (page - 1) * limit;
 
   try {
-
     const [totalItems, TMCTargets] = await Promise.all([
       TMCTarget.countDocuments(),
       TMCTarget.find()
@@ -87,12 +86,11 @@ export const getAllTMCTargets = async (req, res, next) => {
       },
       message: "All TMCTargets fetched successfully",
     });
-  }
-
-  catch (error) {
+  } catch (error) {
     next(error);
   }
 };
+
 
 export const getAllQueuedTMCTargets = async (req, res, next) => {
 

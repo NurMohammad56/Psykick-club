@@ -36,12 +36,7 @@ const TMCTargetSchema = new Schema(
     isCompleted: {
       type: Boolean,
       default: false
-    },
-    status: {
-      type: String,
-      enum: ["pending", "queued", "active", "revealed", "completed"],
-      default: "pending"
-    },
+    }
   },
   { timestamps: true }
 )
