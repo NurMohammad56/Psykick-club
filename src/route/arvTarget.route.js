@@ -1,5 +1,8 @@
 import express from 'express';
-import { createARVTarget, getAllARVTargets, getAllQueuedARVTargets, getAllUnQueuedARVTargets, getActiveARVTarget, updateBufferTime, updateGameTime, updateResultImage, updateAddToQueue, updateRemoveFromQueue, startNextGame, updateMakeInactive, updateMakeComplete } from '../controller/arvTarget.controller.js';
+import { createARVTarget, getAllARVTargets, getAllQueuedARVTargets, getAllUnQueuedARVTargets, getActiveARVTarget,
+     updateBufferTime, updateGameTime, updateResultImage,
+      updateAddToQueue, updateRemoveFromQueue, startNextGame,
+       updateMakeInactive, updateMakeComplete } from '../controller/arvTarget.controller.js';
 
 const router = express.Router();
 

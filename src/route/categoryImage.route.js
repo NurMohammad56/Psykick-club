@@ -2,6 +2,7 @@ import express from "express";
 import {
   createCategory,
   categoryWiseImageUpload,
+  getSubCategoriesByCategory,
   getCategoryImages,
   getSubCategoryImages,
   getAllCategories,
@@ -28,7 +29,7 @@ router.post(
   categoryWiseImageUpload
 );
 // Get all category from admin
-router.get("/get-all-category-images", getAllCategories);
+router.get("/get-all-category", getAllCategories);
 
 // Update Category By Id from admin
 router.patch(
@@ -36,6 +37,9 @@ router.patch(
   upload.single("image"),
   updateCategoryById
 );
+
+// Get Sub-Categories By Category
+router.get("/get-subcategories/:categoryName", getSubCategoriesByCategory);
 
 // Delete Category By Id from admin
 router.delete("/delete-category/:id/:imageId/:subCategoryName", deleteCategoryById);
