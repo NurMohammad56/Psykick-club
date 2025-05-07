@@ -49,12 +49,7 @@ const ARVTargetSchema = new Schema(
     isCompleted: {
       type: Boolean,
       default: false
-    },
-    status: {
-      type: String,
-      enum: ["pending", "queued", "active", "revealed", "expired", "completed"],
-      default: "pending"
-    },
+    }
   },
   { timestamps: true }
 )

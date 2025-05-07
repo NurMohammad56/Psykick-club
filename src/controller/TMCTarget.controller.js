@@ -60,13 +60,11 @@ export const createTMCTarget = async (req, res, next) => {
 };
 
 export const getAllTMCTargets = async (req, res, next) => {
-
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
 
   try {
-
     const [totalItems, TMCTargets] = await Promise.all([
       TMCTarget.countDocuments(),
       TMCTarget.find()
@@ -86,14 +84,13 @@ export const getAllTMCTargets = async (req, res, next) => {
         totalItems,
         itemsPerPage: limit
       },
-      message: "All TMCTargets fetched successfully"
+      message: "All TMCTargets fetched successfully",
     });
-  }
-
-  catch (error) {
+  } catch (error) {
     next(error);
   }
 };
+
 
 export const getAllQueuedTMCTargets = async (req, res, next) => {
 

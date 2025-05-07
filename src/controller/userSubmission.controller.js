@@ -350,8 +350,8 @@ export const getCompletedTargetsCount = async (req, res, next) => {
         const successfulCompletedTargets = successfulTMCTargets + successfulARVTargets;
 
         // Avoid division by zero
-        const successRate = userSubmission.completedChallenges > 0
-            ? Math.min((successfulCompletedTargets / userSubmission.completedChallenges) * 100, 100)
+        const successRate = totalCompletedTargets > 0
+            ? ((successfulCompletedTargets / totalCompletedTargets) * 100)
             : 0;
 
         return res.status(200).json({
@@ -388,6 +388,7 @@ export const getPreviousTMCResults = async (req, res) => {
 
         return res.status(200).json({
             status: true,
+            ujala: "yasgyduy",
             message: "Previous TMC Results fetched successfully",
             data: previousTMCResults
         });
@@ -682,8 +683,6 @@ export const getARVTMCGraphData = async (req, res, next) => {
                 }
             }
         ]);
-
-        console.log(tmcData)
 
         // ARV aggregation
         const arvData = await UserSubmission.aggregate([
