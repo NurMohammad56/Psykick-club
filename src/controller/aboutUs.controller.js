@@ -2,10 +2,7 @@ import { AboutUs } from "../model/aboutUs.model.js";
 
 // Create About Us content from admin
 const createAboutUs = async (req, res, next) => {
-  const { previousId } = req.params;
   try {
-
-    await AboutUs.findByIdAndDelete(previousId);
     const aboutUs = new AboutUs(req.body);
     await aboutUs.save();
     return res
@@ -19,9 +16,10 @@ const createAboutUs = async (req, res, next) => {
 };
 
 // Get About Us content from admin
-const getAboutUs = async (_, res, next) => {
+const getAboutUs = async (req, res, next) => {
+  const { id } = req.params;
   try {
-    const aboutUs = await AboutUs.find({});
+    const aboutUs = await AboutUs.findById(id);
     if (!aboutUs)
       return res
         .status(404)
@@ -40,8 +38,8 @@ const getAboutUs = async (_, res, next) => {
 
 // Update About Us content
 const updateAboutUs = async (req, res, next) => {
+  const { id } = req.params.id;
   try {
-    const { id } = req.params.id;
     const aboutUs = await AboutUs.findOneAndUpdate({ id }, req.body, {
       new: true,
     });

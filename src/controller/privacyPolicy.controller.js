@@ -4,7 +4,6 @@ import { PrivacyPolicy } from "../model/privacyPolicy.model.js";
 
 const createPrivacyPolicy = async (req, res, next) => {
   const { content } = req.body;
-  const { previousId } = req.params;
   try {
     if (!content) {
       return res
@@ -12,7 +11,6 @@ const createPrivacyPolicy = async (req, res, next) => {
         .json({ status: false, message: "Content is required" });
     }
 
-    await PrivacyPolicy.findByIdAndDelete(previousId);
     const newPrivacyPolicy = new PrivacyPolicy({ content });
 
     await newPrivacyPolicy.save();
@@ -28,9 +26,10 @@ const createPrivacyPolicy = async (req, res, next) => {
 };
 
 // Get privacy policies from admin
-const getPrivacyPolicies = async (_, res, next) => {
+const getPrivacyPolicies = async (req, res, next) => {
+  const { id } = req.params;
   try {
-    const privacyPolicies = await PrivacyPolicy.find({});
+    const privacyPolicies = await PrivacyPolicy.findById(id);
     return res.status(200).json({
       status: true,
       message: "Privacy policy fetched successfully",
@@ -69,28 +68,8 @@ const updatePrivacyPolicy = async (req, res, next) => {
   }
 };
 
-// Delete privacy policy from admin
-const deletePrivacyPolicy = async (req, res, next) => {
-  const { id } = req.params;
-  try {
-    const privacyPolicy = await PrivacyPolicy.findByIdAndDelete(id);
-    if (!privacyPolicy) {
-      return res
-        .status(404)
-        .json({ status: false, message: "Privacy policy not found" });
-    }
-    return res.status(200).json({
-      status: true,
-      message: "Privacy policy is deleted successfully",
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
 export {
   createPrivacyPolicy,
   getPrivacyPolicies,
-  updatePrivacyPolicy,
-  deletePrivacyPolicy,
+  updatePrivacyPolicy
 };
