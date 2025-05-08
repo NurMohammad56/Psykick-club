@@ -41,6 +41,7 @@ router.patch(
 // Get Sub-Categories By Category
 router.get("/get-subcategories/:categoryName", getSubCategoriesByCategory);
 
+
 // Delete Category By Id from admin
 router.delete("/delete-category/:id/:imageId/:subCategoryName", deleteCategoryById);
 
