@@ -49,6 +49,7 @@ import aboutUsRoute from "./src/route/aboutUs.route.js";
 import OAuthRoute from "./src/route/OAuth.route.js"
 import contactUsRoute from "./src/route/contactUs.route.js"
 import notificationRoute from "./src/route/notification.route.js"
+import homeRoute from "./src/route/home.route.js"
 
 // set 
 app.use('/api/v1/user', userRoute);
@@ -66,10 +67,11 @@ app.use('/api/v1/terms-and-condition', termsCondition);
 app.use('/api/v1/about-us', aboutUsRoute);
 app.use('/api/v1', OAuthRoute);
 app.use('/api/v1', contactUsRoute);
+app.use('/api/v1/home', homeRoute);
 
 
 // Error handling middleware
-app.use(notFoundHandler);  
+app.use(notFoundHandler);
 app.use(errorHandler);
 
 // Start server
