@@ -12,7 +12,7 @@ router.post(
   "/create-terms-and-condition",
   createTermsCondition
 );
-router.get("/get-terms-and-condition/:id", getTermsCondition);
+router.get("/get-terms-and-condition", getTermsCondition);
 router.patch(
   "/update-terms-and-condition/:id",
   updateTermsCondition

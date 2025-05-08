@@ -27,10 +27,9 @@ const createTermsCondition = async (req, res, next) => {
 };
 
 // Get Terms & Condition from admin
-const getTermsCondition = async (req, res, next) => {
-  const { id } = req.params;
+const getTermsCondition = async (_, res, next) => {
   try {
-    const termsCondition = await TermsCondition.findById(id)
+    const termsCondition = await TermsCondition.find({})
     return res.status(200).json({
       status: true,
       message: "Terms & Condition fetched successfully",
