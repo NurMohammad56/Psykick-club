@@ -9,7 +9,7 @@ const router = express.Router();
 
 // CRUD Privacy Policy Route from admin
 router.post("/create-privacy-policy", createPrivacyPolicy);
-router.get("/get-privacy-policies/:id", getPrivacyPolicies);
+router.get("/get-privacy-policies", getPrivacyPolicies);
 router.patch(
   "/update-privacy-policy/:id",
   updatePrivacyPolicy

@@ -17,9 +17,8 @@ const createAboutUs = async (req, res, next) => {
 
 // Get About Us content from admin
 const getAboutUs = async (req, res, next) => {
-  const { id } = req.params;
   try {
-    const aboutUs = await AboutUs.findById(id);
+    const aboutUs = await AboutUs.find({});
     if (!aboutUs)
       return res
         .status(404)
