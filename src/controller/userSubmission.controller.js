@@ -172,10 +172,6 @@ export const submitTMCGame = async (req, res, next) => {
             points = -10;
         }
 
-        if (points < 0) {
-            points = 0;
-        }
-        
         // Update user submission
         userSubmission.participatedTMCTargets.push({
             TMCId: TMCTargetId,
@@ -184,8 +180,6 @@ export const submitTMCGame = async (req, res, next) => {
             points,
             submissionTime: currentTime
         })
-
-        
 
         userSubmission.completedChallenges += 1;
         userSubmission.totalPoints += points;
