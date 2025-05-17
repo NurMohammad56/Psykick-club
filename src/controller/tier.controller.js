@@ -20,42 +20,37 @@ export const getNextUserTierInfo = async (req, res, next) => {
 
     try {
         const user = await User.findById(userId);
-
         if (!user) {
-            return res.status(404).json({
-                status: false,
-                message: "User not found"
-            });
+            return res.status(404).json({ status: false, message: "User not found" });
         }
 
         const currentTierIndex = tierTable.findIndex(t => t.name === user.tierRank);
-
         if (currentTierIndex === -1) {
-            return res.status(400).json({
-                status: false,
-                message: "Invalid tierRank in user data"
-            });
+            return res.status(400).json({ status: false, message: "Invalid tierRank in user data" });
         }
-
-        const currentTier = tierTable[currentTierIndex];
-        const nextTier = tierTable[currentTierIndex + 1];
-        const secondNextTier = tierTable[currentTierIndex + 2];
 
         const currentPoints = user.totalPoints;
+        const currentTier = tierTable[currentTierIndex];
+        const prevTier = tierTable[currentTierIndex - 1];
+        const nextTier = tierTable[currentTierIndex + 1];
+        const nextNextTier = tierTable[currentTierIndex + 2];
 
+        // Calculate down: how many points until they fall to previous tier
         let down = undefined;
-        if (currentTier.down !== undefined) {
-            down = Math.max(currentPoints - currentTier.down, 0);
+        if (prevTier && prevTier.up !== undefined) {
+            down = Math.max(currentPoints - prevTier.up + 1, 0);
         }
 
+        // Points needed to reach next tier (up1)
         let up1 = undefined;
         if (nextTier?.up !== undefined) {
             up1 = Math.max(nextTier.up - currentPoints, 0);
         }
 
+        // Points needed to reach second next tier (up2)
         let up2 = undefined;
-        if (secondNextTier?.up !== undefined) {
-            up2 = Math.max(secondNextTier.up - currentPoints, 0);
+        if (nextNextTier?.up !== undefined) {
+            up2 = Math.max(nextNextTier.up - currentPoints, 0);
         }
 
         return res.status(200).json({
