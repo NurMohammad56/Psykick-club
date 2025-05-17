@@ -28,29 +28,47 @@ export const getNextUserTierInfo = async (req, res, next) => {
             });
         }
 
-        const currentRankIndex = tierTable.findIndex(t => t.name === user.tierRank);
+        const currentTierIndex = tierTable.findIndex(t => t.name === user.tierRank);
 
-        const pointsToGoNextTier = tierTable[currentRankIndex].up - user.totalPoints
+        if (currentTierIndex === -1) {
+            return res.status(400).json({
+                status: false,
+                message: "Invalid tierRank in user data"
+            });
+        }
 
-        const pointsToGoDownTier = user.totalPoints - tierTable[currentRankIndex].down
+        const currentTier = tierTable[currentTierIndex];
+        const nextTier = tierTable[currentTierIndex + 1];
+        const secondNextTier = tierTable[currentTierIndex + 2];
+
+        const currentPoints = user.totalPoints;
+
+        let down = undefined;
+        if (currentTier.down !== undefined) {
+            down = Math.max(currentPoints - currentTier.down, 0);
+        }
+
+        let up1 = undefined;
+        if (nextTier?.up !== undefined) {
+            up1 = Math.max(nextTier.up - currentPoints, 0);
+        }
+
+        let up2 = undefined;
+        if (secondNextTier?.up !== undefined) {
+            up2 = Math.max(secondNextTier.up - currentPoints, 0);
+        }
 
         return res.status(200).json({
             status: true,
-            message: "User tier system fetched successfully",
+            message: "User tier point data fetched successfully",
             data: {
-                currentTier: user.tierRank,
-                currentPoints: user.totalPoints,
-                nextTier: tierTable[currentRankIndex + 1]?.name,
-                previousTier: tierTable[currentRankIndex - 1]?.name,
-                secondNextTier: tierTable[currentRankIndex + 2]?.name,
-                pointsToGoNextTier: pointsToGoNextTier > 0 ? pointsToGoNextTier : 0,
-                pointsToGoDownTier: pointsToGoDownTier > 0 ? pointsToGoDownTier : 0,
-                pointsToStayInCurrentTier: tierTable[currentRankIndex].retain
+                current: currentPoints,
+                down,
+                up1,
+                up2
             }
         });
-    }
-
-    catch (error) {
+    } catch (error) {
         next(error);
     }
 }
